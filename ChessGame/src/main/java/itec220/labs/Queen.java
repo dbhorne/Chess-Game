@@ -10,6 +10,10 @@ public class Queen extends Piece {
 	Queen(Color color, int rank, int file) {
 		super(PieceType.QUEEN, color, rank, file);
 	}
+	
+	Queen(Pawn pawn){
+		super(PieceType.QUEEN, pawn.getColor(), pawn.getRank(), pawn.getFile());
+	}
 
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {

@@ -9,6 +9,10 @@ public class Knight extends Piece {
 		super(PieceType.KNIGHT, color, rank, file);
 	}
 
+	Knight(Pawn pawn){
+		super(PieceType.KNIGHT, pawn.getColor(), pawn.getRank(), pawn.getFile());
+	}
+
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
 		Piece[][] pieces = copy.getPieces();

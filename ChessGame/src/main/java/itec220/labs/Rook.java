@@ -6,9 +6,14 @@ import java.util.ArrayList;
 public class Rook extends Piece {
 	private static final int[] RANK_OFFSETS = { 0, 0, 1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0 };
+	private boolean hasMoved;
 
 	Rook(Color color, int rank, int file) {
 		super(PieceType.ROOK, color, rank, file);
+	}
+	
+	Rook(Pawn pawn){
+		super(PieceType.ROOK, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
 
 	@Override
@@ -58,5 +63,13 @@ public class Rook extends Piece {
 	@Override
 	public String toString() {
 		return "R" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+	}
+
+	public boolean getHasMoved() {
+		return hasMoved;
+	}
+
+	public void setHasMoved(boolean hasMoved) {
+		this.hasMoved = hasMoved;
 	}
 }

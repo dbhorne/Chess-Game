@@ -3,12 +3,8 @@ package itec220.labs;
 /* Goals:
  * 1. finish with the logic of all the pieces
  * 		1. DONE!
- * 		2. set up the promotion system, have a method in board that after every move just checks the bottom and top 
- * 			ranks for pawns of the oppostite color, i.e a white pawn in rank 7 and a black pawn in rank 0,
- * 			if there is I can say that it can promote, and that method just returns an array or a simpleentry of the rank 
- * 			and file of the pawn then have another method called promote that you pass in the rank, file, and PieceType that
- * 			you want to promote, this will also double check and make sure that the pawn can be promoted. 
- * 		3. set up castling, don't know how I'm going to do it right now, 
+ * 		2. DONE! (Partially, have to wait till I set up the UI to get an input for what piece you want to promote to)
+ * 		3. DONE!
  *	2. After I finish with the logic, begin setting up the layout of the UI, the chess board, and the other parts of the 
  *		UI. The UI will have a start page that asks if you want to play human v human, or against a bot, this will
  *		come into play after I incorporate the bot into the game, this panel can also be used to display the winner 

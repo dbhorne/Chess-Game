@@ -10,6 +10,10 @@ public class Bishop extends Piece {
 	Bishop(Color color, int rank, int file) {
 		super(PieceType.BISHOP, color, rank, file);
 	}
+	
+	Bishop(Pawn pawn){
+		super(PieceType.BISHOP, pawn.getColor(), pawn.getRank(), pawn.getFile());
+	}
 
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {

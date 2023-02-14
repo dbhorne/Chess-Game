@@ -6,6 +6,7 @@ import java.util.ArrayList;
 public class King extends Piece {
 	private static final int[] RANK_OFFSETS = { 0, 0, 1, -1, 1, 1, -1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0, 1, -1, 1, -1 };
+	private boolean hasMoved = false;
 
 	King(Color color, int rank, int file) {
 		super(PieceType.KING, color, rank, file);
@@ -25,26 +26,76 @@ public class King extends Piece {
 			System.out.println("Something went wrong with the king at " + this);
 		} else {
 			for (int i = 0; i < RANK_OFFSETS.length; i++) {
-				int newRank = curRank + (i * RANK_OFFSETS[i]);
-				int newFile = curFile + (i * FILE_OFFSETS[i]);
+				int newRank = curRank + (1 * RANK_OFFSETS[i]);
+				int newFile = curFile + (1 * FILE_OFFSETS[i]);
 				if (newRank >= copy.BOARD_SIZE || newRank < 0 || newFile >= copy.BOARD_SIZE || newFile < 0) {
 					break;
 				}
 				if (pieces[newRank][newFile] == null || pieces[newRank][newFile].getColor() != this.getColor()) {
-					if(kingCheck) {
+					if (kingCheck) {
 						moves.add(new SimpleEntry<>(newRank, newFile));
-					} else if(this.isValidMove(newRank, newFile, copy)) {
+					} else if (this.isValidMove(newRank, newFile, copy)) {
 						moves.add(new SimpleEntry<>(newRank, newFile));
 					}
 				}
 			}
+			if(curFile + 3 < 8) {
+				if (!this.hasMoved && pieces[curRank][curFile + 1] == null && pieces[curRank][curFile + 2] == null
+						&& pieces[curRank][curFile + 3] != null && pieces[curRank][curFile + 3] instanceof Rook) { // check
+																													// castle
+																													// to
+																													// the
+																													// right
+					Rook castle = (Rook) pieces[curRank][curFile + 3];
+					if (!castle.getHasMoved()) {
+						if (kingCheck) {
+							moves.add(new SimpleEntry<>(curRank, curFile + 2));
+						} else {
+							Board copyOfCopy = copy.copy();
+							copyOfCopy.move(curFile, curFile, curRank, curFile+2, getColor());
+							copyOfCopy.move(curFile, curFile+3, curRank, curFile+1, getColor());
+							if(!copyOfCopy.isKingInCheck(getColor())) {
+								moves.add(new SimpleEntry<>(curRank, curFile + 2));
+							}
+						}
+	
+					}
+				}
+			}
+			if(curFile - 4 >= 0) {
+				if (!this.hasMoved && pieces[curRank][curFile - 1] == null && pieces[curRank][curFile - 2] == null
+						&& pieces[curRank][curFile - 3] == null && pieces[curRank][curFile - 4] != null
+						&& pieces[curRank][curFile - 4] instanceof Rook) {
+					Rook castle = (Rook) pieces[curRank][curFile - 4]; // check castle to the left
+					if(!castle.getHasMoved()) {
+						if(kingCheck) {
+							moves.add(new SimpleEntry<>(curRank, curFile - 2));
+						} else {
+							Board copyOfCopy = copy.copy();
+							copyOfCopy.move(curFile, curFile, curRank, curFile-2, getColor());
+							copyOfCopy.move(curFile, curFile-4, curRank, curFile-1, getColor());
+							if(!copyOfCopy.isKingInCheck(getColor())) {
+								moves.add(new SimpleEntry<>(curRank, curFile - 2));
+							}
+						}
+					}
+	
+				}
+			}
 		}
-
 		return moves;
 	}
 
 	@Override
 	public String toString() {
 		return "K" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+	}
+
+	public boolean getHasMoved() {
+		return hasMoved;
+	}
+
+	public void setHasMoved(boolean hasMoved) {
+		this.hasMoved = hasMoved;
 	}
 }
