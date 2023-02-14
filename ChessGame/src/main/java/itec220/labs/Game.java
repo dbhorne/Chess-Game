@@ -73,8 +73,7 @@ public class Game {
 		if (currMove == Color.WHITE) {
 			if (board.isKingInCheck(Color.BLACK)) {
 				tempState = GameState.BLACKINCHECK;
-				if (board.getWhiteMoves().contains(new SimpleEntry<>(board.getKing(Color.BLACK).getRank(),
-						board.getKing(Color.BLACK).getFile()))) {
+				if (board.getBlackMoves().size() == 0) {
 					tempState = GameState.WHITEWINS;
 				}
 			} else if (!board.canKingMove(Color.BLACK) && board.getNumOfPieces(Color.BLACK) == 1) {
@@ -85,8 +84,7 @@ public class Game {
 		} else {
 			if (board.isKingInCheck(Color.WHITE)) {
 				tempState = GameState.WHITEINCHECK;
-				if (board.getBlackMoves().contains(new SimpleEntry<>(board.getKing(Color.WHITE).getRank(),
-						board.getKing(Color.WHITE).getFile()))) {
+				if (board.getWhiteMoves().size() == 0) {
 					tempState = GameState.BLACKWINS;
 				}
 
