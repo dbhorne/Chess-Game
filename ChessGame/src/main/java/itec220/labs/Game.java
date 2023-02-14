@@ -18,7 +18,6 @@ package itec220.labs;
  *		a very simple bot. 
  */
 
-
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +58,7 @@ public class Game {
 	public boolean move(int startX, int startY, int endX, int endY) {
 		if (board.move(startX, startY, endX, endY, currMove)) {
 			currState = updateGameState();
-			if(currMove == Color.WHITE) {
+			if (currMove == Color.WHITE) {
 				updateMoveTracker(board.getBoardString());
 			}
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
@@ -68,30 +67,32 @@ public class Game {
 			return false;
 		}
 	}
-	
+
 	public GameState updateGameState() {
 		GameState tempState = GameState.IN_PROGRESS;
-		if(currMove == Color.WHITE) {
-			if(board.isKingInCheck(Color.BLACK)) {
-				tempState = GameState.CHECK;
-				System.out.println(board.getBlackMoves());
-				if(!board.canKingMove(Color.BLACK) && board.getBlackMoves().size() == 0) {
+		if (currMove == Color.WHITE) {
+			if (board.isKingInCheck(Color.BLACK)) {
+				tempState = GameState.BLACKINCHECK;
+				if (board.getWhiteMoves().contains(new SimpleEntry<>(board.getKing(Color.BLACK).getRank(),
+						board.getKing(Color.BLACK).getFile()))) {
 					tempState = GameState.WHITEWINS;
 				}
-			} else if(!board.canKingMove(Color.BLACK) && board.getNumOfPieces(Color.BLACK) == 1) {
+			} else if (!board.canKingMove(Color.BLACK) && board.getNumOfPieces(Color.BLACK) == 1) {
 				tempState = GameState.STALEMATE;
-			} else if(board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
+			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;
 			}
 		} else {
-			if(board.isKingInCheck(Color.WHITE)) {
-				tempState = GameState.CHECK;
-				if(!board.canKingMove(Color.WHITE) && board.getWhiteMoves().size() == 0) {
+			if (board.isKingInCheck(Color.WHITE)) {
+				tempState = GameState.WHITEINCHECK;
+				if (board.getBlackMoves().contains(new SimpleEntry<>(board.getKing(Color.WHITE).getRank(),
+						board.getKing(Color.WHITE).getFile()))) {
 					tempState = GameState.BLACKWINS;
 				}
-			} else if(!board.canKingMove(Color.WHITE) && board.getNumOfPieces(Color.WHITE) == 1) {
+
+			} else if (!board.canKingMove(Color.WHITE) && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.STALEMATE;
-			} else if(board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
+			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;
 			}
 		}
@@ -99,10 +100,10 @@ public class Game {
 	}
 
 	public void updateMoveTracker(String newBoardState) {
-		if(boardStates.size() < 2) {
+		if (boardStates.size() < 2) {
 			boardStates.add(newBoardState);
 		} else {
-			if(Collections.frequency(boardStates, newBoardState) == 2) {
+			if (Collections.frequency(boardStates, newBoardState) == 2) {
 				currState = GameState.DRAW;
 			} else {
 				boardStates.remove(0);
@@ -110,11 +111,11 @@ public class Game {
 			}
 		}
 	}
-	
+
 	public Board getCopyOfCurrBoard() {
 		return board.copy();
 	}
-	
+
 	public GameState getGameState() {
 		return this.currState;
 	}

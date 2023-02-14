@@ -34,11 +34,11 @@ public abstract class Piece {
 		
 		this.setRank(newRank);
 		this.setFile(newFile);
-		copy.calcPieceMoves(true, color == Color.WHITE ? Color.BLACK : Color.WHITE);
-		
+		copy.calcPieceMoves(true,  this.color == Color.WHITE ? Color.BLACK : Color.WHITE);
+		boolean temp = !copy.isKingInCheck(this.color);
 		this.setRank(origRank);
 		this.setFile(origFile);
-		return !copy.isKingInCheck(color == Color.WHITE ? Color.BLACK : Color.WHITE);
+		return temp;
 	}
 
 	public abstract ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck);

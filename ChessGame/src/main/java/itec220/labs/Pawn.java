@@ -50,15 +50,20 @@ public class Pawn extends Piece {
 			System.out.println("Something went wrong in the pawn class, take a second to check on " + this);
 		} else {
 			if (this.getColor() == Color.WHITE) {
-				if (pieces[curRank + 1][curFile] == null) {						// can white pawn move forward one space
+				if (curRank + 1 < 8 && pieces[curRank + 1][curFile] == null) { // can white pawn move forward one space
 					if (kingCheck) {
 						moves.add(new SimpleEntry<>(curRank + 1, curFile));
 					} else if (this.isValidMove(curRank + 1, curFile, copy)) {
 						moves.add(new SimpleEntry<>(curRank + 1, curFile));
 					}
 				}
-				if (curFile != 0 && curFile != 7) {								// check and see if the pawn is on the edge of the board
-					if (pieces[curRank + 1][curFile + 1] != null				// check to see if the pawn to the upper right is not null and not white
+				if (curFile != 0 && curFile != 7) { // check and see if the pawn is on the edge of the board
+					if (curRank + 1 < 8 && curFile + 1 < 8 && pieces[curRank + 1][curFile + 1] != null // check to see
+																										// if the pawn
+																										// to the upper
+																										// right is not
+																										// null and not
+																										// white
 							&& pieces[curRank + 1][curFile + 1].getColor() == Color.BLACK) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
@@ -66,7 +71,9 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
 						}
 					}
-					if (pieces[curRank + 1][curFile - 1] != null				// check the upper left move
+					if (curRank + 1 < 8 && curFile - 1 >= 0 && pieces[curRank + 1][curFile - 1] != null // check the
+																										// upper left
+																										// move
 							&& pieces[curRank + 1][curFile - 1].getColor() == Color.BLACK) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
@@ -74,8 +81,9 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
 						}
 					}
-					if (pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile + 1] instanceof Pawn) {	// check enPassant to the right
+					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null
+							&& pieces[curRank][curFile + 1].getColor() == Color.BLACK
+							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
 						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -85,8 +93,9 @@ public class Pawn extends Piece {
 							}
 						}
 					}
-					if (pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile - 1] instanceof Pawn) {	// check enPassant to the left
+					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null
+							&& pieces[curRank][curFile - 1].getColor() == Color.BLACK
+							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
 						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -96,8 +105,10 @@ public class Pawn extends Piece {
 							}
 						}
 					}
-				} else if (curFile == 0) {										// check to see if the pawn is on the left side of the board
-					if (pieces[curRank + 1][curFile + 1] != null				// can it take a pawn up and to the right
+				} else if (curFile == 0) { // check to see if the pawn is on the left side of the board
+					if (curRank + 1 < 8 && curFile + 1 < 8 && pieces[curRank + 1][curFile + 1] != null // can it take a
+																										// pawn up and
+																										// to the right
 							&& pieces[curRank + 1][curFile + 1].getColor() == Color.BLACK) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
@@ -105,8 +116,8 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
 						}
 					}
-					if (pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile + 1] instanceof Pawn) {	// check enPassant to the right
+					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.BLACK
+							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
 						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -116,8 +127,8 @@ public class Pawn extends Piece {
 							}
 						}
 					}
-				} else if (curFile == 7) {										// if the pawn is on the right side of the board
-					if (pieces[curRank + 1][curFile - 1] != null				// check the up and to the left space
+				} else if (curFile == 7) { // if the pawn is on the right side of the board
+					if (curRank + 1 < 8 && curFile - 1 >= 0 && pieces[curRank + 1][curFile - 1] != null // check the up and to the left space
 							&& pieces[curRank + 1][curFile - 1].getColor() == Color.BLACK) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
@@ -125,8 +136,8 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
 						}
 					}
-					if (pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile - 1] instanceof Pawn) {	// check enPassant to the left
+					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.BLACK
+							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
 						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -138,7 +149,7 @@ public class Pawn extends Piece {
 					}
 				}
 				if (!madeFirstMove) {
-					if (pieces[curRank + 1][curFile] == null && pieces[curRank + 2][curFile] == null) {
+					if (curRank + 1 < 8 && pieces[curRank + 1][curFile] == null && pieces[curRank + 2][curFile] == null) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank + 2, curFile));
 						} else if (this.isValidMove(curRank + 2, curFile, copy)) {
@@ -148,15 +159,15 @@ public class Pawn extends Piece {
 				}
 
 			} else if (this.getColor() == Color.BLACK) {
-				if (pieces[curRank - 1][curFile] == null) {						// check to see if it can move forward one space
+				if (curRank - 1 >= 0 && pieces[curRank - 1][curFile] == null) { // check to see if it can move forward one space
 					if (kingCheck) {
 						moves.add(new SimpleEntry<>(curRank - 1, curFile));
 					} else if (this.isValidMove(curRank - 1, curFile, copy)) {
 						moves.add(new SimpleEntry<>(curRank - 1, curFile));
 					}
 				}
-				if (curFile != 0 && curFile != 7) {								// if the pawn isn't on the edge of the board
-					if (pieces[curRank - 1][curFile + 1] != null				// check the space down and to the right
+				if (curFile != 0 && curFile != 7) { // if the pawn isn't on the edge of the board
+					if (curRank - 1 >= 0 && curFile + 1 < 8 && pieces[curRank - 1][curFile + 1] != null // check the space down and to the right
 							&& pieces[curRank - 1][curFile + 1].getColor() == Color.WHITE) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
@@ -164,7 +175,7 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
 						}
 					}
-					if (pieces[curRank - 1][curFile - 1] != null				// check the space down and to the left
+					if (curRank - 1 >= 0 && curFile - 1 >= 0 && pieces[curRank - 1][curFile - 1] != null // check the space down and to the left
 							&& pieces[curRank - 1][curFile - 1].getColor() == Color.WHITE) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
@@ -172,8 +183,8 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
 						}
 					}
-					if (pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile + 1] instanceof Pawn) {	// check enPassant to the right
+					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.WHITE
+							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
 						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -183,8 +194,8 @@ public class Pawn extends Piece {
 							}
 						}
 					}
-					if (pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile - 1] instanceof Pawn) {	// check enPassant to the left
+					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.WHITE
+							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
 						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -194,8 +205,8 @@ public class Pawn extends Piece {
 							}
 						}
 					}
-				} else if (curFile == 0) {										// if the pawn is on the left side of the board
-					if (pieces[curRank - 1][curFile + 1] != null				// check the space down and to the right
+				} else if (curFile == 0) { // if the pawn is on the left side of the board
+					if (curRank - 1 >= 0 && curFile + 1 < 8 && pieces[curRank - 1][curFile + 1] != null // check the space down and to the right
 							&& pieces[curRank - 1][curFile + 1].getColor() == Color.WHITE) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
@@ -203,8 +214,8 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
 						}
 					}
-					if (pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile + 1] instanceof Pawn) {	// check enPassant to the right
+					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.WHITE
+							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
 						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -214,8 +225,8 @@ public class Pawn extends Piece {
 							}
 						}
 					}
-				} else if (curFile == 7) {										// if the pawn is on the right side of the board
-					if (pieces[curRank - 1][curFile - 1] != null				// check the space down and to the left
+				} else if (curFile == 7) { // if the pawn is on the right side of the board
+					if (curRank - 1 >= 0 && curFile - 1 >= 0 && pieces[curRank - 1][curFile - 1] != null // check the space down and to the left
 							&& pieces[curRank - 1][curFile - 1].getColor() == Color.WHITE) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
@@ -223,8 +234,8 @@ public class Pawn extends Piece {
 							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
 						}
 					}
-					if (pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile - 1] instanceof Pawn) {	// check enPassant to the left
+					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.WHITE
+							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
 						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
@@ -236,7 +247,7 @@ public class Pawn extends Piece {
 					}
 				}
 				if (!madeFirstMove) {
-					if (pieces[curRank - 1][curFile] == null && pieces[curRank - 2][curFile] == null) {
+					if (curRank - 2 >= 0 &&  pieces[curRank - 1][curFile] == null && pieces[curRank - 2][curFile] == null) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank - 2, curFile));
 						} else if (this.isValidMove(curRank - 2, curFile, copy)) {

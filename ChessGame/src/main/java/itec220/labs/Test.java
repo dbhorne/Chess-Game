@@ -17,7 +17,9 @@ public class Test {
 			System.out.println("Enter the space you want to move to, i.e C5: ");
 			int[] moveTo = formatInput(kb.nextLine());
 			game.move(moveFrom[1]-1, moveFrom[0], moveTo[1]-1, moveTo[0]);
-		}while(game.getCurrState() == GameState.IN_PROGRESS || game.getCurrState() == GameState.CHECK);
+			System.out.println(game.getCurrState());
+		}while(game.getCurrState() == GameState.IN_PROGRESS || game.getCurrState() == GameState.BLACKINCHECK || game.getCurrState() == GameState.WHITEINCHECK);
+		kb.close();
 	}
 	
 	public static int[] formatInput(String input) {

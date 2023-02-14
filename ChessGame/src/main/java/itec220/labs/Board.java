@@ -15,30 +15,30 @@ public class Board {
 	Board() {
 		resetBoard();
 	}
-	
-	public ArrayList<SimpleEntry<Integer, Integer>> getWhiteMoves(){
-		calcPieceMoves(true, Color.WHITE);
+
+	public ArrayList<SimpleEntry<Integer, Integer>> getWhiteMoves() {
+		calcPieceMoves(false, Color.WHITE);
 		ArrayList<SimpleEntry<Integer, Integer>> temp = new ArrayList<>();
-		for(SimpleEntry<Integer, Integer> pair : whiteMoves) {
+		for (SimpleEntry<Integer, Integer> pair : whiteMoves) {
 			temp.add(new SimpleEntry<>(pair.getKey(), pair.getValue()));
 		}
 		return temp;
 	}
-	
-	public ArrayList<SimpleEntry<Integer, Integer>> getBlackMoves(){
-		calcPieceMoves(true, Color.BLACK);
+
+	public ArrayList<SimpleEntry<Integer, Integer>> getBlackMoves() {
+		calcPieceMoves(false, Color.BLACK);
 		ArrayList<SimpleEntry<Integer, Integer>> temp = new ArrayList<>();
-		for(SimpleEntry<Integer, Integer> pair : blackMoves) {
+		for (SimpleEntry<Integer, Integer> pair : blackMoves) {
 			temp.add(new SimpleEntry<>(pair.getKey(), pair.getValue()));
 		}
 		return temp;
 	}
-	
+
 	public void calcNumOfPieces() {
-		for(int i = 0; i < BOARD_SIZE; i++) {
-			for(int j = 0; j < BOARD_SIZE; j++) {
-				if(pieces[i][j] != null) {
-					if(pieces[i][j].getColor() == Color.BLACK) {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				if (pieces[i][j] != null) {
+					if (pieces[i][j].getColor() == Color.BLACK) {
 						numOfBlackPieces = getNumOfPieces(Color.BLACK) + 1;
 					} else {
 						numOfWhitePieces = getNumOfPieces(Color.WHITE) + 1;
@@ -47,8 +47,8 @@ public class Board {
 			}
 		}
 	}
-	
-	Board(Piece[][] pieces){
+
+	Board(Piece[][] pieces) {
 		this.pieces = pieces;
 	}
 
@@ -153,50 +153,53 @@ public class Board {
 		if (pieces[startX][startY] != null && pieces[startX][startY].getColor() == currColor
 				&& pieces[startX][startY].getValidMoves(this.copy(), false).contains(new SimpleEntry<>(endX, endY))) {
 			Piece piece = pieces[startX][startY];
-			if(piece instanceof Pawn) {
-				if(piece.getColor() == Color.WHITE && Math.abs(startY-endY) == 1 && endX-startX == 1 && pieces[endX][endY] == null) {
+			if (piece instanceof Pawn) {
+				if (piece.getColor() == Color.WHITE && Math.abs(startY - endY) == 1 && endX - startX == 1
+						&& pieces[endX][endY] == null) {
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
-				} else if(piece.getColor() == Color.BLACK && Math.abs(startY-endY) == 1 && startX-endX == 1 && pieces[endX][endY] == null) {
+				} else if (piece.getColor() == Color.BLACK && Math.abs(startY - endY) == 1 && startX - endX == 1
+						&& pieces[endX][endY] == null) {
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
 				}
-			} 
+			}
 			updateEnPassant();
 			pieces[endX][endY] = piece;
 			piece.setRank(endX);
 			piece.setFile(endY);
 			pieces[startX][startY] = null;
-			if(piece instanceof Pawn) {
+			if (piece instanceof Pawn) {
 				Pawn pawn = (Pawn) piece;
-				if(pawn.getMadeFirstMove() == false) {
+				if (pawn.getMadeFirstMove() == false) {
 					pawn.makeFirstMove();
-					if(pawn.getColor() == Color.WHITE && endX - startX == 2) {
+					if (pawn.getColor() == Color.WHITE && endX - startX == 2) {
 						pawn.canEnPassant(true);
 						enPassant = new SimpleEntry<>(endX, endY);
-					} else if(piece.getColor() == Color.BLACK && startX - endX == 2) {
+					} else if (piece.getColor() == Color.BLACK && startX - endX == 2) {
 						pawn.canEnPassant(true);
 						enPassant = new SimpleEntry<>(endX, endY);
 					}
 				}
 			}
-
+			blackMoves.clear();
+			whiteMoves.clear();
 			return true;
 		}
 		return false;
 	}
-	
+
 	public void updateEnPassant() {
-		if(enPassant != null) {
-			if(pieces[enPassant.getKey()][enPassant.getValue()] != null) {
-				((Pawn)pieces[enPassant.getKey()][enPassant.getValue()]).canEnPassant(false);
+		if (enPassant != null) {
+			if (pieces[enPassant.getKey()][enPassant.getValue()] != null) {
+				((Pawn) pieces[enPassant.getKey()][enPassant.getValue()]).canEnPassant(false);
 			}
 			enPassant = null;
 		}
 	}
-	
+
 	public boolean canKingMove(Color colorOfKing) {
-		for(int i = 0; i < BOARD_SIZE; i++) {
-			for(int j = 0; j < BOARD_SIZE; j++) {
-				if(pieces[i][j] != null && pieces[i][j] instanceof King && pieces[i][j].getColor() == colorOfKing) {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				if (pieces[i][j] != null && pieces[i][j] instanceof King && pieces[i][j].getColor() == colorOfKing) {
 					return pieces[i][j].getValidMoves(this.copy(), true).isEmpty();
 				}
 			}
@@ -204,30 +207,36 @@ public class Board {
 		return false;
 	}
 
-	public boolean isKingInCheck(Color colorOfKing) {
-		
-		ArrayList<SimpleEntry<Integer, Integer>> moves;
-		King king = null;
-		for (int i = 0; i < BOARD_SIZE; i++) {
-			for (int j = 0; j < 8; j++) {
-				if (pieces[i][j] instanceof King && pieces[i][j].getColor() == colorOfKing) {
-					king = (King) pieces[i][j];
+	public King getKing(Color color) {
+		int kingRow = -1;
+		int kingCol = -1;
+		for (int row = 0; row < pieces.length; row++) {
+			for (int col = 0; col < pieces[0].length; col++) {
+				if (pieces[row][col] != null && pieces[row][col].getType() == PieceType.KING
+						&& pieces[row][col].getColor() == color) {
+					kingRow = row;
+					kingCol = col;
 					break;
 				}
 			}
-			if (king != null)
-				break;
 		}
-		if (king == null)
-			return true;
-
-		if (king.getColor() == Color.WHITE) {
-			moves = getBlackMoves();
-		} else {
-			moves = getWhiteMoves();
+		if (kingRow == -1 || kingCol == -1) {
+			return null;
 		}
+		return (King) pieces[kingRow][kingCol];
+	}
 
-		return king.isInCheck(moves);
+	public boolean isKingInCheck(Color colorOfKing) {
+		if (getKing(colorOfKing) != null) {
+			if (colorOfKing == Color.WHITE) {
+				calcPieceMoves(true, Color.BLACK);
+				return getKing(colorOfKing).isInCheck(blackMoves);
+			} else {
+				calcPieceMoves(true, Color.WHITE);
+				return getKing(colorOfKing).isInCheck(whiteMoves);
+			}
+		}
+		return true;
 	}
 
 	public void setPieces(Piece[][] pieces) {
@@ -237,7 +246,7 @@ public class Board {
 	public Piece[][] getPieces() {
 		return pieces;
 	}
-	
+
 	public Piece getPiece(int rank, int file) {
 		return pieces[rank][file];
 	}
@@ -251,6 +260,7 @@ public class Board {
 		return new ArrayList<SimpleEntry<Integer, Integer>>();
 	}
 
+	// !!!!!! FIX THIS METHOD
 	public void calcPieceMoves(boolean kingFlag, Color color) {
 		whiteMoves.clear();
 		blackMoves.clear();
@@ -273,11 +283,11 @@ public class Board {
 			}
 		}
 	}
-
+	
 	@Override
 	public String toString() {
 		String temp = "";
-		for (int i = pieces.length - 1; i >=  0; i--) {
+		for (int i = pieces.length - 1; i >= 0; i--) {
 			for (int j = 0; j < pieces[i].length; j++) {
 				if (pieces[i][j] != null) {
 					switch (pieces[i][j].getType()) {
@@ -311,21 +321,21 @@ public class Board {
 		}
 		return temp;
 	}
-	
+
 	public String getBoardString() {
-	    StringBuilder sb = new StringBuilder();
-	    for (int i = 0; i < BOARD_SIZE; i++) {
-	      for (int j = 0; j < BOARD_SIZE; j++) {
-	        Piece piece = pieces[i][j];
-	        if (piece == null) {
-	          sb.append("_");
-	        } else {
-	          sb.append(piece.toString());
-	        }
-	      }
-	    }
-	    return sb.toString();
-	  }
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				Piece piece = pieces[i][j];
+				if (piece == null) {
+					sb.append("_");
+				} else {
+					sb.append(piece.toString());
+				}
+			}
+		}
+		return sb.toString();
+	}
 
 	public int getNumOfPieces(Color color) {
 		return color == Color.WHITE ? numOfWhitePieces : numOfBlackPieces;
