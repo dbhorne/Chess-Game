@@ -136,6 +136,9 @@ public class ChessGUI extends Application {
 								lastMove.setText("Last Move: "
 										+ game.getCopyOfCurrBoard().getPiece(button.rank, button.file).toString());
 							}
+						} else { 
+							lastMove.setText("Last Move: "
+									+ game.getCopyOfCurrBoard().getPiece(button.rank, button.file).toString());
 						}
 					}
 				} else {

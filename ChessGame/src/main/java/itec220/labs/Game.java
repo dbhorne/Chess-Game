@@ -70,7 +70,7 @@ public class Game {
 
 	public GameState updateGameState() {
 		GameState tempState = GameState.IN_PROGRESS;
-		if (currMove == Color.WHITE) {
+		if (currMove == Color.WHITE && this.currState != GameState.WHITEINCHECK) {
 			if (board.isKingInCheck(Color.BLACK)) {
 				tempState = GameState.BLACKINCHECK;
 				if (board.getBlackMoves().size() == 0) {
@@ -81,7 +81,7 @@ public class Game {
 			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;
 			}
-		} else {
+		} else if(this.currState != GameState.BLACKINCHECK) {
 			if (board.isKingInCheck(Color.WHITE)) {
 				tempState = GameState.WHITEINCHECK;
 				if (board.getWhiteMoves().size() == 0) {

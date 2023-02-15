@@ -31,11 +31,17 @@ public abstract class Piece {
 		pieces[newRank][newFile] = this;
 		int origRank = this.rank;
 		int origFile = this.file;
-		
+
 		this.setRank(newRank);
 		this.setFile(newFile);
-		copy.calcPieceMoves(true,  this.color == Color.WHITE ? Color.BLACK : Color.WHITE);
+		copy.calcPieceMoves(true, this.color == Color.WHITE ? Color.BLACK : Color.WHITE);
 		boolean temp = !copy.isKingInCheck(this.color);
+		if (board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE) != null
+				&& board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE).getRank() == newRank
+				&& board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE).getFile() == newFile) {
+			temp = true;
+		}
+
 		this.setRank(origRank);
 		this.setFile(origFile);
 		return temp;
