@@ -15,12 +15,17 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+
 
 public class ChessGUI extends Application {
-
+	
+	private MediaPlayer chessMove = new MediaPlayer(new Media(getClass().getResource("/itec220/labs/ChessMove.mp3").toString()));
 	private GridPane grid = new GridPane();
 	private Game game = new Game();
 	private Region left = new Region();
@@ -36,6 +41,7 @@ public class ChessGUI extends Application {
 	private PromoteButton[] promoteButtons = { new PromoteButton("Knight", PieceType.KNIGHT),
 			new PromoteButton("Queen", PieceType.QUEEN), new PromoteButton("Rook", PieceType.ROOK),
 			new PromoteButton("Bishop", PieceType.BISHOP) };
+	
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -58,7 +64,7 @@ public class ChessGUI extends Application {
 
 	public void setUpGUI() {
 		currentColor.setText(String.format("%s's move", game.getCurrMove().name));
-
+		
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
@@ -94,12 +100,13 @@ public class ChessGUI extends Application {
 	}
 
 	public void click(ChessButton button) {
-
 		if (!moveList.isEmpty() && moveFrom != null && bottom.getChildren().size() == 1) {
 			if (moveList.contains(new SimpleEntry<>(button.rank, button.file))) {
 				if (game.move(moveFrom.getKey(), moveFrom.getValue(), button.rank, button.file)) {
+					chessMove.play();
+					chessMove.seek(Duration.ZERO);
 					updateBoard();
-					if (gameIsOver()) {
+					if (gameIsOver()) {															// implement logic for if the game is over
 
 					} else {
 						moveFrom = null;
