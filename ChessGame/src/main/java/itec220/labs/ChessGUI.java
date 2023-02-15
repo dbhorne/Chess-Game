@@ -1,6 +1,7 @@
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
+
 import java.util.ArrayList;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -26,6 +27,7 @@ public class ChessGUI extends Application {
 	private Label lastMove = new Label();	
 	private ChessButton[][] buttons = new ChessButton[8][8]; 
 	private ChessStackPane[][] spaces = new ChessStackPane[8][8];
+	private Region[][] spacesBackground = new Region[8][8];
 	private SimpleEntry<Integer, Integer> moveFrom = null;
 	private ArrayList<SimpleEntry<Integer, Integer>> moveList = new ArrayList<>();
 
@@ -40,7 +42,8 @@ public class ChessGUI extends Application {
         root.setRight(right);
         root.setBottom(lastMove);
         root.setLeft(left);
-        Scene scene = new Scene(root, 350, 420);
+        Scene scene = new Scene(root, 650, 700);
+        scene.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
         primaryStage.setTitle("Chess");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -60,8 +63,24 @@ public class ChessGUI extends Application {
         for(int i = 0; i < 8; i++) {
         	for(int j = 0; j < 8; j ++) {
         		spaces[i][j] = new ChessStackPane(7-i, j);
+        		spacesBackground[i][j] = new Region();
         		buttons[i][j] = new ChessButton(7-i, j);
         		buttons[i][j].setOnAction(event);
+        		if(i % 2 == 0) {
+        			if(j % 2 == 0) {
+        				spacesBackground[i][j].getStyleClass().add("chess-background-white");
+        			} else {
+        				spacesBackground[i][j].getStyleClass().add("chess-background-black");
+        			}
+        		} else {
+        			if(j % 2 == 0) {
+        				spacesBackground[i][j].getStyleClass().add("chess-background-black");
+        			} else {
+        				spacesBackground[i][j].getStyleClass().add("chess-background-white");
+        			}
+        		}
+        		buttons[i][j].getStyleClass().add("chess-button-transparent");
+        		spaces[i][j].getChildren().add(spacesBackground[i][j]);
         		spaces[i][j].getChildren().add(buttons[i][j]);
         		grid.add(spaces[i][j], j, i);
         	}
@@ -72,7 +91,6 @@ public class ChessGUI extends Application {
 		if(!moveList.isEmpty() && moveFrom != null) {
 			if(moveList.contains(new SimpleEntry<>(button.rank, button.file))){
 				if(game.move(moveFrom.getKey(), moveFrom.getValue(), button.rank, button.file)) {
-					clearValidMoves();
 					updateBoard();
 					if(gameIsOver()) {
 						
@@ -83,19 +101,19 @@ public class ChessGUI extends Application {
 						lastMove.setText("Last Move: " + button.toString());
 					}
 				} else {
-					clearValidMoves();
+					updateBoard();
 					moveFrom = null;
 					moveList.clear();
 					lastMove.setText("Invalid Move, please try again. ");
 				}
 			} else {
-				clearValidMoves();
+				updateBoard();
 				moveFrom = new SimpleEntry<>(button.rank, button.file);
 				moveList = game.getValidMoves(button.rank, button.file);
 				showValidMoves();
 			}
 		} else {
-			clearValidMoves();
+			updateBoard();
 			moveFrom = new SimpleEntry<>(button.rank, button.file);
 			moveList = game.getValidMoves(button.rank, button.file);
 			showValidMoves();
@@ -142,9 +160,13 @@ public class ChessGUI extends Application {
 		for(int i = 0; i < 8; i++) {
 			for(int j = 0; j < 8; j++) {
 				Piece piece = brd.getPiece(spaces[i][j].rank, spaces[i][j].file);
+				while(spaces[i][j].getChildren().size() >= 2) {
+					spaces[i][j].getChildren().remove(spaces[i][j].getChildren().size()-1);
+				}
 				if(piece != null) {
 					spaces[i][j].getChildren().add(new ImageView(getImage(piece)));
 				}
+				spaces[i][j].getChildren().add(buttons[i][j]);
 			}
 		}
 	}
@@ -156,44 +178,44 @@ public class ChessGUI extends Application {
 		switch(type) {
 		case QUEEN:
 			if(color == itec220.labs.Color.WHITE) {
-				image = new Image("File:itec220.labs.Images/WhiteQueen.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("WhiteQueen.png"));
 			} else {
-				image = new Image("File:itec220.labs.Images/BlackQueen.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("BlackQueen.png"));
 			}
 			break;
 		case KING:
 			if(color == itec220.labs.Color.WHITE) {
-				image = new Image("File:itec220.labs.Images/WhiteKing.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("WhiteKing.png"));
 			} else {
-				image = new Image("File:itec220.labs.Images/BlackKing.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("BlackKing.png"));
 			}
 			break;
 		case PAWN:
 			if(color == itec220.labs.Color.WHITE) {
-				image = new Image("File:itec220.labs.Images/WhitePawn.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("WhitePawn.png"));
 			} else {
-				image = new Image("File:itec220.labs.Images/BlackPawn.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("BlackPawn.png"));
 			}
 			break;
 		case KNIGHT:
 			if(color == itec220.labs.Color.WHITE) {
-				image = new Image("File:itec220.labs.Images/WhiteKnight.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("WhiteKnight.png"));
 			} else {
-				image = new Image("File:itec220.labs.Images/BlackKnight.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("BlackKnight.png"));
 			}
 			break;
 		case ROOK:
 			if(color == itec220.labs.Color.WHITE) {
-				image = new Image("File:itec220.labs.Images/WhiteRook.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("WhiteRook.png"));
 			} else {
-				image = new Image("File:itec220.labs.Images/BlackRook.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("BlackRook.png"));
 			}
 			break;
 		case BISHOP:
 			if(color == itec220.labs.Color.WHITE) {
-				image = new Image("File:itec220.labs.Images/WhiteBishop.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("WhiteBishop.png"));
 			} else {
-				image = new Image("File:itec220.labs.Images/BlackBishop.png");
+				image = new Image(ChessGUI.class.getResourceAsStream("BlackBishop.png"));
 			}
 			break;	
 		}
@@ -205,21 +227,14 @@ public class ChessGUI extends Application {
 		for(int i = 0; i<8; i++) {
 			for(int j = 0; j<8; j++) {
 				if(moveList.contains(new SimpleEntry<>(spaces[i][j].rank, spaces[i][j].file))) {
-					Circle circ = new Circle(5);
-					circ.setFill(Color.BLACK);
-					circ.setOpacity(0.25);
-					spaces[i][j].getChildren().add(circ);
-				}
-			}
-		}
-	}
-	
-	public void clearValidMoves() {
-		for(int i = 0; i<8; i++) {
-			for(int j = 0; j<8; j++) {
-				if(moveList.contains(new SimpleEntry<>(spaces[i][j].rank, spaces[i][j].file))) {
-					System.out.print("here2");
 					spaces[i][j].getChildren().remove(spaces[i][j].getChildren().size()-1);
+					Circle circ = new Circle(25);
+					circ.setStroke(Color.BLACK);
+					circ.setFill(Color.TRANSPARENT);
+					circ.setStrokeWidth(5);
+					circ.setOpacity(0.6);
+					spaces[i][j].getChildren().add(circ);
+					spaces[i][j].getChildren().add(buttons[i][j]);
 				}
 			}
 		}

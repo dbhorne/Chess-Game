@@ -1,0 +1,75 @@
+.label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: Black;
+    -fx-padding: 15 30 15 30;
+   
+}
+.chess-background-black {
+ 	-fx-background-color: lightgreen;
+    -fx-background-insets: 0,1,4,5;
+    -fx-background-radius: 9,8,5,4;
+    -fx-padding: 15 30 15 30;
+    -fx-padding: 15 30 15 30;
+    
+    -fx-min-width: 70px;
+    -fx-max-width: 70px;
+    
+    -fx-min-height: 70px;
+    -fx-max-height: 70px;
+   
+}
+
+.chess-button-transparent{
+	-fx-background-color: transparent;
+    -fx-background-insets: 0,1,4,5;
+    -fx-background-radius: 9,8,5,4;
+    -fx-padding: 15 30 15 30;
+    -fx-padding: 15 30 15 30;
+    
+    -fx-min-width: 70px;
+    -fx-max-width: 70px;
+    
+    -fx-min-height: 70px;
+    -fx-max-height: 70px;
+   
+}
+
+.chess-background-white {
+ 	-fx-background-color: tan;
+    -fx-background-insets: 0,1,4,5;
+    -fx-background-radius: 9,8,5,4;
+    -fx-padding: 15 30 15 30;
+    -fx-padding: 15 30 15 30;
+    
+    -fx-min-width: 70px;
+    -fx-max-width: 70px;
+    
+    -fx-min-height: 70px;
+    -fx-max-height: 70px;
+   
+}
+
+Region {
+    width: 50;
+    height: 300;
+    
+    -fx-min-width: width;
+    -fx-max-width: width;
+    
+    -fx-min-height: height;
+    -fx-max-height: height;
+    -fx-background-color: white;
+   
+}
+.button:hover {
+  background-color: #4CAF50; /* Green */
+  color: white;
+}
+
+.root {
+    -fx-font-size: 16pt;
+    -fx-font-family: "Courier New";
+    -fx-base: rgb(255, 255, 255);
+    -fx-background: rgb(255, 255, 255);
+}

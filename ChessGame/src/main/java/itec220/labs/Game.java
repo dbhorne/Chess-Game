@@ -54,7 +54,7 @@ public class Game {
 	public boolean move(int startX, int startY, int endX, int endY) {
 		if (board.move(startX, startY, endX, endY, currMove)) {
 			currState = updateGameState();
-			if (currMove == Color.WHITE) {
+			if (currMove == Color.BLACK) {
 				updateMoveTracker(board.getBoardString());
 			}
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
@@ -94,9 +94,10 @@ public class Game {
 	}
 
 	public void updateMoveTracker(String newBoardState) {
-		if (boardStates.size() < 2) {
+		if (boardStates.size() < 4) {
 			boardStates.add(newBoardState);
 		} else {
+			System.out.println(Collections.frequency(boardStates, newBoardState));
 			if (Collections.frequency(boardStates, newBoardState) == 2) {
 				currState = GameState.DRAW;
 			} else {
