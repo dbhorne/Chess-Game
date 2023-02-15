@@ -161,29 +161,29 @@ public class Board {
 						&& pieces[endX][endY] == null) {
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
 				}
-			} else if(piece instanceof King) {
-				if(endY-startY == 2) {
-					((King)pieces[startX][startY]).setHasMoved(true);
-					Rook castle = ((Rook)pieces[startX][startY+3]);
+			} else if (piece instanceof King) {
+				if (endY - startY == 2) {
+					((King) pieces[startX][startY]).setHasMoved(true);
+					Rook castle = ((Rook) pieces[startX][startY + 3]);
 					castle.setHasMoved(true);
-					pieces[startX][startY+1] = castle;
-					pieces[startX][startY+3] = null;
+					pieces[startX][startY + 1] = castle;
+					pieces[startX][startY + 3] = null;
 					castle.setRank(startX);
-					castle.setFile(startY+1);					
-				} else if(startY-endY == 2) {
-					((King)pieces[startX][startY]).setHasMoved(true);
-					Rook castle = ((Rook)pieces[startX][startY-4]);
+					castle.setFile(startY + 1);
+				} else if (startY - endY == 2) {
+					((King) pieces[startX][startY]).setHasMoved(true);
+					Rook castle = ((Rook) pieces[startX][startY - 4]);
 					castle.setHasMoved(true);
-					pieces[startX][startY-1] = castle;
-					pieces[startX][startY-4] = null;
+					pieces[startX][startY - 1] = castle;
+					pieces[startX][startY - 4] = null;
 					castle.setRank(startX);
-					castle.setFile(startY-1);	
-					
+					castle.setFile(startY - 1);
+
 				} else {
-					((King)pieces[startX][startY]).setHasMoved(true);
+					((King) pieces[startX][startY]).setHasMoved(true);
 				}
-			} else if(piece instanceof Rook) {
-				((Rook)piece).setHasMoved(true);
+			} else if (piece instanceof Rook) {
+				((Rook) piece).setHasMoved(true);
 			}
 			updateEnPassant();
 			pieces[endX][endY] = piece;
@@ -201,8 +201,6 @@ public class Board {
 						pawn.canEnPassant(true);
 						enPassant = new SimpleEntry<>(endX, endY);
 					}
-				} else if(pawn.getMadeFirstMove() == true) {
-					checkPromotion(endX, endY);
 				}
 			}
 			blackMoves.clear();
@@ -211,13 +209,39 @@ public class Board {
 		}
 		return false;
 	}
-	
-	public void checkPromotion(int rank, int file) {
+
+	public void promote(int rank, int file, PieceType type) {
 		Pawn pawn = (Pawn) pieces[rank][file];
-		if(pawn.getColor() == Color.WHITE && rank == 7) {
-			pieces[rank][file] = new Queen(pawn);
-		} else if(pawn.getColor() == Color.BLACK && rank == 0) {
-			pieces[rank][file] = new Queen(pawn);
+		if (pawn.getColor() == Color.WHITE && rank == 7) {
+			switch (type) {
+			case QUEEN:
+				pieces[rank][file] = new Queen(pawn);
+				break;
+			case KNIGHT:
+				pieces[rank][file] = new Knight(pawn);
+				break;
+			case ROOK:
+				pieces[rank][file] = new Rook(pawn);
+				break;
+			case BISHOP:
+				pieces[rank][file] = new Bishop(pawn);
+				break;
+			}
+		} else if (pawn.getColor() == Color.BLACK && rank == 0) {
+			switch (type) {
+			case QUEEN:
+				pieces[rank][file] = new Queen(pawn);
+				break;
+			case KNIGHT:
+				pieces[rank][file] = new Knight(pawn);
+				break;
+			case ROOK:
+				pieces[rank][file] = new Rook(pawn);
+				break;
+			case BISHOP:
+				pieces[rank][file] = new Bishop(pawn);
+				break;
+			}
 		}
 	}
 
@@ -300,13 +324,13 @@ public class Board {
 		ArrayList<SimpleEntry<Integer, Integer>> moves;
 		for (int i = 0; i < pieces.length; i++) {
 			for (int j = 0; j < pieces[i].length; j++) {
-				if(pieces[i][j] != null) {
+				if (pieces[i][j] != null) {
 					if (pieces[i][j].getColor() == Color.WHITE && pieces[i][j].getColor() == color) {
 						moves = pieces[i][j].getValidMoves(this.copy(), kingFlag);
 						for (SimpleEntry<Integer, Integer> move : moves) {
 							whiteMoves.add(move);
 						}
-					} else if (pieces[i][j].getColor() == color){
+					} else if (pieces[i][j].getColor() == color) {
 						moves = pieces[i][j].getValidMoves(this.copy(), kingFlag);
 						for (SimpleEntry<Integer, Integer> move : moves) {
 							blackMoves.add(move);
@@ -316,7 +340,7 @@ public class Board {
 			}
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		String temp = "";

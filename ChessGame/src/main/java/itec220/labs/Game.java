@@ -30,6 +30,10 @@ public class Game {
 		currState = GameState.IN_PROGRESS;
 		currMove = Color.WHITE;
 	}
+	
+	public void promote(int rank, int file, PieceType type) {
+		board.promote(rank, file, type);
+	}
 
 	public Color getCurrMove() {
 		return currMove;
