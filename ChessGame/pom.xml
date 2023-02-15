@@ -8,6 +8,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <mainClassName>itec220.labs.ChessGUI</mainClassName>
     </properties>
     <dependencies>
         <dependency>
@@ -36,7 +37,7 @@
                         <!-- Usage: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>itec220.labs.App</mainClass>
+                            <mainClass>itec220.labs.ChessGUI</mainClass>
                         </configuration>
                     </execution>
                 </executions>

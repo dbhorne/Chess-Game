@@ -286,7 +286,7 @@ public class Board {
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(int rank, int file, Color currMove) {
 		if (pieces[rank][file] != null) {
 			if (pieces[rank][file].getColor() == currMove) {
-				return pieces[rank][file].getValidMoves(this.copy(), true);
+				return pieces[rank][file].getValidMoves(this.copy(), false);
 			}
 		}
 		return new ArrayList<SimpleEntry<Integer, Integer>>();
