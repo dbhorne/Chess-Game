@@ -68,15 +68,19 @@ public class Game {
 		}
 	}
 
+	
+	// game speed issues happen here
 	public GameState updateGameState() {
 		GameState tempState = GameState.IN_PROGRESS;
 		if (currMove == Color.WHITE && this.currState != GameState.WHITEINCHECK) {
-			if (board.isKingInCheck(Color.BLACK)) {
-				tempState = GameState.BLACKINCHECK;
+			if (board.isKingInCheck(Color.BLACK)) { // this is causing game speed errors
+				tempState = GameState.BLACKINCHECK;		
+			
 				if (board.getBlackMoves().size() == 0) {
 					tempState = GameState.WHITEWINS;
 				}
-			} else if (!board.canKingMove(Color.BLACK) && board.getNumOfPieces(Color.BLACK) == 1) {
+			} else if (!board.isKingInCheck(Color.BLACK) && board.getBlackMoves().size() == 0) {
+				System.out.println("here");
 				tempState = GameState.STALEMATE;
 			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;
@@ -88,7 +92,7 @@ public class Game {
 					tempState = GameState.BLACKWINS;
 				}
 
-			} else if (!board.canKingMove(Color.WHITE) && board.getNumOfPieces(Color.WHITE) == 1) {
+			} else if (!board.isKingInCheck(Color.WHITE) && board.getWhiteMoves().size() == 0) {
 				tempState = GameState.STALEMATE;
 			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;

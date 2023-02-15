@@ -289,13 +289,12 @@ public class Board {
 	}
 
 	public boolean isKingInCheck(Color colorOfKing) {
-		if (getKing(colorOfKing) != null) {
+		King king = getKing(colorOfKing);
+		if (king != null) {
 			if (colorOfKing == Color.WHITE) {
-				calcPieceMoves(true, Color.BLACK);
-				return getKing(colorOfKing).isInCheck(blackMoves);
+				return king.isInCheck(blackMoves);
 			} else {
-				calcPieceMoves(true, Color.WHITE);
-				return getKing(colorOfKing).isInCheck(whiteMoves);
+				return king.isInCheck(whiteMoves);
 			}
 		}
 		return true;
