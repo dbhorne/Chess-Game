@@ -15,6 +15,11 @@ public class Rook extends Piece {
 	Rook(Pawn pawn){
 		super(PieceType.ROOK, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
+	
+	Rook(Rook rook){
+		super(PieceType.ROOK, rook.getColor(), rook.getRank(), rook.getFile());
+		this.setHasMoved(rook.getHasMoved());
+	}
 
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {

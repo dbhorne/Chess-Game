@@ -149,7 +149,7 @@ public class Pawn extends Piece {
 					}
 				}
 				if (!madeFirstMove) {
-					if (curRank + 1 < 8 && pieces[curRank + 1][curFile] == null && pieces[curRank + 2][curFile] == null) {
+					if (curRank + 2 < 8 &&  pieces[curRank + 1][curFile] == null && pieces[curRank + 2][curFile] == null) {
 						if (kingCheck) {
 							moves.add(new SimpleEntry<>(curRank + 2, curFile));
 						} else if (this.isValidMove(curRank + 2, curFile, copy)) {

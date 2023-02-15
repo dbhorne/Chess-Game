@@ -97,7 +97,6 @@ public class Game {
 		if (boardStates.size() < 4) {
 			boardStates.add(newBoardState);
 		} else {
-			System.out.println(Collections.frequency(boardStates, newBoardState));
 			if (Collections.frequency(boardStates, newBoardState) == 2) {
 				currState = GameState.DRAW;
 			} else {

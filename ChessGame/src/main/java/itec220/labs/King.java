@@ -11,6 +11,11 @@ public class King extends Piece {
 	King(Color color, int rank, int file) {
 		super(PieceType.KING, color, rank, file);
 	}
+	
+	King(King king){
+		super(PieceType.KING, king.getColor(), king.getRank(), king.getFile());
+		this.setHasMoved(king.getHasMoved());
+	}
 
 	public boolean isInCheck(ArrayList<SimpleEntry<Integer, Integer>> possibleMoves) {
 		return possibleMoves.contains(new SimpleEntry<>(this.getRank(), this.getFile()));
@@ -29,7 +34,7 @@ public class King extends Piece {
 				int newRank = curRank + (1 * RANK_OFFSETS[i]);
 				int newFile = curFile + (1 * FILE_OFFSETS[i]);
 				if (newRank >= copy.BOARD_SIZE || newRank < 0 || newFile >= copy.BOARD_SIZE || newFile < 0) {
-					break;
+					continue;
 				}
 				if (pieces[newRank][newFile] == null || pieces[newRank][newFile].getColor() != this.getColor()) {
 					if (kingCheck) {

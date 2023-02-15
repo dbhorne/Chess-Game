@@ -123,13 +123,13 @@ public class Board {
 					Color color = piece.getColor();
 					switch (type) {
 					case ROOK:
-						tempPieces[i][j] = new Rook(color, i, j);
+						tempPieces[i][j] = new Rook((Rook) piece);
 						break;
 					case QUEEN:
 						tempPieces[i][j] = new Queen(color, i, j);
 						break;
 					case KING:
-						tempPieces[i][j] = new King(color, i, j);
+						tempPieces[i][j] = new King((King) piece);
 						break;
 					case BISHOP:
 						tempPieces[i][j] = new Bishop(color, i, j);
@@ -182,6 +182,8 @@ public class Board {
 				} else {
 					((King)pieces[startX][startY]).setHasMoved(true);
 				}
+			} else if(piece instanceof Rook) {
+				((Rook)piece).setHasMoved(true);
 			}
 			updateEnPassant();
 			pieces[endX][endY] = piece;

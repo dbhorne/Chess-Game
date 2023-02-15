@@ -27,11 +27,10 @@ public class Knight extends Piece {
 			int row = curRank + rowOffsets[i];
 			int col = curFile + colOffsets[i];
 			if (row >= 0 && row <= 7 && col >= 0 && col <= 7) {
-				Piece targetPiece = pieces[row][col];
-				if (targetPiece == null || targetPiece.getColor() != this.getColor()) {
+				if (pieces[row][col] == null || pieces[row][col].getColor() != this.getColor()) {
 					if(kingCheck) {
 						moves.add(new SimpleEntry<>(row, col));
-					} else if(this.isValidMove(curFile, curRank, copy)) {
+					} else if(this.isValidMove(row, col, copy)) {
 						moves.add(new SimpleEntry<>(row, col));
 					}
 				}
