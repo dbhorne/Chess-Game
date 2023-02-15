@@ -70,7 +70,7 @@ public class ChessGUI extends Application {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
-				click(tb);
+				click(tb.rank, tb.file);
 			}
 		};
 
@@ -101,10 +101,10 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	public void click(ChessButton button) {
+	public void click(int rank, int file) {
 		if (!moveList.isEmpty() && moveFrom != null && bottom.getChildren().size() == 1) {
-			if (moveList.contains(new SimpleEntry<>(button.rank, button.file))) {
-				if (game.move(moveFrom.getKey(), moveFrom.getValue(), button.rank, button.file)) {
+			if (moveList.contains(new SimpleEntry<>(rank, file))) {
+				if (game.move(moveFrom.getKey(), moveFrom.getValue(), rank, file)) {
 					if(game.getNumTakenPieces() != numTakenPieces) {
 						numTakenPieces = game.getNumTakenPieces();
 						chessTake.play();
@@ -121,39 +121,39 @@ public class ChessGUI extends Application {
 						moveList.clear();
 						currentColor.setText(String.format("%s's move", game.getCurrMove().name));
 
-						if (game.getCopyOfCurrBoard().getPiece(button.rank, button.file) instanceof Pawn) {
+						if (game.getCopyOfCurrBoard().getPiece(rank, file) instanceof Pawn) {
 							EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 								public void handle(ActionEvent e) {
 									PromoteButton tb = (PromoteButton) e.getSource();
-									game.promote(button.rank, button.file, tb.type);
+									game.promote(rank, file, tb.type);
 									updateBoard();
 									while (bottom.getChildren().size() > 1) {
 										bottom.getChildren().remove(bottom.getChildren().size() - 1);
 									}
 									lastMove.setText("Last Move: "
-											+ game.getCopyOfCurrBoard().getPiece(button.rank, button.file).toString());
+											+ game.getCopyOfCurrBoard().getPiece(rank, file).toString());
 								}
 							};
-							Pawn p = (Pawn) game.getCopyOfCurrBoard().getPiece(button.rank, button.file);
-							if (p.getColor() == itec220.labs.Color.WHITE && button.rank == 7) {
-								lastMove.setText("Looks like white can promote the pawn at: " + button.toString());
+							Pawn p = (Pawn) game.getCopyOfCurrBoard().getPiece(rank, file);
+							if (p.getColor() == itec220.labs.Color.WHITE && rank == 7) {
+								lastMove.setText("Looks like white can promote the pawn at: " + buttons[7-rank][file].toString());
 								for (Button b : promoteButtons) {
 									b.setOnAction(event);
 									bottom.getChildren().add(b);
 								}
-							} else if (button.rank == 0) {
-								lastMove.setText("Looks like black can promote the pawn at: " + button.toString());
+							} else if (rank == 0) {
+								lastMove.setText("Looks like black can promote the pawn at: " + buttons[7-rank][file].toString());
 								for (Button b : promoteButtons) {
 									b.setOnAction(event);
 									bottom.getChildren().add(b);
 								}
 							} else {
 								lastMove.setText("Last Move: "
-										+ game.getCopyOfCurrBoard().getPiece(button.rank, button.file).toString());
+										+ game.getCopyOfCurrBoard().getPiece(rank, file).toString());
 							}
 						} else { 
 							lastMove.setText("Last Move: "
-									+ game.getCopyOfCurrBoard().getPiece(button.rank, button.file).toString());
+									+ game.getCopyOfCurrBoard().getPiece(rank, file).toString());
 						}
 					}
 				} else {
@@ -165,16 +165,16 @@ public class ChessGUI extends Application {
 			} else {
 				updateBoard();
 				if (bottom.getChildren().size() == 1) {
-					moveFrom = new SimpleEntry<>(button.rank, button.file);
-					moveList = game.getValidMoves(button.rank, button.file);
+					moveFrom = new SimpleEntry<>(rank, file);
+					moveList = game.getValidMoves(rank, file);
 					showValidMoves();
 				}
 			}
 		} else {
 			updateBoard();
 			if (bottom.getChildren().size() == 1) {
-				moveFrom = new SimpleEntry<>(button.rank, button.file);
-				moveList = game.getValidMoves(button.rank, button.file);
+				moveFrom = new SimpleEntry<>(rank, file);
+				moveList = game.getValidMoves(rank, file);
 				showValidMoves();
 			}
 		}
