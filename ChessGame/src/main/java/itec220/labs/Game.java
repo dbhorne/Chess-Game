@@ -117,6 +117,10 @@ public class Game {
 	public Board getCopyOfCurrBoard() {
 		return board.copy();
 	}
+	
+	public int getNumTakenPieces() {
+		return board.getNumOfTakenPieces();
+	}
 
 	public GameState getGameState() {
 		return this.currState;

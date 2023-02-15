@@ -11,6 +11,7 @@ public class Board {
 	private int numOfWhitePieces = 0;
 	private int numOfBlackPieces = 0;
 	private SimpleEntry<Integer, Integer> enPassant = null;
+	private ArrayList<Piece> takenPieces = new ArrayList<>();
 
 	Board() {
 		resetBoard();
@@ -156,9 +157,11 @@ public class Board {
 			if (piece instanceof Pawn) {
 				if (piece.getColor() == Color.WHITE && Math.abs(startY - endY) == 1 && endX - startX == 1
 						&& pieces[endX][endY] == null) {
+					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
 				} else if (piece.getColor() == Color.BLACK && Math.abs(startY - endY) == 1 && startX - endX == 1
 						&& pieces[endX][endY] == null) {
+					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
 				}
 			} else if (piece instanceof King) {
@@ -178,12 +181,14 @@ public class Board {
 					pieces[startX][startY - 4] = null;
 					castle.setRank(startX);
 					castle.setFile(startY - 1);
-
 				} else {
 					((King) pieces[startX][startY]).setHasMoved(true);
 				}
 			} else if (piece instanceof Rook) {
 				((Rook) piece).setHasMoved(true);
+			}
+			if(pieces[endX][endY] != null) {
+				takenPieces.add(pieces[endX][endY]);
 			}
 			updateEnPassant();
 			pieces[endX][endY] = piece;
@@ -208,6 +213,10 @@ public class Board {
 			return true;
 		}
 		return false;
+	}
+	
+	public int getNumOfTakenPieces() {
+		return takenPieces.size();
 	}
 
 	public void promote(int rank, int file, PieceType type) {

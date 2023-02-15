@@ -24,8 +24,9 @@ import javafx.util.Duration;
 
 
 public class ChessGUI extends Application {
-	
+
 	private MediaPlayer chessMove = new MediaPlayer(new Media(getClass().getResource("/itec220/labs/ChessMove.mp3").toString()));
+	private MediaPlayer chessTake = new MediaPlayer(new Media(getClass().getResource("/itec220/labs/ChessCapture.mp3").toString()));
 	private GridPane grid = new GridPane();
 	private Game game = new Game();
 	private Region left = new Region();
@@ -37,6 +38,7 @@ public class ChessGUI extends Application {
 	private ChessStackPane[][] spaces = new ChessStackPane[8][8];
 	private Region[][] spacesBackground = new Region[8][8];
 	private SimpleEntry<Integer, Integer> moveFrom = null;
+	private int numTakenPieces = 0;
 	private ArrayList<SimpleEntry<Integer, Integer>> moveList = new ArrayList<>();
 	private PromoteButton[] promoteButtons = { new PromoteButton("Knight", PieceType.KNIGHT),
 			new PromoteButton("Queen", PieceType.QUEEN), new PromoteButton("Rook", PieceType.ROOK),
@@ -103,8 +105,14 @@ public class ChessGUI extends Application {
 		if (!moveList.isEmpty() && moveFrom != null && bottom.getChildren().size() == 1) {
 			if (moveList.contains(new SimpleEntry<>(button.rank, button.file))) {
 				if (game.move(moveFrom.getKey(), moveFrom.getValue(), button.rank, button.file)) {
-					chessMove.play();
-					chessMove.seek(Duration.ZERO);
+					if(game.getNumTakenPieces() != numTakenPieces) {
+						numTakenPieces = game.getNumTakenPieces();
+						chessTake.play();
+						chessTake.seek(Duration.ZERO);
+					} else {
+						chessMove.play();
+						chessMove.seek(Duration.ZERO);
+					}
 					updateBoard();
 					if (gameIsOver()) {															// implement logic for if the game is over
 
