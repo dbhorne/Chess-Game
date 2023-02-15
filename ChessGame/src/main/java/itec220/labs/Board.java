@@ -226,6 +226,8 @@ public class Board {
 			case BISHOP:
 				pieces[rank][file] = new Bishop(pawn);
 				break;
+			default:
+				break;
 			}
 		} else if (pawn.getColor() == Color.BLACK && rank == 0) {
 			switch (type) {
@@ -240,6 +242,8 @@ public class Board {
 				break;
 			case BISHOP:
 				pieces[rank][file] = new Bishop(pawn);
+				break;
+			default:
 				break;
 			}
 		}
