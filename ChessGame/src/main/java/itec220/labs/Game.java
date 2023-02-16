@@ -58,9 +58,7 @@ public class Game {
 	public boolean move(int startX, int startY, int endX, int endY) {
 		if (board.move(startX, startY, endX, endY, currMove)) {
 			currState = updateGameState();
-			if (currMove == Color.BLACK) {
-				updateMoveTracker(board.getBoardString());
-			}
+			updateMoveTracker(board.getBoardString());
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
 			return true;
 		} else {
@@ -99,17 +97,14 @@ public class Game {
 		}
 		return tempState;
 	}
-
+	
+	
+	// figure out how to make this work for both colors for 3 move repetition
 	public void updateMoveTracker(String newBoardState) {
-		if (boardStates.size() < 4) {
-			boardStates.add(newBoardState);
+		if(Collections.frequency(boardStates, newBoardState) == 2) {
+			currState = GameState.DRAW;
 		} else {
-			if (Collections.frequency(boardStates, newBoardState) == 2) {
-				currState = GameState.DRAW;
-			} else {
-				boardStates.remove(0);
-				boardStates.add(newBoardState);
-			}
+			boardStates.add(newBoardState);
 		}
 	}
 
