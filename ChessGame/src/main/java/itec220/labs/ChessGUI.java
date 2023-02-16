@@ -15,6 +15,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
@@ -29,9 +31,12 @@ public class ChessGUI extends Application {
 	private MediaPlayer chessTake = new MediaPlayer(new Media(getClass().getResource("/itec220/labs/ChessCapture.mp3").toString()));
 	private GridPane grid = new GridPane();
 	private Game game = new Game();
-	private Region left = new Region();
+	private Region leftRegion = new Region();
+	private VBox leftButtons = new VBox();
+	private Button restart = new Button("Restart");
 	private Region right = new Region();
 	private HBox bottom = new HBox();
+	private StackPane left = new StackPane();
 	private Label currentColor = new Label();
 	private Label lastMove = new Label();
 	private ChessButton[][] buttons = new ChessButton[8][8];
@@ -66,6 +71,20 @@ public class ChessGUI extends Application {
 
 	public void setUpGUI() {
 		currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+		
+		left.getChildren().add(leftRegion);	
+		restart.getStyleClass().add("restart");
+		leftButtons.getChildren().add(restart);
+		left.getChildren().add(leftButtons);
+		EventHandler<ActionEvent> restartEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				game = new Game();
+				currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+				lastMove.setText("");
+				updateBoard();
+			}
+		};
+		restart.setOnAction(restartEvent);
 		
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {

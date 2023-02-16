@@ -21,7 +21,6 @@
 .chess-button-transparent{
 	-fx-background-color: transparent;
     -fx-padding: 15 30 15 30;
-    -fx-padding: 15 30 15 30;
     
     -fx-min-width: 70px;
     -fx-max-width: 70px;
@@ -33,7 +32,6 @@
 
 .chess-background-white {
  	-fx-background-color: rgb(252, 228, 194);
-    -fx-padding: 15 30 15 30;
     -fx-padding: 15 30 15 30;
     
     -fx-min-width: 70px;
@@ -56,6 +54,11 @@ Region {
     -fx-background-color: grey;
    
 }
+
+.restart {	
+    -fx-padding: 15 30 15 30;
+}
+
 .button:hover {
   background-color: #4CAF50; /* Green */
   color: white;
