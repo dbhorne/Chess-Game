@@ -1,14 +1,12 @@
 .label {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
-    -fx-text-fill: Black;
+    -fx-text-fill: white;
     -fx-padding: 15 30 15 30;
    
 }
 .chess-background-black {
- 	-fx-background-color: lightgreen;
-    -fx-background-insets: 0,1,4,5;
-    -fx-background-radius: 9,8,5,4;
+ 	-fx-background-color: rgb(155,103,60);
     -fx-padding: 15 30 15 30;
     -fx-padding: 15 30 15 30;
     
@@ -22,8 +20,6 @@
 
 .chess-button-transparent{
 	-fx-background-color: transparent;
-    -fx-background-insets: 0,1,4,5;
-    -fx-background-radius: 9,8,5,4;
     -fx-padding: 15 30 15 30;
     -fx-padding: 15 30 15 30;
     
@@ -36,9 +32,7 @@
 }
 
 .chess-background-white {
- 	-fx-background-color: tan;
-    -fx-background-insets: 0,1,4,5;
-    -fx-background-radius: 9,8,5,4;
+ 	-fx-background-color: rgb(252, 228, 194);
     -fx-padding: 15 30 15 30;
     -fx-padding: 15 30 15 30;
     
@@ -59,7 +53,7 @@ Region {
     
     -fx-min-height: height;
     -fx-max-height: height;
-    -fx-background-color: white;
+    -fx-background-color: grey;
    
 }
 .button:hover {
@@ -71,5 +65,5 @@ Region {
     -fx-font-size: 16pt;
     -fx-font-family: "Courier New";
     -fx-base: rgb(255, 255, 255);
-    -fx-background: rgb(255, 255, 255);
+    -fx-background: grey;
 }
