@@ -36,13 +36,15 @@ public class Board {
 	}
 
 	public void calcNumOfPieces() {
+		numOfBlackPieces = 0;
+		numOfWhitePieces = 0;
 		for (int i = 0; i < BOARD_SIZE; i++) {
 			for (int j = 0; j < BOARD_SIZE; j++) {
 				if (pieces[i][j] != null) {
 					if (pieces[i][j].getColor() == Color.BLACK) {
-						numOfBlackPieces = getNumOfPieces(Color.BLACK) + 1;
+						numOfBlackPieces += 1;
 					} else {
-						numOfWhitePieces = getNumOfPieces(Color.WHITE) + 1;
+						numOfWhitePieces += 1;
 					}
 				}
 			}
@@ -407,6 +409,7 @@ public class Board {
 	}
 
 	public int getNumOfPieces(Color color) {
+		calcNumOfPieces();
 		return color == Color.WHITE ? numOfWhitePieces : numOfBlackPieces;
 	}
 }

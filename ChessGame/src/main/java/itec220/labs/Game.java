@@ -30,7 +30,7 @@ public class Game {
 		currState = GameState.IN_PROGRESS;
 		currMove = Color.WHITE;
 	}
-	
+
 	public void promote(int rank, int file, PieceType type) {
 		board.promote(rank, file, type);
 	}
@@ -68,14 +68,13 @@ public class Game {
 		}
 	}
 
-	
 	// game speed issues happen here
 	public GameState updateGameState() {
 		GameState tempState = GameState.IN_PROGRESS;
 		if (currMove == Color.WHITE && this.currState != GameState.WHITEINCHECK) {
-			if (board.isKingInCheck(Color.BLACK)) { // this is causing game speed errors
-				tempState = GameState.BLACKINCHECK;		
-			
+			if (board.isKingInCheck(Color.BLACK)) {
+				tempState = GameState.BLACKINCHECK;
+
 				if (board.getBlackMoves().size() == 0) {
 					tempState = GameState.WHITEWINS;
 				}
@@ -85,7 +84,7 @@ public class Game {
 			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;
 			}
-		} else if(this.currState != GameState.BLACKINCHECK) {
+		} else if (this.currState != GameState.BLACKINCHECK) {
 			if (board.isKingInCheck(Color.WHITE)) {
 				tempState = GameState.WHITEINCHECK;
 				if (board.getWhiteMoves().size() == 0) {
@@ -117,7 +116,7 @@ public class Game {
 	public Board getCopyOfCurrBoard() {
 		return board.copy();
 	}
-	
+
 	public int getNumTakenPieces() {
 		return board.getNumOfTakenPieces();
 	}
