@@ -24,11 +24,12 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-
 public class ChessGUI extends Application {
 
-	private MediaPlayer chessMove = new MediaPlayer(new Media(getClass().getResource("/itec220/labs/ChessMove.mp3").toString()));
-	private MediaPlayer chessTake = new MediaPlayer(new Media(getClass().getResource("/itec220/labs/ChessCapture.mp3").toString()));
+	private MediaPlayer chessMove = new MediaPlayer(
+			new Media(getClass().getResource("/itec220/labs/ChessMove.mp3").toString()));
+	private MediaPlayer chessTake = new MediaPlayer(
+			new Media(getClass().getResource("/itec220/labs/ChessCapture.mp3").toString()));
 	private GridPane grid = new GridPane();
 	private Game game = new Game();
 	private Region leftRegion = new Region();
@@ -48,7 +49,6 @@ public class ChessGUI extends Application {
 	private PromoteButton[] promoteButtons = { new PromoteButton("Knight", PieceType.KNIGHT),
 			new PromoteButton("Queen", PieceType.QUEEN), new PromoteButton("Rook", PieceType.ROOK),
 			new PromoteButton("Bishop", PieceType.BISHOP) };
-	
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
@@ -71,8 +71,8 @@ public class ChessGUI extends Application {
 
 	public void setUpGUI() {
 		currentColor.setText(String.format("%s's move", game.getCurrMove().name));
-		
-		left.getChildren().add(leftRegion);	
+
+		left.getChildren().add(leftRegion);
 		restart.getStyleClass().add("restart");
 		leftButtons.getChildren().add(restart);
 		left.getChildren().add(leftButtons);
@@ -80,19 +80,25 @@ public class ChessGUI extends Application {
 			public void handle(ActionEvent e) {
 				game = new Game();
 				currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+				disableButtons();
+				enableButtons();
 				lastMove.setText("");
+				numTakenPieces = 0;
 				updateBoard();
 			}
 		};
 		restart.setOnAction(restartEvent);
-		
+
+		setUpBoard();
+	}
+
+	public void setUpBoard() {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
 				click(tb.rank, tb.file);
 			}
 		};
-
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
 				spaces[i][j] = new ChessStackPane(7 - i, j);
@@ -124,7 +130,7 @@ public class ChessGUI extends Application {
 		if (!moveList.isEmpty() && moveFrom != null && bottom.getChildren().size() == 1) {
 			if (moveList.contains(new SimpleEntry<>(rank, file))) {
 				if (game.move(moveFrom.getKey(), moveFrom.getValue(), rank, file)) {
-					if(game.getNumTakenPieces() != numTakenPieces) {
+					if (game.getNumTakenPieces() != numTakenPieces) {
 						numTakenPieces = game.getNumTakenPieces();
 						chessTake.play();
 						chessTake.seek(Duration.ZERO);
@@ -133,7 +139,7 @@ public class ChessGUI extends Application {
 						chessMove.seek(Duration.ZERO);
 					}
 					updateBoard();
-					if (gameIsOver()) {															// implement logic for if the game is over
+					if (gameIsOver()) { // implement logic for if the game is over
 
 					} else {
 						moveFrom = null;
@@ -149,30 +155,31 @@ public class ChessGUI extends Application {
 									while (bottom.getChildren().size() > 1) {
 										bottom.getChildren().remove(bottom.getChildren().size() - 1);
 									}
-									lastMove.setText("Last Move: "
-											+ game.getCopyOfCurrBoard().getPiece(rank, file).toString());
+									lastMove.setText(
+											"Last Move: " + game.getCopyOfCurrBoard().getPiece(rank, file).toString());
 								}
 							};
 							Pawn p = (Pawn) game.getCopyOfCurrBoard().getPiece(rank, file);
 							if (p.getColor() == itec220.labs.Color.WHITE && rank == 7) {
-								lastMove.setText("Looks like white can promote the pawn at: " + buttons[7-rank][file].toString());
+								lastMove.setText("Looks like white can promote the pawn at: "
+										+ buttons[7 - rank][file].toString());
 								for (Button b : promoteButtons) {
 									b.setOnAction(event);
 									bottom.getChildren().add(b);
 								}
 							} else if (rank == 0) {
-								lastMove.setText("Looks like black can promote the pawn at: " + buttons[7-rank][file].toString());
+								lastMove.setText("Looks like black can promote the pawn at: "
+										+ buttons[7 - rank][file].toString());
 								for (Button b : promoteButtons) {
 									b.setOnAction(event);
 									bottom.getChildren().add(b);
 								}
 							} else {
-								lastMove.setText("Last Move: "
-										+ game.getCopyOfCurrBoard().getPiece(rank, file).toString());
+								lastMove.setText(
+										"Last Move: " + game.getCopyOfCurrBoard().getPiece(rank, file).toString());
 							}
-						} else { 
-							lastMove.setText("Last Move: "
-									+ game.getCopyOfCurrBoard().getPiece(rank, file).toString());
+						} else {
+							lastMove.setText("Last Move: " + game.getCopyOfCurrBoard().getPiece(rank, file).toString());
 						}
 					}
 				} else {
@@ -205,6 +212,7 @@ public class ChessGUI extends Application {
 		case WHITEWINS:
 		case DRAW:
 		case STALEMATE:
+			disableButtons();
 			setEndText();
 			return true;
 		case WHITEINCHECK:
@@ -212,6 +220,28 @@ public class ChessGUI extends Application {
 		case IN_PROGRESS:
 		default:
 			return false;
+		}
+	}
+
+	public void disableButtons() {
+		for(ChessButton[] bArray : buttons) {
+			for(ChessButton b : bArray) {
+				b.setOnAction(null);
+			}
+		}
+	}
+	
+	public void enableButtons() {
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				ChessButton tb = (ChessButton) e.getSource();
+				click(tb.rank, tb.file);
+			}
+		};
+		for(ChessButton[] bArray : buttons) {
+			for(ChessButton b : bArray) {
+				b.setOnAction(event);
+			}
 		}
 	}
 

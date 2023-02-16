@@ -77,7 +77,6 @@ public class Game {
 					tempState = GameState.WHITEWINS;
 				}
 			} else if (!board.isKingInCheck(Color.BLACK) && board.getBlackMoves().size() == 0) {
-				System.out.println("here");
 				tempState = GameState.STALEMATE;
 			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;

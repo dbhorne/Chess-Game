@@ -212,6 +212,8 @@ public class Board {
 			}
 			blackMoves.clear();
 			whiteMoves.clear();
+			calcPieceMoves(false, Color.WHITE);
+			calcPieceMoves(false, Color.BLACK);
 			return true;
 		}
 		return false;
@@ -333,8 +335,11 @@ public class Board {
 	}
 
 	public void calcPieceMoves(boolean kingFlag, Color color) {
-		whiteMoves.clear();
-		blackMoves.clear();
+		if(color == Color.WHITE) {
+			whiteMoves.clear();
+		} else {
+			blackMoves.clear();
+		}
 		ArrayList<SimpleEntry<Integer, Integer>> moves;
 		for (int i = 0; i < pieces.length; i++) {
 			for (int j = 0; j < pieces[i].length; j++) {
