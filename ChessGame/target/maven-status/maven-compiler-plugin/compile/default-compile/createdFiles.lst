@@ -4,6 +4,7 @@ itec220\labs\King.class
 itec220\labs\Piece.class
 itec220\labs\Game.class
 itec220\labs\ChessStackPane.class
+itec220\labs\ChessGUI$7.class
 itec220\labs\Knight.class
 itec220\labs\Board$1.class
 itec220\labs\Color.class
@@ -13,6 +14,7 @@ itec220\labs\ChessGUI$5.class
 itec220\labs\Queen.class
 itec220\labs\ChessGUI$1.class
 itec220\labs\ChessGUI$3.class
+itec220\labs\ChessGUI$6.class
 itec220\labs\ChessButton.class
 itec220\labs\ChessGUI$4.class
 itec220\labs\PromoteButton.class

@@ -35,6 +35,8 @@ public class ChessGUI extends Application {
 	private Region leftRegion = new Region();
 	private VBox leftButtons = new VBox();
 	private Button restart = new Button("Restart");
+	private Button mainMenu = new Button("Main Menu");
+	private Button playGame = new Button("Player vs. Player");
 	private Region right = new Region();
 	private HBox bottom = new HBox();
 	private StackPane left = new StackPane();
@@ -56,16 +58,43 @@ public class ChessGUI extends Application {
 		updateBoard();
 
 		BorderPane root = new BorderPane();
+		BorderPane menu = new BorderPane();
+		menu.setCenter(playGame);
 		root.setTop(currentColor);
 		root.setCenter(grid);
 		root.setRight(right);
 		bottom.getChildren().add(lastMove);
 		root.setBottom(bottom);
 		root.setLeft(left);
-		Scene scene = new Scene(root, 950, 700);
-		scene.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
+		Scene sceneGame = new Scene(root, 950, 700);
+		Scene sceneMain = new Scene(menu, 950, 700);
+		
+		EventHandler<ActionEvent> mainMenuEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				primaryStage.setScene(sceneMain);
+			}
+		};
+		
+		EventHandler<ActionEvent> playGameEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				primaryStage.setScene(sceneGame);
+				game = new Game();
+				currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+				disableButtons();
+				enableButtons();
+				lastMove.setText("");
+				numTakenPieces = 0;
+				updateBoard();
+			}
+		};
+		
+		mainMenu.setOnAction(mainMenuEvent);
+		playGame.setOnAction(playGameEvent);
+
+		sceneGame.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
+		sceneMain.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
 		primaryStage.setTitle("Chess");
-		primaryStage.setScene(scene);
+		primaryStage.setScene(sceneMain);
 		primaryStage.show();
 	}
 
@@ -75,6 +104,8 @@ public class ChessGUI extends Application {
 		left.getChildren().add(leftRegion);
 		restart.getStyleClass().add("restart");
 		leftButtons.getChildren().add(restart);
+		leftButtons.getChildren().add(mainMenu);
+		mainMenu.getStyleClass().add("restart");
 		left.getChildren().add(leftButtons);
 		EventHandler<ActionEvent> restartEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
