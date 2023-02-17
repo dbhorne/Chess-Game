@@ -43,7 +43,7 @@
 }
 
 Region {
-    width: 200;
+    width: 300;
     height: 300;
     
     -fx-min-width: width;
@@ -57,6 +57,11 @@ Region {
 
 .restart {	
     -fx-padding: 15 30 15 30;
+    width: 250;
+    
+    -fx-min-width: width;
+    -fx-max-width: width;
+    
 }
 
 .button:hover {
@@ -65,7 +70,7 @@ Region {
 }
 
 .root {
-    -fx-font-size: 16pt;
+    -fx-font-size: 10pt;
     -fx-font-family: "Courier New";
     -fx-base: rgb(255, 255, 255);
     -fx-background: grey;

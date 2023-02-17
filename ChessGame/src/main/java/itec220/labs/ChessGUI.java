@@ -35,7 +35,8 @@ public class ChessGUI extends Application {
 	private Region leftRegion = new Region();
 	private VBox leftButtons = new VBox();
 	private Button restart = new Button("Restart");
-	private Button mainMenu = new Button("Main Menu");
+	private Button exitNoSave = new Button("Exit without Saving");
+	private Button saveAndExit = new Button("Save and Exit");
 	private Button playGame = new Button("Player vs. Player");
 	private Region right = new Region();
 	private HBox bottom = new HBox();
@@ -66,29 +67,41 @@ public class ChessGUI extends Application {
 		bottom.getChildren().add(lastMove);
 		root.setBottom(bottom);
 		root.setLeft(left);
-		Scene sceneGame = new Scene(root, 950, 700);
-		Scene sceneMain = new Scene(menu, 950, 700);
+		Scene sceneGame = new Scene(root, 1050, 700);
+		Scene sceneMain = new Scene(menu, 1050, 700);
 		
 		EventHandler<ActionEvent> mainMenuEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				primaryStage.setScene(sceneMain);
+				game = null;
+			}
+		};
+		
+		EventHandler<ActionEvent> mainMenuAndSave = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneMain);
 			}
 		};
 		
+		
+		
 		EventHandler<ActionEvent> playGameEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneGame);
-				game = new Game();
+				if(game == null) {
+					game = new Game();
+					lastMove.setText("");
+				}
 				currentColor.setText(String.format("%s's move", game.getCurrMove().name));
 				disableButtons();
 				enableButtons();
-				lastMove.setText("");
-				numTakenPieces = 0;
+				numTakenPieces = game.getNumTakenPieces();
 				updateBoard();
 			}
 		};
 		
-		mainMenu.setOnAction(mainMenuEvent);
+		exitNoSave.setOnAction(mainMenuEvent);
+		saveAndExit.setOnAction(mainMenuAndSave);
 		playGame.setOnAction(playGameEvent);
 
 		sceneGame.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
@@ -104,8 +117,10 @@ public class ChessGUI extends Application {
 		left.getChildren().add(leftRegion);
 		restart.getStyleClass().add("restart");
 		leftButtons.getChildren().add(restart);
-		leftButtons.getChildren().add(mainMenu);
-		mainMenu.getStyleClass().add("restart");
+		leftButtons.getChildren().add(exitNoSave);
+		leftButtons.getChildren().add(saveAndExit);
+		exitNoSave.getStyleClass().add("restart");
+		saveAndExit.getStyleClass().add("restart");
 		left.getChildren().add(leftButtons);
 		EventHandler<ActionEvent> restartEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
