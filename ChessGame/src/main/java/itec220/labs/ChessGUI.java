@@ -69,37 +69,38 @@ public class ChessGUI extends Application {
 		root.setLeft(left);
 		Scene sceneGame = new Scene(root, 1050, 700);
 		Scene sceneMain = new Scene(menu, 1050, 700);
-		
+
 		EventHandler<ActionEvent> mainMenuEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneMain);
 				game = null;
 			}
 		};
-		
+
 		EventHandler<ActionEvent> mainMenuAndSave = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneMain);
 			}
 		};
-		
-		
-		
+
 		EventHandler<ActionEvent> playGameEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneGame);
-				if(game == null) {
+				if (game == null) {
 					game = new Game();
 					lastMove.setText("");
 				}
 				currentColor.setText(String.format("%s's move", game.getCurrMove().name));
-				disableButtons();
-				enableButtons();
-				numTakenPieces = game.getNumTakenPieces();
-				updateBoard();
+				if (!gameIsOver()) {
+					disableButtons();
+					enableButtons();
+					numTakenPieces = game.getNumTakenPieces();
+					updateBoard();
+				}
+
 			}
 		};
-		
+
 		exitNoSave.setOnAction(mainMenuEvent);
 		saveAndExit.setOnAction(mainMenuAndSave);
 		playGame.setOnAction(playGameEvent);
@@ -185,9 +186,7 @@ public class ChessGUI extends Application {
 						chessMove.seek(Duration.ZERO);
 					}
 					updateBoard();
-					if (gameIsOver()) { // implement logic for if the game is over
-
-					} else {
+					if (!gameIsOver()) {
 						moveFrom = null;
 						moveList.clear();
 						currentColor.setText(String.format("%s's move", game.getCurrMove().name));
@@ -270,13 +269,13 @@ public class ChessGUI extends Application {
 	}
 
 	public void disableButtons() {
-		for(ChessButton[] bArray : buttons) {
-			for(ChessButton b : bArray) {
+		for (ChessButton[] bArray : buttons) {
+			for (ChessButton b : bArray) {
 				b.setOnAction(null);
 			}
 		}
 	}
-	
+
 	public void enableButtons() {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
@@ -284,8 +283,8 @@ public class ChessGUI extends Application {
 				click(tb.rank, tb.file);
 			}
 		};
-		for(ChessButton[] bArray : buttons) {
-			for(ChessButton b : bArray) {
+		for (ChessButton[] bArray : buttons) {
+			for (ChessButton b : bArray) {
 				b.setOnAction(event);
 			}
 		}
