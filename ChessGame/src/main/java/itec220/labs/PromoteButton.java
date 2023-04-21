@@ -1,3 +1,8 @@
+/* Author: 	Donovan Horne
+ * Purpose:	To create a button that is used for promotions
+ * Date: 	4/20/2023
+ */
+
 package itec220.labs;
 
 import javafx.scene.control.Button;

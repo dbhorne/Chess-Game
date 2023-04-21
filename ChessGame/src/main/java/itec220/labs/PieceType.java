@@ -1,3 +1,8 @@
+/* Author:	Donovan Horne
+ * Purpose:	Used to bypass checking if every piece is an instance of another piece, just store
+ * 			the piece type for each piece
+ * Date:	4/20/2023
+ */
 package itec220.labs;
 
 public enum PieceType {

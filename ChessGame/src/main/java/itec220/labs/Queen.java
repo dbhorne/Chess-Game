@@ -1,3 +1,8 @@
+/* Author:	Donovan Horne
+ * Purpose:	A class to handle the logic of a queen piece in chess
+ * Date:	4/20/2023
+ */
+
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -7,14 +12,28 @@ public class Queen extends Piece {
 	private static final int[] RANK_OFFSETS = { 0, 0, 1, -1, 1, 1, -1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0, 1, -1, 1, -1 };
 
+	
+	/* A constructor for a new queen
+	 * @param color the color of the queen
+	 * @param rank the row of the queen
+	 * @param file the column of the queen
+	 */
 	Queen(Color color, int rank, int file) {
 		super(PieceType.QUEEN, color, rank, file);
 	}
 	
+	/* Used when promoting a pawn to a queen
+	 * @param pawn the pawn that is being promoted
+	 */
 	Queen(Pawn pawn){
 		super(PieceType.QUEEN, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
 
+	/* return a list of valid moves for the queen using the row/column offsets
+	 * @param copy a copy of the current board state
+	 * @param kingCheck set to true if you want to allow the move to be valid without checking
+	 * 			to see if it will put the queen in check
+	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
 		Piece[][] pieces = copy.getPieces();
@@ -59,6 +78,8 @@ public class Queen extends Piece {
 		return moves;
 	}
 
+	
+	// Convert the queen to a string using the rank and file
 	@Override
 	public String toString() {
 		return "Q" + colomnLetters[this.getFile()] + (this.getRank() + 1);

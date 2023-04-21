@@ -53,6 +53,10 @@ public class ChessGUI extends Application {
 			new PromoteButton("Queen", PieceType.QUEEN), new PromoteButton("Rook", PieceType.ROOK),
 			new PromoteButton("Bishop", PieceType.BISHOP) };
 
+	
+	/* Set up the starting stage of the GUI
+	 * @param primaryStage default parameter for JavaFX
+	 */
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		setUpGUI();
@@ -70,6 +74,7 @@ public class ChessGUI extends Application {
 		Scene sceneGame = new Scene(root, 1050, 700);
 		Scene sceneMain = new Scene(menu, 1050, 700);
 
+		// event to move the scene back to the main menu and set the game to null
 		EventHandler<ActionEvent> mainMenuEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneMain);
@@ -77,12 +82,17 @@ public class ChessGUI extends Application {
 			}
 		};
 
+		// event to move the scene back to main menu, but don't reset the game to null
 		EventHandler<ActionEvent> mainMenuAndSave = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneMain);
 			}
 		};
 
+		/* event to start a game from main menu, if game is null, create a new game, if not
+		 * check to see if the game wasn't over, if so, update everything
+		 */
+		
 		EventHandler<ActionEvent> playGameEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneGame);
@@ -112,6 +122,7 @@ public class ChessGUI extends Application {
 		primaryStage.show();
 	}
 
+	// Set up the GUI with buttons, and stylesheets
 	public void setUpGUI() {
 		currentColor.setText(String.format("%s's move", game.getCurrMove().name));
 
@@ -138,8 +149,11 @@ public class ChessGUI extends Application {
 
 		setUpBoard();
 	}
-
+	
+	// Set up the board using the buttons, regions, and custom stackpanes
 	public void setUpBoard() {
+		
+		// Set all the buttons event handler to the click method
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
@@ -173,6 +187,10 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	/* Event handler for the buttons, used to move pieces on the board
+	 * @param rank Row of the button that was pressed
+	 * @param file Column of the button that was pressed
+	 */
 	public void click(int rank, int file) {
 		if (!moveList.isEmpty() && moveFrom != null && bottom.getChildren().size() == 1) {
 			if (moveList.contains(new SimpleEntry<>(rank, file))) {
@@ -251,6 +269,7 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	// Check the current game state to see if the game is over, if so disable all the buttons
 	public boolean gameIsOver() {
 		switch (game.getCurrState()) {
 		case BLACKWINS:
@@ -268,6 +287,7 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	// Loop through the buttons and disable their event handler
 	public void disableButtons() {
 		for (ChessButton[] bArray : buttons) {
 			for (ChessButton b : bArray) {
@@ -276,6 +296,7 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	// Loop through the buttons and enable their event handler
 	public void enableButtons() {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
@@ -290,6 +311,7 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	// Set the end text based on the current game state
 	public void setEndText() {
 		switch (game.getCurrState()) {
 		case WHITEWINS:
@@ -309,6 +331,7 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	// Update the GUI board, used after a move is made in the game class
 	public void updateBoard() {
 		Board brd = game.getCopyOfCurrBoard();
 		for (int i = 0; i < 8; i++) {
@@ -325,6 +348,10 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	/* Get the correct image for the pieces to be on the GUI
+	 * @param piece The piece that you are getting the image for
+	 */
+	
 	public Image getImage(Piece piece) {
 		PieceType type = piece.getType();
 		itec220.labs.Color color = piece.getColor();
@@ -377,6 +404,7 @@ public class ChessGUI extends Application {
 
 	}
 
+	// Show valid moves on the board, used by the click() method
 	public void showValidMoves() {
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
@@ -394,6 +422,10 @@ public class ChessGUI extends Application {
 		}
 	}
 
+	
+	/* Launch the GUI game
+	 * @param args default java argument
+	 */
 	public static void main(String[] args) {
 		launch(args);
 	}

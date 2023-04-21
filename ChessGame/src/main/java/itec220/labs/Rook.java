@@ -1,3 +1,8 @@
+/* Author: 	Donovan Horne
+ * Purpose:	To handle the logic of a rook piece in chess
+ * Date:	4/20/2023
+ */
+
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -8,19 +13,35 @@ public class Rook extends Piece {
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0 };
 	private boolean hasMoved;
 
+	/* Constructor of a new rook
+	 * @param color the color of the rook
+	 * @param rank the row of the new rook
+	 * @param file the column of the new rook
+	 */
 	Rook(Color color, int rank, int file) {
 		super(PieceType.ROOK, color, rank, file);
 	}
 	
+	/* Used when promoting a pawn to a rook
+	 * @param pawn the pawn that is being promoted
+	 */
 	Rook(Pawn pawn){
 		super(PieceType.ROOK, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
 	
+	/* Used when creating a deep copy of a rook
+	 * @param rook the rook you are creating a copy from
+	 */
 	Rook(Rook rook){
 		super(PieceType.ROOK, rook.getColor(), rook.getRank(), rook.getFile());
 		this.setHasMoved(rook.getHasMoved());
 	}
 
+	/* Used to get a list of the rooks valid moves, using the row/column offsets until reaching a piece
+	 * @param copy a copy of the current board state
+	 * @param kingCheck set to true if you want to allow the move to be valid without checking
+	 * 			to see if it will put the king in check
+	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
 		Piece[][] pieces = copy.getPieces();
@@ -65,15 +86,18 @@ public class Rook extends Piece {
 		return moves;
 	}
 
+	// Return a string of the rook using it's row and column
 	@Override
 	public String toString() {
 		return "R" + colomnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 
+	// Return whether the rook has moved, used for castling
 	public boolean getHasMoved() {
 		return hasMoved;
 	}
 
+	// Set whether the rook has moved, used for castling
 	public void setHasMoved(boolean hasMoved) {
 		this.hasMoved = hasMoved;
 	}

@@ -1,3 +1,8 @@
+/* Author:	Donovan Horne
+ * Purpose:	To handle the logic of the king chess piece
+ * Date:	4/20/2023
+ */
+
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -8,19 +13,34 @@ public class King extends Piece {
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0, 1, -1, 1, -1 };
 	private boolean hasMoved = false;
 
+	/* Constructor for a new King
+	 * @param color color of the king
+	 * @param rank the row of the piece
+	 * @param file the column of the piece
+	 */
 	King(Color color, int rank, int file) {
 		super(PieceType.KING, color, rank, file);
 	}
 	
+	/* Constructor for creating a deep copy of the king
+	 * @param king the king you are creating a copy from
+	 */
 	King(King king){
 		super(PieceType.KING, king.getColor(), king.getRank(), king.getFile());
 		this.setHasMoved(king.getHasMoved());
 	}
 
+	/* Used to see if the king is in check by checking a list to see if their position is in it
+	 * @param possibleMoves the list of possible moves of the other color
+	 */
 	public boolean isInCheck(ArrayList<SimpleEntry<Integer, Integer>> possibleMoves) {
 		return possibleMoves.contains(new SimpleEntry<>(this.getRank(), this.getFile()));
 	}
 
+	/* Used to get the valid moves for a king using the offsets declared
+	 * @param copy a copy of the current game's board state
+	 * @param kingCheck true if you don't care if the king is in check, false if you want to check
+	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
 		Piece[][] pieces = copy.getPieces();
@@ -91,15 +111,19 @@ public class King extends Piece {
 		return moves;
 	}
 
+	
+	// Convert the current piece to a string
 	@Override
 	public String toString() {
 		return "K" + colomnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 
+	// return whether the king has moved, used for castling
 	public boolean getHasMoved() {
 		return hasMoved;
 	}
 
+	// set whether it has moved, used for castling
 	public void setHasMoved(boolean hasMoved) {
 		this.hasMoved = hasMoved;
 	}

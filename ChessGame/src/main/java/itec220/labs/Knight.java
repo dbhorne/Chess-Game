@@ -1,3 +1,8 @@
+/* Author:	Donovan Horne
+ * Purpose:	To handle the logic of the knight piece in chess
+ * Date: 	4/20/2023
+ */
+
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -5,14 +10,26 @@ import java.util.ArrayList;
 
 public class Knight extends Piece {
 
+	/* Constructor for a new knight
+	 * @param color the color of the new piece
+	 * @param rank row of the piece
+	 * @param file the column of the piece
+	 */
 	Knight(Color color, int rank, int file) {
 		super(PieceType.KNIGHT, color, rank, file);
 	}
 
+	/* Constructor used if you are promoting from a pawn
+	 * @param pawn pawn being used to promote from
+	 */
 	Knight(Pawn pawn){
 		super(PieceType.KNIGHT, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
 
+	/* Used to return a list of the valid moves for this piece
+	 * @param copy a copy of the current board
+	 * @param kingCheck set to true if you don't want to check for the king being in check
+	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
 		Piece[][] pieces = copy.getPieces();
@@ -40,6 +57,7 @@ public class Knight extends Piece {
 		return moves;
 	}
 
+	// Return a string of the knight and position
 	@Override
 	public String toString() {
 		return "N" + colomnLetters[this.getFile()] + (this.getRank() + 1);
