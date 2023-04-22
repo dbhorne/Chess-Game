@@ -2,15 +2,26 @@
 package itec220.labs;
 
 /**
- * Purpose:	Used to bypass checking if every piece is an instance of another piece, just store
+ * Used to bypass checking if every piece is an instance of another piece, just store
  * 			the piece type for each piece
- * Date:	4/20/2023
  * @author Donovan Horne
  *
  */
 public enum PieceType {
-	KNIGHT("Knight"), KING("King"), QUEEN("Queen"), PAWN("Pawn"), BISHOP("Bishop"), ROOK("Rook");
+	/** Represents piece of type Knight */
+	KNIGHT("Knight"), 
+	/** Represents piece of type King */
+	KING("King"), 
+	/** Represents piece of type Queen */
+	QUEEN("Queen"), 
+	/** Represents piece of type Pawn */
+	PAWN("Pawn"), 
+	/** Represents piece of type Bishop */
+	BISHOP("Bishop"), 
+	/** Represents piece of type Rook */
+	ROOK("Rook");
 	
+	/** String representation of each piece, i.e King for KING enum */
 	public final String name;
 	
 	/**

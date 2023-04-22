@@ -4,8 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
 /**
- * Purpose:	To handle the logic of the king chess piece
- * Date:	4/20/2023
+ * To handle the logic of the king chess piece
  * @author Donovan Horne
  *
  */

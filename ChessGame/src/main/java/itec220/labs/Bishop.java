@@ -4,8 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
 /**
- * Purpose: To handle the logic for a bishop piece in chess
- * Date:	4/20/2023
+ * To handle the logic for a bishop piece in chess
  * @author Donovan Horne
  */
 public class Bishop extends Piece {

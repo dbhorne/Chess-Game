@@ -3,8 +3,7 @@ package itec220.labs;
 import javafx.scene.layout.StackPane;
 
 /**
- * Purpose:	To create a stack pane that also stores the rank and file
- * Date: 	4/20/2023
+ * To create a stack pane that also stores the rank and file
  * @author Donovan Horne
  */
 public class ChessStackPane extends StackPane {
@@ -18,6 +17,9 @@ public class ChessStackPane extends StackPane {
 		this.rank = rank;
 		this.file = file;
 	}
+	
+	/** The rank/row of the stack pane */
 	public final int rank;
+	/** The file/column of the stack pane */
 	public final int file;
 }

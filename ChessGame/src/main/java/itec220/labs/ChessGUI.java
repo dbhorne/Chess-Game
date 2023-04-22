@@ -25,9 +25,8 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
- * Purpose:	To create and handle the GUI of the chess game, and communicate between the game and
+ * To create and handle the GUI of the chess game, and communicate between the game and
  * 			the GUI
- * Date:	4/20/2023
  * @author Donovan Horne
  *
  */

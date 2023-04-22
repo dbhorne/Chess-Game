@@ -4,9 +4,8 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
 /**
- * Purpose:	Create a parent class for all the pieces that will store general information about 
+ * Create a parent class for all the pieces that will store general information about 
  * 			the piece that has been created
- * Date:	4/20/2023
  * @author Donovan Horne
  *
  */

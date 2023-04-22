@@ -4,8 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
 /**
- * Purpose:	To handle the game logic for a pawn
- * Date:	4/20/2023
+ * To handle the game logic for a pawn
  * @author Donovan Horne
  *
  */

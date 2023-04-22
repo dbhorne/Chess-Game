@@ -20,9 +20,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 /**
- * Purpose:	To create a class that communicated with the board, which will handle piece logic,
+ * To create a class that communicated with the board, which will handle piece logic,
  * 			and allow for this class to handle game state logic, such as check, checkmate, etc.
- * Date:	4/20/2023	
  * @author Donovan Horne
  *
  */

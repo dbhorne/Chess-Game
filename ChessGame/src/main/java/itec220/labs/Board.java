@@ -5,12 +5,12 @@ import java.util.ArrayList;
 
 
 /**
- * Purpose: Board class to handle almost all logic for the game other than game state
- * Date:	4/20/2023
+ * Board class to handle almost all logic for the game other than game state
  * @author Donovan Horne
  */
 public class Board {
 	private Piece[][] pieces = new Piece[8][8];
+	/** The board size */
 	public final int BOARD_SIZE = pieces.length; 
 	private ArrayList<SimpleEntry<Integer, Integer>> whiteMoves = new ArrayList<>();
 	private ArrayList<SimpleEntry<Integer, Integer>> blackMoves = new ArrayList<>();

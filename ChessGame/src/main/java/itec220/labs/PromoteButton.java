@@ -3,8 +3,7 @@ package itec220.labs;
 import javafx.scene.control.Button;
 
 /**
- * Purpose:	To create a button that is used for promotions
- * Date: 	4/20/2023
+ * To create a button that is used for promotions
  * @author Donovan Horne
  *
  */
@@ -20,5 +19,8 @@ public class PromoteButton extends Button {
 		this.type = type;
 	}
 	
+	/** The type of piece the button will promote the pawn to, stored in each button
+	 * 	 	for each specific type
+	*/
 	public final PieceType type;
 }

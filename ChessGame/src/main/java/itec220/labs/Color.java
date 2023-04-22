@@ -2,14 +2,17 @@ package itec220.labs;
 
 
 /**
- * Purpose:	An enum that is used to determine a pieces color, as well as the current move
- * Date:	4/20/2023
+ * An enum that is used to determine a pieces color, as well as the current move
  * @author Donovan Horne
  *
  */
 public enum Color {
-	WHITE("White"), BLACK("Black");
+	/** Enum for white pieces */
+	WHITE("White"),
+	/** Enum for black pieces */
+	BLACK("Black");
 	
+	/** String version of each enum, i.e Black for BLACK */
 	public final String name;
 	
 	/**

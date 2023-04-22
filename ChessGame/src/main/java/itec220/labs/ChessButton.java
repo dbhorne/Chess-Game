@@ -3,8 +3,7 @@ package itec220.labs;
 import javafx.scene.control.Button;
 
 /**
- * Purpose:	An enum to create buttons for the GUI, which in addition to being a button stores the rank and file
- * Date:	4/20/2023
+ * An enum to create buttons for the GUI, which in addition to being a button stores the rank and file
  * @author Donovan Horne
  */
 public class ChessButton extends Button {
@@ -19,9 +18,12 @@ public class ChessButton extends Button {
 		this.rank = rank;
 		this.file = file;
 	}
-	
+	/** rank/row of each button */
 	public final int rank;
+	/** file/column of each button*/
 	public final int file;
+	/** array of characters to go with each file/column, commonly used in chess, 
+	 * 		i.e F7 is a square on the board*/
 	protected final char[] colomnLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
 	
 	
