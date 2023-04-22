@@ -1,19 +1,21 @@
-/* Author:	Donovan Horne
- * Purpose:	A class to handle the logic of a queen piece in chess
- * Date:	4/20/2023
- */
-
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
+/**
+ * Purpose:	A class to handle the logic of a queen piece in chess
+ * Date:	4/20/2023
+ * @author Donovan Horne
+ *
+ */
 public class Queen extends Piece {
 	private static final int[] RANK_OFFSETS = { 0, 0, 1, -1, 1, 1, -1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0, 1, -1, 1, -1 };
 
 	
-	/* A constructor for a new queen
+	/**
+	 * A constructor for a new queen
 	 * @param color the color of the queen
 	 * @param rank the row of the queen
 	 * @param file the column of the queen
@@ -22,17 +24,20 @@ public class Queen extends Piece {
 		super(PieceType.QUEEN, color, rank, file);
 	}
 	
-	/* Used when promoting a pawn to a queen
+	/**
+	 * Used when promoting a pawn to a queen
 	 * @param pawn the pawn that is being promoted
 	 */
 	Queen(Pawn pawn){
 		super(PieceType.QUEEN, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
 
-	/* return a list of valid moves for the queen using the row/column offsets
+	/**
+	 * return a list of valid moves for the queen using the row/column offsets
 	 * @param copy a copy of the current board state
 	 * @param kingCheck set to true if you want to allow the move to be valid without checking
 	 * 			to see if it will put the queen in check
+	 * @return Return a list of valid moves for the piece
 	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
@@ -79,7 +84,10 @@ public class Queen extends Piece {
 	}
 
 	
-	// Convert the queen to a string using the rank and file
+	/**
+	 * Convert the queen to a string using the rank and file
+	 * @return Return a string of the piece
+	 */
 	@Override
 	public String toString() {
 		return "Q" + colomnLetters[this.getFile()] + (this.getRank() + 1);

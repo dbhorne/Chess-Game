@@ -1,20 +1,22 @@
-/* Author:	Donovan Horne
- * Purpose:	To handle the game logic for a pawn
- * Date:	4/20/2023
- */
-
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
+/**
+ * Purpose:	To handle the game logic for a pawn
+ * Date:	4/20/2023
+ * @author Donovan Horne
+ *
+ */
 public class Pawn extends Piece {
 	private int thisPawnID;
 	private static int pawnID = 0;
 	private boolean madeFirstMove = false;
 	private boolean canBeEnPassanted = false;
 
-	/* Constructor for creating a new pawn also incrementing the pawnID
+	/**
+	 * Constructor for creating a new pawn also incrementing the pawnID
 	 * @param color the color of the new pawn
 	 * @param rank the row of the pawn
 	 * @param file the column of the pawn
@@ -24,7 +26,8 @@ public class Pawn extends Piece {
 		thisPawnID = pawnID++;
 	}
 
-	/* Constructor used when creating a deep copy of the pawn
+	/**
+	 * Constructor used when creating a deep copy of the pawn
 	 * @param pawn the pawn you are creating a copy of
 	 */
 	Pawn(Pawn pawn) {
@@ -33,37 +36,50 @@ public class Pawn extends Piece {
 		this.canBeEnPassanted = pawn.getEnPassant();
 	}
 
-	// Called when the pawn makes it's first move
+	/**
+	 * Called when the pawn makes it's first move
+	 */
 	public void makeFirstMove() {
 		this.madeFirstMove = true;
 	}
 
-	// Returns whether the pawn has made a move yet or not
+	/**
+	 * Returns whether the pawn has made a move yet or not
+	 * @return Return a boolean of whether the pawn has moved
+	 */
 	public boolean getMadeFirstMove() {
 		return this.madeFirstMove;
 	}
 
-	/* Set the canBeEnPassanted flag
-	 * @param flag the flag you want to set the variable to
+	/**
+	 * Set the canBeEnPassanted flag
+	 * @param flag the flag you want to set this.canBeEnPassanted to
 	 */
 	public void canEnPassant(Boolean flag) {
 		this.canBeEnPassanted = flag;
 	}
 
-	// Return whether the pawn can be en passanted
+	/**
+	 * Return whether the pawn can be en passanted
+	 * @return Return boolean value of this.canBeEnPassanted
+	 */
 	public boolean getEnPassant() {
 		return this.canBeEnPassanted;
 	}
 
-	// Resets the static variable pawnID
+	/**
+	 * Resets the static variable pawnID
+	 */
 	public static void resetPawnID() {
 		pawnID = 0;
 	}
 
 	
-	/* Returns a list of valid moves for the pawn
+	/**
+	 * Returns a list of valid moves for the pawn
 	 * @param copy a copy of the current games board
 	 * @param kingCheck set to true if you do not wish to see if the move will put the king in check
+	 * @return Return an ArrayList of valid moves for the piece
 	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
@@ -286,12 +302,18 @@ public class Pawn extends Piece {
 	}
 
 	
-	// Return the current pawns ID
+	/**
+	 * Return the current pawns ID
+	 * @return return the pawnsID as an int
+	 */
 	public int getThisPawnID() {
 		return thisPawnID;
 	}
 
-	// Convert the pawn to a string using the rnak and file
+	/**
+	 * Convert the pawn to a string using the rnak and file
+	 * @return Returns a string of the piece
+	 */
 	@Override
 	public String toString() {
 		return "" + colomnLetters[this.getFile()] + (this.getRank() + 1);

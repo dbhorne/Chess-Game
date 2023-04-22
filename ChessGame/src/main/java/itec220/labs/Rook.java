@@ -1,19 +1,20 @@
-/* Author: 	Donovan Horne
- * Purpose:	To handle the logic of a rook piece in chess
- * Date:	4/20/2023
- */
-
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
+/**
+ * Purpose:	To handle the logic of a rook piece in chess
+ * Date:	4/20/2023
+ * @author Donovan Horne
+ */
 public class Rook extends Piece {
 	private static final int[] RANK_OFFSETS = { 0, 0, 1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0 };
 	private boolean hasMoved;
 
-	/* Constructor of a new rook
+	/**
+	 * Constructor of a new rook
 	 * @param color the color of the rook
 	 * @param rank the row of the new rook
 	 * @param file the column of the new rook
@@ -22,14 +23,16 @@ public class Rook extends Piece {
 		super(PieceType.ROOK, color, rank, file);
 	}
 	
-	/* Used when promoting a pawn to a rook
+	/**
+	 * Used when promoting a pawn to a rook
 	 * @param pawn the pawn that is being promoted
 	 */
 	Rook(Pawn pawn){
 		super(PieceType.ROOK, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
 	
-	/* Used when creating a deep copy of a rook
+	/**
+	 * Used when creating a deep copy of a rook
 	 * @param rook the rook you are creating a copy from
 	 */
 	Rook(Rook rook){
@@ -37,10 +40,12 @@ public class Rook extends Piece {
 		this.setHasMoved(rook.getHasMoved());
 	}
 
-	/* Used to get a list of the rooks valid moves, using the row/column offsets until reaching a piece
+	/**
+	 * Used to get a list of the rooks valid moves, using the row/column offsets until reaching a piece
 	 * @param copy a copy of the current board state
 	 * @param kingCheck set to true if you want to allow the move to be valid without checking
 	 * 			to see if it will put the king in check
+	 * @return returns a list of valid moves for this piece
 	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
@@ -86,18 +91,28 @@ public class Rook extends Piece {
 		return moves;
 	}
 
-	// Return a string of the rook using it's row and column
+	/**
+	 * a string of the rook using it's row and column
+	 * @return a string version of the piece
+	 */
 	@Override
 	public String toString() {
 		return "R" + colomnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 
-	// Return whether the rook has moved, used for castling
+	/**
+	 * get whether the rook has moved
+	 * @return return hasMoved boolean, holds whether the rook has moved or not
+	 */
+	
 	public boolean getHasMoved() {
 		return hasMoved;
 	}
 
-	// Set whether the rook has moved, used for castling
+	/** 
+	 * Set whether the rook has moved, used for castling
+	 * @param hasMoved the boolean value you want to set for the hasMoved variable
+	*/
 	public void setHasMoved(boolean hasMoved) {
 		this.hasMoved = hasMoved;
 	}

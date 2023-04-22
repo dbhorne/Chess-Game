@@ -1,9 +1,3 @@
-/* Author:	Donovan Horne
- * Purpose:	To create a class that communicated with the board, which will handle piece logic,
- * 			and allow for this class to handle game state logic, such as check, checkmate, etc.
- * Date:	4/20/2023	
- */
-
 package itec220.labs;
 
 /* Goals:
@@ -25,20 +19,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
+/**
+ * Purpose:	To create a class that communicated with the board, which will handle piece logic,
+ * 			and allow for this class to handle game state logic, such as check, checkmate, etc.
+ * Date:	4/20/2023	
+ * @author Donovan Horne
+ *
+ */
 public class Game {
 	private Board board;
 	private GameState currState;
 	private Color currMove;
 	private LinkedList<String> boardStates = new LinkedList<>();
 
-	// Constructor for the game, create a new board, and update the current move and game state
+	/**
+	 * Constructor for the game, create a new board, and update the current move and game state
+	 */
 	Game() {
 		board = new Board();
 		currState = GameState.IN_PROGRESS;
 		currMove = Color.WHITE;
 	}
 
-	/* Promote a pawn on the board
+	/**
+	 * Promote a pawn on the board
 	 * @param rank row of the pawn
 	 * @param file column of the pawn
 	 * @param type the type of piece the pawn is promoting to
@@ -47,25 +51,36 @@ public class Game {
 		board.promote(rank, file, type);
 	}
 
-	// Get the color of the current move
+	/**
+	 * Get the color of the current move
+	 * @return Returns a Color enum
+	 */
 	public Color getCurrMove() {
 		return currMove;
 	}
 
-	// Get the current game state, i.e IN_PROGRESS
+	/**
+	 * Get the current game state, i.e IN_PROGRESS
+	 * @return Returns a GameState enum
+	 */
 	public GameState getCurrState() {
 		return currState;
 	}
 
-	/* Get the valid moves for a specific piece
+	/**
+	 * Get the valid moves for a specific piece
 	 * @param rank the row of the piece
 	 * @param file the column of the piece
+	 * @return Returns a ArrayList of valid moves for the given piece
 	 */
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(int rank, int file) {
 		return board.getValidMoves(rank, file, currMove);
 	}
 
-	// Return a boolean of whether the game is over or not
+	/**
+	 * Return a boolean of whether the game is over or not
+	 * @return Returns a boolean, true if the game is over, false if it will continue
+	 */
 	public boolean gameOver() {
 		if (currState == GameState.BLACKWINS || currState == GameState.WHITEWINS || currState == GameState.DRAW
 				|| currState == GameState.STALEMATE) {
@@ -74,12 +89,13 @@ public class Game {
 		return false;
 	}
 
-	/* Call a move on the board, if it is true, update game states, if it was an invalid move
-	 * 		return false
+	/**
+	 * Call a move on the board
 	 * @param startX the starting row of the piece
 	 * @param startY the starting column of the piece
 	 * @param endX the destination row of the piece
 	 * @param endY the destination row of the piece
+	 * @return Return a boolean based on whether the move was made or not
 	 */
 	public boolean move(int startX, int startY, int endX, int endY) {
 		if (board.move(startX, startY, endX, endY, currMove)) {
@@ -92,11 +108,11 @@ public class Game {
 		}
 	}
 
-	/* game speed issues happen here
+	/** game speed issues happen here
 	 *  Update the current game state, speed issues happen because we calculate all the moves on the
 	 *  the board
+	 *  @return Return the GameState enum
 	 */
-	
 	public GameState updateGameState() {
 		GameState tempState = GameState.IN_PROGRESS;
 		if (currMove == Color.WHITE && this.currState != GameState.WHITEINCHECK) {
@@ -128,7 +144,8 @@ public class Game {
 	}
 	
 	
-	/* W.I.P Used to track 3 move repeting, should work
+	/** 
+	 * W.I.P Used to track 3 move repeting, should work
 	 * @param newBoardState a string of the current board state
 	 */
 	public void updateMoveTracker(String newBoardState) {
@@ -139,17 +156,26 @@ public class Game {
 		}
 	}
 
-	// Get a deep copy of the games current board
+	/**
+	 * Get a deep copy of the games current board
+	 * @return Returns a copy of the current board
+	 */
 	public Board getCopyOfCurrBoard() {
 		return board.copy();
 	}
 
-	// Get the number of taken pieces from the board
+	/**
+	 * Get the number of taken pieces from the board
+	 * @return Returns an int of the number of taken pieces
+	 */
 	public int getNumTakenPieces() {
 		return board.getNumOfTakenPieces();
 	}
 
-	// return the current game state
+	/**
+	 * return the current game state
+	 * @return return the current game state enum
+	 */
 	public GameState getGameState() {
 		return this.currState;
 	}

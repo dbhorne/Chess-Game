@@ -1,14 +1,15 @@
-/* Author: 	Donovan Horne
- * Purpose:	To create a stack pane that also stores the rank and file
- * Date: 	4/20/2023
- */
-
 package itec220.labs;
 
 import javafx.scene.layout.StackPane;
 
+/**
+ * Purpose:	To create a stack pane that also stores the rank and file
+ * Date: 	4/20/2023
+ * @author Donovan Horne
+ */
 public class ChessStackPane extends StackPane {
-	/* Constructor for the custom stackpane
+	/**
+	 * Constructor for the custom stackpane
 	 * @param rank The row of the stack pane
 	 * @param file The column of the stack pane
 	 */

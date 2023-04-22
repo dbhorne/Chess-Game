@@ -1,18 +1,19 @@
-/* Author:  Donovan Horne
- * Purpose: To handle the logic for a bishop piece in chess
- * Date:	4/20/2023
- */
-
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
+/**
+ * Purpose: To handle the logic for a bishop piece in chess
+ * Date:	4/20/2023
+ * @author Donovan Horne
+ */
 public class Bishop extends Piece {
 	private static final int[] RANK_OFFSETS = { 1, -1, 1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, 1, -1, -1 };
 
-	/* Constructor for a bishop with the position and color
+	/**
+	 * Constructor for a bishop with the position and color
 	 * @param color for the color of the piece
 	 * @param rank The rank of the piece being created
 	 * @param file The file of the piece being created
@@ -21,16 +22,19 @@ public class Bishop extends Piece {
 		super(PieceType.BISHOP, color, rank, file);
 	}
 	
-	/* Constructor for a bishop being promoted from a pawn
+	/**
+	 * Constructor for a bishop being promoted from a pawn
 	 * @param pawn The pawn that is being promoted to a bishop
 	 */
 	Bishop(Pawn pawn){
 		super(PieceType.BISHOP, pawn.getColor(), pawn.getRank(), pawn.getFile());
 	}
 
-	/* Method to return a list of valid moves for a piece
+	/**
+	 * Method to return a list of valid moves for a piece
 	 * @param copy a copy of the current state of the board
 	 * @param kingCheck used if you are checking to see if the king is in check, ignoring future moves
+	 * @return Return a list of valid moves for the piece
 	 */
 	@Override
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
@@ -74,7 +78,10 @@ public class Bishop extends Piece {
 		return moves;
 	}
 
-	// toString method for the bishop piece
+	/**
+	 * toString method for the bishop piece
+	 * @return A string created from the information about the piece
+	 */
 	@Override
 	public String toString() {
 		return "B" + colomnLetters[this.getFile()] + (this.getRank() + 1);

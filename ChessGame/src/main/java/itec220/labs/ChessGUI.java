@@ -24,6 +24,13 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * Purpose:	To create and handle the GUI of the chess game, and communicate between the game and
+ * 			the GUI
+ * Date:	4/20/2023
+ * @author Donovan Horne
+ *
+ */
 public class ChessGUI extends Application {
 
 	private MediaPlayer chessMove = new MediaPlayer(
@@ -54,7 +61,8 @@ public class ChessGUI extends Application {
 			new PromoteButton("Bishop", PieceType.BISHOP) };
 
 	
-	/* Set up the starting stage of the GUI
+	/**
+	 * Set up the starting stage of the GUI
 	 * @param primaryStage default parameter for JavaFX
 	 */
 	@Override
@@ -122,7 +130,9 @@ public class ChessGUI extends Application {
 		primaryStage.show();
 	}
 
-	// Set up the GUI with buttons, and stylesheets
+	/**
+	 * Set up the GUI with buttons, and stylesheets
+	 */
 	public void setUpGUI() {
 		currentColor.setText(String.format("%s's move", game.getCurrMove().name));
 
@@ -150,7 +160,9 @@ public class ChessGUI extends Application {
 		setUpBoard();
 	}
 	
-	// Set up the board using the buttons, regions, and custom stackpanes
+	/**
+	 * Set up the board using the buttons, regions, and custom stackpanes
+	 */
 	public void setUpBoard() {
 		
 		// Set all the buttons event handler to the click method
@@ -187,7 +199,8 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	/* Event handler for the buttons, used to move pieces on the board
+	/**
+	 * Event handler for the buttons, used to move pieces on the board
 	 * @param rank Row of the button that was pressed
 	 * @param file Column of the button that was pressed
 	 */
@@ -269,7 +282,10 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	// Check the current game state to see if the game is over, if so disable all the buttons
+	/**
+	 * Check the current game state to see if the game is over, if so disable all the buttons
+	 * @return Returns a boolean, true if the game is over, false if it is still continuing
+	 */
 	public boolean gameIsOver() {
 		switch (game.getCurrState()) {
 		case BLACKWINS:
@@ -287,7 +303,9 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	// Loop through the buttons and disable their event handler
+	/**
+	 * Loop through the buttons and disable their event handler
+	 */
 	public void disableButtons() {
 		for (ChessButton[] bArray : buttons) {
 			for (ChessButton b : bArray) {
@@ -296,7 +314,9 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	// Loop through the buttons and enable their event handler
+	/**
+	 * Loop through the buttons and enable their event handler
+	 */
 	public void enableButtons() {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
@@ -311,7 +331,9 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	// Set the end text based on the current game state
+	/**
+	 * Set the end text based on the current game state
+	 */
 	public void setEndText() {
 		switch (game.getCurrState()) {
 		case WHITEWINS:
@@ -331,7 +353,9 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	// Update the GUI board, used after a move is made in the game class
+	/**
+	 * Update the GUI board, used after a move is made in the game class
+	 */
 	public void updateBoard() {
 		Board brd = game.getCopyOfCurrBoard();
 		for (int i = 0; i < 8; i++) {
@@ -348,8 +372,10 @@ public class ChessGUI extends Application {
 		}
 	}
 
-	/* Get the correct image for the pieces to be on the GUI
+	/**
+	 * Get the correct image for the pieces to be on the GUI
 	 * @param piece The piece that you are getting the image for
+	 * @return Returns an image created based on the piece
 	 */
 	
 	public Image getImage(Piece piece) {
@@ -404,7 +430,9 @@ public class ChessGUI extends Application {
 
 	}
 
-	// Show valid moves on the board, used by the click() method
+	/**
+	 * Show valid moves on the board, used by the click() method
+	 */
 	public void showValidMoves() {
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
@@ -423,7 +451,8 @@ public class ChessGUI extends Application {
 	}
 
 	
-	/* Launch the GUI game
+	/**
+	 * Launch the GUI game
 	 * @param args default java argument
 	 */
 	public static void main(String[] args) {

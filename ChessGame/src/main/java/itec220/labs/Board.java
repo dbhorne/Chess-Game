@@ -1,18 +1,17 @@
-/* Author:	Donovan Horne
- * Purpose: Board class to handle almost all logic for the game other than game state
- * Date:	4/20/2023
- */
-
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
 
-
+/**
+ * Purpose: Board class to handle almost all logic for the game other than game state
+ * Date:	4/20/2023
+ * @author Donovan Horne
+ */
 public class Board {
 	private Piece[][] pieces = new Piece[8][8];
-	public final int BOARD_SIZE = pieces.length;
+	public final int BOARD_SIZE = pieces.length; 
 	private ArrayList<SimpleEntry<Integer, Integer>> whiteMoves = new ArrayList<>();
 	private ArrayList<SimpleEntry<Integer, Integer>> blackMoves = new ArrayList<>();
 	private int numOfWhitePieces = 0;
@@ -20,12 +19,17 @@ public class Board {
 	private SimpleEntry<Integer, Integer> enPassant = null;
 	private ArrayList<Piece> takenPieces = new ArrayList<>();
 	
-	// Constructor for the board, calls a reset board method
+	/**
+	 * Constructor for the board, calls a reset board method
+	 */
 	Board() {
 		resetBoard();
 	}
 
-	// Get all possible moves for the white pieces and return them
+	/**
+	 * Get all possible moves for the white pieces and return them
+	 * @return Return a ArrayList of all possible moves for white
+	 */
 	public ArrayList<SimpleEntry<Integer, Integer>> getWhiteMoves() {
 		calcPieceMoves(false, Color.WHITE);
 		ArrayList<SimpleEntry<Integer, Integer>> temp = new ArrayList<>();
@@ -35,7 +39,10 @@ public class Board {
 		return temp;
 	}
 
-	// Get all possible moves for the black pieces and return them
+	/**
+	 * Get all possible moves for the black pieces and return them
+	 * @return Return a ArrayList of all possible moves for black
+	 */
 	public ArrayList<SimpleEntry<Integer, Integer>> getBlackMoves() {
 		calcPieceMoves(false, Color.BLACK);
 		ArrayList<SimpleEntry<Integer, Integer>> temp = new ArrayList<>();
@@ -45,7 +52,9 @@ public class Board {
 		return temp;
 	}
 
-	// calculate the current number of pieces on the board for each color
+	/**
+	 * calculate the current number of pieces on the board for each color
+	 */
 	public void calcNumOfPieces() {
 		numOfBlackPieces = 0;
 		numOfWhitePieces = 0;
@@ -63,14 +72,17 @@ public class Board {
 	}
 
 	
-	/* Constructor for the board with a pieces array passed in to create a specific board state
+	/**
+	 * Constructor for the board with a pieces array passed in to create a specific board state
 	 * @param pieces Piece array with the board state you wish to have
 	 */
 	Board(Piece[][] pieces) {
 		this.pieces = pieces;
 	}
 
-	// resets the board to a default state
+	/**
+	 * resets the board to a default state
+	 */
 	public void resetBoard() {
 		Pawn.resetPawnID();
 		for (int row = 0; row < 8; row++) {
@@ -130,7 +142,10 @@ public class Board {
 	}
 
 	
-	// Creates a deep copy of the board so that the new copy doesn't reference the same pieces
+	/**
+	 * Creates a deep copy of the board so that the new copy doesn't reference the same pieces
+	 * @return Returns a deep copy of the current Board
+	 */
 	public Board copy() {
 		Board copy = new Board();
 		Piece[][] tempPieces = new Piece[8][8];
@@ -170,13 +185,15 @@ public class Board {
 		return copy;
 	}
 
-	/* Used to move a piece if the move is valid, as well as check for special cases such
+	/**
+	 * Used to move a piece if the move is valid, as well as check for special cases such
 	 * 		as en passant, castling, and promotions
 	 * @param startX the starting row of the piece being moved
 	 * @param startY the starting column of the piece being moved
 	 * @param endX the destination row of the piece being moved
 	 * @param endY the destination column of the piece being moved
 	 * @param currColor a check to ensure the color of the piece is the correct with the one they want to move
+	 * @return Returns a boolean, true if the move was made, false if it was an invalid move
 	 */
 	public boolean move(int startX, int startY, int endX, int endY, Color currColor) {
 		if (pieces[startX][startY] != null && pieces[startX][startY].getColor() == currColor
@@ -245,12 +262,16 @@ public class Board {
 		return false;
 	}
 	
-	// Return the number of pieces that have been taken
+	/**
+	 * Return the number of pieces that have been taken
+	 * @return Return an int value of the number of taken pieces
+	 */
 	public int getNumOfTakenPieces() {
 		return takenPieces.size();
 	}
 	
-	/* Used to promote a pawn to a new type of piece
+	/**
+	 * Used to promote a pawn to a new type of piece
 	 * @param rank the row in which the pawn is in
 	 * @param file the column the pawn is in 
 	 * @param type the type of piece the pawn wants to promote to
@@ -294,8 +315,9 @@ public class Board {
 		}
 	}
 
-	/* Update enPassant variable after each move, if a piece is available for being enPassant
-	 * remove it and set it to null, and set that it cannot be taken via en passant
+	/**
+	 * Update enPassant variable after each move, if a piece is available for being enPassant
+	 * 		remove it and set it to null, and set that it cannot be taken via en passant
 	 */
 
 	public void updateEnPassant() {
@@ -307,9 +329,11 @@ public class Board {
 		}
 	}
 
-	/* a method to determine if the king can move, whether it be check or there are simply no possible moves
-	 * for the king
+	/**
+	 * a method to determine if the king can move, whether it be check or there are simply no possible moves
+	 * 		for the king
 	 * @param colorOfKing the color of the king that you wish to determine
+	 * @return Returns a boolean about whether the king has any possible moves
 	 */
 	public boolean canKingMove(Color colorOfKing) {
 		for (int i = 0; i < BOARD_SIZE; i++) {
@@ -323,8 +347,10 @@ public class Board {
 	}
 
 
-	/* Return the King of the color specified
+	/**
+	 * Return the King of the color specified
 	 * @param color Color of the king you wish to return
+	 * @return Returns a piece of type King
 	 */
 	public King getKing(Color color) {
 		int kingRow = -1;
@@ -345,8 +371,10 @@ public class Board {
 		return (King) pieces[kingRow][kingCol];
 	}
 
-	/* Used to call the method for each king called isInCheck
+	/**
+	 * Used to call the method for each king called isInCheck
 	 * @param colorOfKing color of the king you wish to determine
+	 * @return Returns a boolean based on if the king is in check
 	 */
 	public boolean isKingInCheck(Color colorOfKing) {
 		King king = getKing(colorOfKing);
@@ -361,30 +389,38 @@ public class Board {
 	}
 
 	
-	/* Used to set the pieces on the board
+	/**
+	 * Used to set the pieces on the board
 	 * @param pieces the Piece array you wish to set the board to
 	 */
 	public void setPieces(Piece[][] pieces) {
 		this.pieces = pieces;
 	}
 
-	// Return the pieces array of the board state
+	/**
+	 * Return the pieces array of the board state
+	 * @return Returns the current Piece array
+	 */
 	public Piece[][] getPieces() {
 		return pieces;
 	}
 
-	/* Return a piece at a specific position on the board
+	/**
+	 * Return a piece at a specific position on the board
 	 * @param rank the row in which the piece is
 	 * @param file the column in which the piece is
+	 * @return Returns a piece based on rank and file
 	 */
 	public Piece getPiece(int rank, int file) {
 		return pieces[rank][file];
 	}
 
-	/* Used to get a list of valid moves for a specific piece
+	/**
+	 * Used to get a list of valid moves for a specific piece
 	 * @param rank row of the piece
 	 * @param file column of the piece
 	 * @param currMove A check of the color of the piece you want
+	 * @return Returns an ArrayList of valid moves for given piece
 	 */
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(int rank, int file, Color currMove) {
 		if (pieces[rank][file] != null) {
@@ -395,7 +431,8 @@ public class Board {
 		return new ArrayList<SimpleEntry<Integer, Integer>>();
 	}
 
-	/* Used to update all possible moves on the board for a specific color
+	/**
+	 * Used to update all possible moves on the board for a specific color
 	 * @param kingFlag if you want to check if the king is going to be in check or to ignore
 	 * @param color the color of pieces you wish to calculate all the moves for
 	 */
@@ -425,7 +462,10 @@ public class Board {
 		}
 	}
 
-	// Convert the current board state into a string
+	/** 
+	 * Convert the current board state into a string
+	 * @return String of the current board
+	 */
 	@Override
 	public String toString() {
 		String temp = "";
@@ -464,7 +504,10 @@ public class Board {
 		return temp;
 	}
 
-	// To get a String of the board
+	/**
+	 * To get a String of the board, used for keeping track of each board state
+	 * @return Returns a single string of the board
+	 */
 	public String getBoardString() {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < BOARD_SIZE; i++) {
@@ -480,8 +523,10 @@ public class Board {
 		return sb.toString();
 	}
 
-	/* To get the number of pieces on the board for a specific color
+	/**
+	 * To get the number of pieces on the board for a specific color
 	 * @param color Color of which you want know their number of pieces
+	 * @return Returns and int of the number of pieces on the board
 	 */
 	public int getNumOfPieces(Color color) {
 		calcNumOfPieces();
