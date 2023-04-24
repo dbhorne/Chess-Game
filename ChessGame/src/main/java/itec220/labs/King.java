@@ -35,8 +35,9 @@ public class King extends Piece {
 	}
 
 	/**
-	 * Used to see if the king is in check by checking a list to see if their position is in it
-	 * @param possibleMoves the list of possible moves of the other color
+	 * Used to see if the king is in check by checking offsets to see if a piece of the other color is there, and is
+	 * 		the correct instance piece
+	 * @param copy Copy of the board used to check pieces on the board
 	 * @return Returns a boolean of whether the King is in check
 	 */
 	public boolean isInCheck(Board copy) {
