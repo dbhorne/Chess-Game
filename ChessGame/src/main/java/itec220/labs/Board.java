@@ -380,9 +380,9 @@ public class Board {
 		King king = getKing(colorOfKing);
 		if (king != null) {
 			if (colorOfKing == Color.WHITE) {
-				return king.isInCheck(blackMoves);
+				return king.isInCheck(this.copy());
 			} else {
-				return king.isInCheck(whiteMoves);
+				return king.isInCheck(this.copy());
 			}
 		}
 		return true;

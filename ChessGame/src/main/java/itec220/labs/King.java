@@ -11,6 +11,8 @@ import java.util.ArrayList;
 public class King extends Piece {
 	private static final int[] RANK_OFFSETS = { 0, 0, 1, -1, 1, 1, -1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0, 1, -1, 1, -1 };
+	private static final int[] RANK_CHECK_OFFSETS = {0, 0, 1, -1, 1, 1, -1, -1, 2, 1, -1, -2, -2, -1, 1, 2};
+	private static final int[] FILE_CHECK_OFFSETS = {1, -1, 0, 0, 1, -1, 1, -1, 1, 2, 2, 1, -1, -2, -2, -1 };
 	private boolean hasMoved = false;
 
 	/**
@@ -37,8 +39,44 @@ public class King extends Piece {
 	 * @param possibleMoves the list of possible moves of the other color
 	 * @return Returns a boolean of whether the King is in check
 	 */
-	public boolean isInCheck(ArrayList<SimpleEntry<Integer, Integer>> possibleMoves) {
-		return possibleMoves.contains(new SimpleEntry<>(this.getRank(), this.getFile()));
+	public boolean isInCheck(Board copy) {
+		Piece[][] pieces = copy.getPieces();
+		
+		int curRank = this.getRank();
+		int curFile = this.getFile();
+		for (int check = 0; check < RANK_CHECK_OFFSETS.length; check++) {
+			int rankOffset = RANK_CHECK_OFFSETS[check];
+			int fileOffset = FILE_CHECK_OFFSETS[check];
+
+			for (int i = 1; i < copy.BOARD_SIZE; i++) {
+				int newRank = curRank + (i * rankOffset);
+				int newFile = curFile + (i * fileOffset);
+				if(newRank > 7 || newFile > 7 || newRank < 0 || newFile < 0)
+					break;
+				
+				if(pieces[newRank][newFile] != null) {
+					if(check < 4) {
+						if(pieces[newRank][newFile].getColor() != this.getColor() && (pieces[newRank][newFile] instanceof Rook || pieces[newRank][newFile] instanceof Queen)) {
+							return true;							
+						}
+					} else if(check < 8) {
+						if(pieces[newRank][newFile].getColor() != this.getColor()) {
+							if(i == 1 && (pieces[newRank][newFile] instanceof Queen || pieces[newRank][newFile] instanceof Bishop || pieces[newRank][newFile] instanceof Pawn)) {
+								return true;
+							} else if(pieces[newRank][newFile] instanceof Queen || pieces[newRank][newFile] instanceof Bishop) {
+								return true;
+							}
+						} 
+					} else {
+						if(pieces[newRank][newFile] != null && pieces[newRank][newFile].getColor() != this.getColor() && pieces[newRank][newFile] instanceof Knight) {
+							return true;
+						}
+						break;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
