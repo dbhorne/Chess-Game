@@ -86,6 +86,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final ChessStackPane[][] spaces = new ChessStackPane[BOARD_SIZE][BOARD_SIZE];
 	private final Region[][] spacesBackground = new Region[BOARD_SIZE][BOARD_SIZE];
 	private final Region[][] lastMoveHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
+	private final Region[][] checkHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
 	private final Region[][] selectedHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
 	private final Circle[][] moveIndicators = new Circle[BOARD_SIZE][BOARD_SIZE];
 	private final ImageView[][] pieceViews = new ImageView[BOARD_SIZE][BOARD_SIZE];
@@ -489,6 +490,11 @@ public class ChessGUI extends Application implements GameViewListener {
 				lastMoveHighlights[i][j].setVisible(false);
 				lastMoveHighlights[i][j].setMouseTransparent(true);
 
+				checkHighlights[i][j] = new Region();
+				checkHighlights[i][j].getStyleClass().add("check-square");
+				checkHighlights[i][j].setVisible(false);
+				checkHighlights[i][j].setMouseTransparent(true);
+
 				selectedHighlights[i][j] = new Region();
 				selectedHighlights[i][j].getStyleClass().add("selected-square");
 				selectedHighlights[i][j].setVisible(false);
@@ -512,6 +518,7 @@ public class ChessGUI extends Application implements GameViewListener {
 
 				spaces[i][j].getChildren().add(spacesBackground[i][j]);
 				spaces[i][j].getChildren().add(lastMoveHighlights[i][j]);
+				spaces[i][j].getChildren().add(checkHighlights[i][j]);
 				spaces[i][j].getChildren().add(selectedHighlights[i][j]);
 				spaces[i][j].getChildren().add(moveIndicators[i][j]);
 				spaces[i][j].getChildren().add(pieceViews[i][j]);
@@ -852,6 +859,25 @@ public class ChessGUI extends Application implements GameViewListener {
 		lastMoveHighlights[BOARD_SIZE - 1 - endRank][endFile].setVisible(true);
 	}
 
+	private void updateCheckHighlight() {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				checkHighlights[i][j].setVisible(false);
+			}
+		}
+		GameState state = game.getCurrState();
+		Color colorInCheck = null;
+		if (state == GameState.WHITEINCHECK) {
+			colorInCheck = Color.WHITE;
+		} else if (state == GameState.BLACKINCHECK) {
+			colorInCheck = Color.BLACK;
+		}
+		if (colorInCheck == null) return;
+		King king = game.getCopyOfCurrBoard().getKing(colorInCheck);
+		if (king == null) return;
+		checkHighlights[BOARD_SIZE - 1 - king.getRank()][king.getFile()].setVisible(true);
+	}
+
 	private void clearPromotionButtons() {
 		for (Button b : promoteButtons) {
 			b.setOnAction(null);
@@ -880,6 +906,7 @@ public class ChessGUI extends Application implements GameViewListener {
 			currentColor.setText(String.format("%s's move", game.getCurrMove().name));
 			break;
 		}
+		updateCheckHighlight();
 	}
 
 	private Media loadMedia(String resourcePath) {
