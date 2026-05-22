@@ -109,6 +109,24 @@ public abstract class Piece {
 	}
 
 	/**
+	 * Return the FEN character for this piece (uppercase = white, lowercase = black)
+	 * @return the FEN character
+	 */
+	public char toFENChar() {
+		char c;
+		switch (type) {
+			case KING:   c = 'k'; break;
+			case QUEEN:  c = 'q'; break;
+			case ROOK:   c = 'r'; break;
+			case BISHOP: c = 'b'; break;
+			case KNIGHT: c = 'n'; break;
+			case PAWN:   c = 'p'; break;
+			default:     c = '?'; break;
+		}
+		return color == Color.WHITE ? Character.toUpperCase(c) : c;
+	}
+
+	/**
 	 * Return the color of the piece
 	 * @return Return a Color enum from the piece
 	 */
