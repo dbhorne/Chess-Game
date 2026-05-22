@@ -56,6 +56,29 @@
     -fx-background-color: rgba(220, 50, 50, 0.45);
 }
 
+.coord-label-rank {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #b8b0a8;
+    -fx-font-family: "Courier New";
+    -fx-min-width: 22px;
+    -fx-pref-width: 22px;
+    -fx-min-height: 76px;
+    -fx-pref-height: 76px;
+    -fx-alignment: center-right;
+    -fx-padding: 0 4 0 0;
+}
+
+.coord-label-file {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #b8b0a8;
+    -fx-font-family: "Courier New";
+    -fx-min-width: 76px;
+    -fx-pref-width: 76px;
+    -fx-alignment: center;
+}
+
 .selected-square {
     -fx-background-color: rgba(247, 206, 86, 0.42);
 }

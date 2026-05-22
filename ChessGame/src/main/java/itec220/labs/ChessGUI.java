@@ -133,8 +133,25 @@ public class ChessGUI extends Application implements GameViewListener {
 		menuCenter.setPadding(new Insets(20));
 		menu.setCenter(menuCenter);
 
+		VBox rankLabels = new VBox(0);
+		rankLabels.setPadding(new Insets(18, 6, 18, 0));
+		for (int i = BOARD_SIZE - 1; i >= 0; i--) {
+			Label lbl = new Label(String.valueOf(i + 1));
+			lbl.getStyleClass().add("coord-label-rank");
+			rankLabels.getChildren().add(lbl);
+		}
+		HBox fileLabels = new HBox(0);
+		fileLabels.setPadding(new Insets(4, 0, 0, 40));
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			Label lbl = new Label(String.valueOf((char) ('A' + j)));
+			lbl.getStyleClass().add("coord-label-file");
+			fileLabels.getChildren().add(lbl);
+		}
+		HBox boardRow = new HBox(0, rankLabels, grid);
+		VBox boardWithCoords = new VBox(0, boardRow, fileLabels);
+
 		root.setTop(currentColor);
-		root.setCenter(grid);
+		root.setCenter(boardWithCoords);
 		root.setRight(moveHistoryPanel);
 		moveBar.getChildren().add(lastMove);
 		bottom.getChildren().add(moveBar);
