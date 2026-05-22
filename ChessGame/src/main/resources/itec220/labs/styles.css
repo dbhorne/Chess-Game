@@ -48,6 +48,10 @@
     -fx-background-color: #f3d9ad;
 }
 
+.last-move-square {
+    -fx-background-color: rgba(205, 210, 106, 0.38);
+}
+
 .selected-square {
     -fx-background-color: rgba(247, 206, 86, 0.42);
 }

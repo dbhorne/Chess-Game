@@ -85,6 +85,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final ChessButton[][] buttons = new ChessButton[BOARD_SIZE][BOARD_SIZE];
 	private final ChessStackPane[][] spaces = new ChessStackPane[BOARD_SIZE][BOARD_SIZE];
 	private final Region[][] spacesBackground = new Region[BOARD_SIZE][BOARD_SIZE];
+	private final Region[][] lastMoveHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
 	private final Region[][] selectedHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
 	private final Circle[][] moveIndicators = new Circle[BOARD_SIZE][BOARD_SIZE];
 	private final ImageView[][] pieceViews = new ImageView[BOARD_SIZE][BOARD_SIZE];
@@ -262,6 +263,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	private void resetGameView() {
 		lastMove.setText("");
 		clearSelection();
+		clearLastMoveHighlights();
 		clearPromotionButtons();
 		numTakenPieces = game.getNumTakenPieces();
 		updateStatusLabel();
@@ -482,6 +484,11 @@ public class ChessGUI extends Application implements GameViewListener {
 				spacesBackground[i][j].getStyleClass().add((i + j) % 2 == 0
 						? "chess-background-white" : "chess-background-black");
 
+				lastMoveHighlights[i][j] = new Region();
+				lastMoveHighlights[i][j].getStyleClass().add("last-move-square");
+				lastMoveHighlights[i][j].setVisible(false);
+				lastMoveHighlights[i][j].setMouseTransparent(true);
+
 				selectedHighlights[i][j] = new Region();
 				selectedHighlights[i][j].getStyleClass().add("selected-square");
 				selectedHighlights[i][j].setVisible(false);
@@ -504,6 +511,7 @@ public class ChessGUI extends Application implements GameViewListener {
 				buttons[i][j].getStyleClass().add("chess-button-transparent");
 
 				spaces[i][j].getChildren().add(spacesBackground[i][j]);
+				spaces[i][j].getChildren().add(lastMoveHighlights[i][j]);
 				spaces[i][j].getChildren().add(selectedHighlights[i][j]);
 				spaces[i][j].getChildren().add(moveIndicators[i][j]);
 				spaces[i][j].getChildren().add(pieceViews[i][j]);
@@ -645,6 +653,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		boolean inCheck = state == GameState.WHITEINCHECK || state == GameState.BLACKINCHECK;
 		playSound(inCheck ? chessCheck : isCapture ? chessTake : chessMove);
 		clearSelection();
+		setLastMoveHighlights(move.startRank, move.startFile, move.endRank, move.endFile);
 		updateMoveSquares(move.startRank, move.startFile, move.endRank, move.endFile, movingPiece, enPassantCapture);
 		handlePromotionIfNeeded(move.endRank, move.endFile);
 		if (promotionPending) {
@@ -827,6 +836,20 @@ public class ChessGUI extends Application implements GameViewListener {
 				moveIndicators[i][j].setVisible(false);
 			}
 		}
+	}
+
+	private void clearLastMoveHighlights() {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				lastMoveHighlights[i][j].setVisible(false);
+			}
+		}
+	}
+
+	private void setLastMoveHighlights(int startRank, int startFile, int endRank, int endFile) {
+		clearLastMoveHighlights();
+		lastMoveHighlights[BOARD_SIZE - 1 - startRank][startFile].setVisible(true);
+		lastMoveHighlights[BOARD_SIZE - 1 - endRank][endFile].setVisible(true);
 	}
 
 	private void clearPromotionButtons() {
