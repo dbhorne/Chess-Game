@@ -327,24 +327,6 @@ public class Board {
 	}
 
 	/**
-	 * a method to determine if the king can move, whether it be check or there are simply no possible moves
-	 * 		for the king
-	 * @param colorOfKing the color of the king that you wish to determine
-	 * @return Returns a boolean about whether the king has any possible moves
-	 */
-	public boolean canKingMove(Color colorOfKing) {
-		for (int i = 0; i < BOARD_SIZE; i++) {
-			for (int j = 0; j < BOARD_SIZE; j++) {
-				if (pieces[i][j] != null && pieces[i][j] instanceof King && pieces[i][j].getColor() == colorOfKing) {
-					return pieces[i][j].getValidMoves(this.copy(), true).isEmpty();
-				}
-			}
-		}
-		return false;
-	}
-
-
-	/**
 	 * Return the King of the color specified
 	 * @param color Color of the king you wish to return
 	 * @return Returns a piece of type King
