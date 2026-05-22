@@ -87,7 +87,7 @@ public class Pawn extends Piece {
 		ArrayList<SimpleEntry<Integer, Integer>> moves = new ArrayList<>();
 		int curRank = this.getRank();
 		int curFile = this.getFile();
-		if (curRank >= copy.BOARD_SIZE || curRank < 0 || curFile >= copy.BOARD_SIZE || curRank < 0) {
+		if (curRank >= copy.BOARD_SIZE || curRank < 0 || curFile >= copy.BOARD_SIZE || curFile < 0) {
 			System.out.println("Something went wrong in the pawn class, take a second to check on " + this);
 		} else {
 			if (this.getColor() == Color.WHITE) {

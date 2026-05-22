@@ -42,7 +42,7 @@ public class Bishop extends Piece {
 		int curRank = this.getRank();
 		int curFile = this.getFile();
 
-		if (curRank >= copy.BOARD_SIZE || curRank < 0 || curFile > copy.BOARD_SIZE || curRank < 0) {
+		if (curRank >= copy.BOARD_SIZE || curRank < 0 || curFile >= copy.BOARD_SIZE || curFile < 0) {
 			System.out.println("Something went wrong with the bishop at " + this);
 		} else {
 			for (int check = 0; check < 4; check++) {

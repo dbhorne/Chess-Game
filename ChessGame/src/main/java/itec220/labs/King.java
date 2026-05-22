@@ -92,7 +92,7 @@ public class King extends Piece {
 		ArrayList<SimpleEntry<Integer, Integer>> moves = new ArrayList<>();
 		int curRank = this.getRank();
 		int curFile = this.getFile();
-		if (curRank >= copy.BOARD_SIZE || curRank < 0 || curFile > copy.BOARD_SIZE || curRank < 0) {
+		if (curRank >= copy.BOARD_SIZE || curRank < 0 || curFile >= copy.BOARD_SIZE || curFile < 0) {
 			System.out.println("Something went wrong with the king at " + this);
 		} else {
 			for (int i = 0; i < RANK_OFFSETS.length; i++) {
