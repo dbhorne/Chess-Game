@@ -122,8 +122,8 @@ public class King extends Piece {
 							moves.add(new SimpleEntry<>(curRank, curFile + 2));
 						} else {
 							Board copyOfCopy = copy.copy();
-							copyOfCopy.move(curFile, curFile, curRank, curFile+2, getColor());
-							copyOfCopy.move(curFile, curFile+3, curRank, curFile+1, getColor());
+							copyOfCopy.move(curRank, curFile, curRank, curFile+2, getColor());
+							copyOfCopy.move(curRank, curFile+3, curRank, curFile+1, getColor());
 							if(!copyOfCopy.isKingInCheck(getColor())) {
 								moves.add(new SimpleEntry<>(curRank, curFile + 2));
 							}
@@ -142,8 +142,8 @@ public class King extends Piece {
 							moves.add(new SimpleEntry<>(curRank, curFile - 2));
 						} else {
 							Board copyOfCopy = copy.copy();
-							copyOfCopy.move(curFile, curFile, curRank, curFile-2, getColor());
-							copyOfCopy.move(curFile, curFile-4, curRank, curFile-1, getColor());
+							copyOfCopy.move(curRank, curFile, curRank, curFile-2, getColor());
+							copyOfCopy.move(curRank, curFile-4, curRank, curFile-1, getColor());
 							if(!copyOfCopy.isKingInCheck(getColor())) {
 								moves.add(new SimpleEntry<>(curRank, curFile - 2));
 							}
