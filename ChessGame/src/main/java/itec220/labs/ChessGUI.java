@@ -11,6 +11,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -45,7 +46,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	private static final int MOVE_INDICATOR_RADIUS = 10;
 	private static final int CAPTURE_INDICATOR_RADIUS = 28;
 	private static final int SCENE_WIDTH = 1120;
-	private static final int SCENE_HEIGHT = 780;
+	private static final int SCENE_HEIGHT = 820;
 	private static final String MOVE_SOUND = "/itec220/labs/ChessMove.mp3";
 	private static final String CAPTURE_SOUND = "/itec220/labs/ChessCapture.mp3";
 	private static final String CHECK_SOUND = "/itec220/labs/move-check.mp3";
@@ -687,6 +688,7 @@ public class ChessGUI extends Application implements GameViewListener {
 				}
 			}
 		};
+		setPromoteButtonImages(pawn.getColor());
 		for (Button b : promoteButtons) {
 			b.setOnAction(event);
 			if (!moveBar.getChildren().contains(b)) {
@@ -945,6 +947,18 @@ public class ChessGUI extends Application implements GameViewListener {
 		King king = game.getCopyOfCurrBoard().getKing(colorInCheck);
 		if (king == null) return;
 		checkHighlights[BOARD_SIZE - 1 - king.getRank()][king.getFile()].setVisible(true);
+	}
+
+	private void setPromoteButtonImages(Color color) {
+		EnumMap<PieceType, Image> images = color == itec220.labs.Color.WHITE ? whiteImages : blackImages;
+		for (PromoteButton b : promoteButtons) {
+			ImageView iv = new ImageView(images.get(b.type));
+			iv.setFitWidth(44);
+			iv.setFitHeight(44);
+			iv.setPreserveRatio(true);
+			b.setGraphic(iv);
+			b.setContentDisplay(ContentDisplay.TOP);
+		}
 	}
 
 	private void clearPromotionButtons() {

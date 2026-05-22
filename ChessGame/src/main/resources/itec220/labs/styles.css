@@ -193,9 +193,9 @@
     -fx-min-width: 220px;
     -fx-pref-width: 220px;
     -fx-max-width: 220px;
-    -fx-min-height: 220px;
-    -fx-pref-height: 220px;
-    -fx-max-height: 220px;
+    -fx-min-height: 260px;
+    -fx-pref-height: 260px;
+    -fx-max-height: 260px;
     -fx-background-color: #6f7276;
 }
 
