@@ -89,6 +89,6 @@ public class Queen extends Piece {
 	 */
 	@Override
 	public String toString() {
-		return "Q" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+		return "Q" + columnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 }

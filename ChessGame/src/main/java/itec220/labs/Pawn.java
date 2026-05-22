@@ -91,209 +91,82 @@ public class Pawn extends Piece {
 			System.out.println("Something went wrong in the pawn class, take a second to check on " + this);
 		} else {
 			if (this.getColor() == Color.WHITE) {
-				if (curRank + 1 < 8 && pieces[curRank + 1][curFile] == null) { // can white pawn move forward one space
+				int fwd = curRank + 1;
+				if (fwd < 8 && pieces[fwd][curFile] == null) {
 					if (kingCheck) {
-						moves.add(new SimpleEntry<>(curRank + 1, curFile));
-					} else if (this.isValidMove(curRank + 1, curFile, copy)) {
-						moves.add(new SimpleEntry<>(curRank + 1, curFile));
+						moves.add(new SimpleEntry<>(fwd, curFile));
+					} else if (this.isValidMove(fwd, curFile, copy)) {
+						moves.add(new SimpleEntry<>(fwd, curFile));
 					}
 				}
-				if (curFile != 0 && curFile != 7) { // check and see if the pawn is on the edge of the board
-					if (curRank + 1 < 8 && curFile + 1 < 8 && pieces[curRank + 1][curFile + 1] != null // check to see
-																										// if the pawn
-																										// to the upper
-																										// right is not
-																										// null and not
-																										// white
-							&& pieces[curRank + 1][curFile + 1].getColor() == Color.BLACK) {
+				for (int df : new int[]{-1, 1}) {
+					int diagFile = curFile + df;
+					if (diagFile < 0 || diagFile >= 8) continue;
+					if (fwd < 8 && pieces[fwd][diagFile] != null && pieces[fwd][diagFile].getColor() == Color.BLACK) {
 						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
-						} else if (this.isValidMove(curRank + 1, curFile + 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
+							moves.add(new SimpleEntry<>(fwd, diagFile));
+						} else if (this.isValidMove(fwd, diagFile, copy)) {
+							moves.add(new SimpleEntry<>(fwd, diagFile));
 						}
 					}
-					if (curRank + 1 < 8 && curFile - 1 >= 0 && pieces[curRank + 1][curFile - 1] != null // check the
-																										// upper left
-																										// move
-							&& pieces[curRank + 1][curFile - 1].getColor() == Color.BLACK) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
-						} else if (this.isValidMove(curRank + 1, curFile - 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
-						}
-					}
-					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null
-							&& pieces[curRank][curFile + 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
-						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
+					if (pieces[curRank][diagFile] != null && pieces[curRank][diagFile].getColor() == Color.BLACK
+							&& pieces[curRank][diagFile] instanceof Pawn) {
+						Pawn temp = (Pawn) pieces[curRank][diagFile];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
-							} else if (this.isValidMove(curRank + 1, curFile + 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
-							}
-						}
-					}
-					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null
-							&& pieces[curRank][curFile - 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
-						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
-						if (temp.getEnPassant()) {
-							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
-							} else if (this.isValidMove(curRank + 1, curFile - 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
-							}
-						}
-					}
-				} else if (curFile == 0) { // check to see if the pawn is on the left side of the board
-					if (curRank + 1 < 8 && curFile + 1 < 8 && pieces[curRank + 1][curFile + 1] != null // can it take a
-																										// pawn up and
-																										// to the right
-							&& pieces[curRank + 1][curFile + 1].getColor() == Color.BLACK) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
-						} else if (this.isValidMove(curRank + 1, curFile + 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
-						}
-					}
-					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
-						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
-						if (temp.getEnPassant()) {
-							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
-							} else if (this.isValidMove(curRank + 1, curFile + 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile + 1));
-							}
-						}
-					}
-				} else if (curFile == 7) { // if the pawn is on the right side of the board
-					if (curRank + 1 < 8 && curFile - 1 >= 0 && pieces[curRank + 1][curFile - 1] != null // check the up and to the left space
-							&& pieces[curRank + 1][curFile - 1].getColor() == Color.BLACK) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
-						} else if (this.isValidMove(curRank + 1, curFile - 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
-						}
-					}
-					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.BLACK
-							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
-						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
-						if (temp.getEnPassant()) {
-							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
-							} else if (this.isValidMove(curRank + 1, curFile - 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank + 1, curFile - 1));
+								moves.add(new SimpleEntry<>(fwd, diagFile));
+							} else if (this.isValidMove(fwd, diagFile, copy)) {
+								moves.add(new SimpleEntry<>(fwd, diagFile));
 							}
 						}
 					}
 				}
-				if (!madeFirstMove) {
-					if (curRank + 2 < 8 &&  pieces[curRank + 1][curFile] == null && pieces[curRank + 2][curFile] == null) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank + 2, curFile));
-						} else if (this.isValidMove(curRank + 2, curFile, copy)) {
-							moves.add(new SimpleEntry<>(curRank + 2, curFile));
-						}
+				if (!madeFirstMove && fwd < 8 && curRank + 2 < 8
+						&& pieces[fwd][curFile] == null && pieces[curRank + 2][curFile] == null) {
+					if (kingCheck) {
+						moves.add(new SimpleEntry<>(curRank + 2, curFile));
+					} else if (this.isValidMove(curRank + 2, curFile, copy)) {
+						moves.add(new SimpleEntry<>(curRank + 2, curFile));
 					}
 				}
 
 			} else if (this.getColor() == Color.BLACK) {
-				if (curRank - 1 >= 0 && pieces[curRank - 1][curFile] == null) { // check to see if it can move forward one space
+				int fwd = curRank - 1;
+				if (fwd >= 0 && pieces[fwd][curFile] == null) {
 					if (kingCheck) {
-						moves.add(new SimpleEntry<>(curRank - 1, curFile));
-					} else if (this.isValidMove(curRank - 1, curFile, copy)) {
-						moves.add(new SimpleEntry<>(curRank - 1, curFile));
+						moves.add(new SimpleEntry<>(fwd, curFile));
+					} else if (this.isValidMove(fwd, curFile, copy)) {
+						moves.add(new SimpleEntry<>(fwd, curFile));
 					}
 				}
-				if (curFile != 0 && curFile != 7) { // if the pawn isn't on the edge of the board
-					if (curRank - 1 >= 0 && curFile + 1 < 8 && pieces[curRank - 1][curFile + 1] != null // check the space down and to the right
-							&& pieces[curRank - 1][curFile + 1].getColor() == Color.WHITE) {
+				for (int df : new int[]{-1, 1}) {
+					int diagFile = curFile + df;
+					if (diagFile < 0 || diagFile >= 8) continue;
+					if (fwd >= 0 && pieces[fwd][diagFile] != null && pieces[fwd][diagFile].getColor() == Color.WHITE) {
 						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
-						} else if (this.isValidMove(curRank - 1, curFile + 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
+							moves.add(new SimpleEntry<>(fwd, diagFile));
+						} else if (this.isValidMove(fwd, diagFile, copy)) {
+							moves.add(new SimpleEntry<>(fwd, diagFile));
 						}
 					}
-					if (curRank - 1 >= 0 && curFile - 1 >= 0 && pieces[curRank - 1][curFile - 1] != null // check the space down and to the left
-							&& pieces[curRank - 1][curFile - 1].getColor() == Color.WHITE) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
-						} else if (this.isValidMove(curRank - 1, curFile - 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
-						}
-					}
-					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
-						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
+					if (pieces[curRank][diagFile] != null && pieces[curRank][diagFile].getColor() == Color.WHITE
+							&& pieces[curRank][diagFile] instanceof Pawn) {
+						Pawn temp = (Pawn) pieces[curRank][diagFile];
 						if (temp.getEnPassant()) {
 							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
-							} else if (this.isValidMove(curRank - 1, curFile + 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
-							}
-						}
-					}
-					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
-						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
-						if (temp.getEnPassant()) {
-							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
-							} else if (this.isValidMove(curRank - 1, curFile - 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
-							}
-						}
-					}
-				} else if (curFile == 0) { // if the pawn is on the left side of the board
-					if (curRank - 1 >= 0 && curFile + 1 < 8 && pieces[curRank - 1][curFile + 1] != null // check the space down and to the right
-							&& pieces[curRank - 1][curFile + 1].getColor() == Color.WHITE) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
-						} else if (this.isValidMove(curRank - 1, curFile + 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
-						}
-					}
-					if (curFile + 1 < 8 && pieces[curRank][curFile + 1] != null && pieces[curRank][curFile + 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile + 1] instanceof Pawn) { // check enPassant to the right
-						Pawn temp = (Pawn) pieces[curRank][curFile + 1];
-						if (temp.getEnPassant()) {
-							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
-							} else if (this.isValidMove(curRank - 1, curFile + 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile + 1));
-							}
-						}
-					}
-				} else if (curFile == 7) { // if the pawn is on the right side of the board
-					if (curRank - 1 >= 0 && curFile - 1 >= 0 && pieces[curRank - 1][curFile - 1] != null // check the space down and to the left
-							&& pieces[curRank - 1][curFile - 1].getColor() == Color.WHITE) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
-						} else if (this.isValidMove(curRank - 1, curFile - 1, copy)) {
-							moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
-						}
-					}
-					if (curFile - 1 >= 0 && pieces[curRank][curFile - 1] != null && pieces[curRank][curFile - 1].getColor() == Color.WHITE
-							&& pieces[curRank][curFile - 1] instanceof Pawn) { // check enPassant to the left
-						Pawn temp = (Pawn) pieces[curRank][curFile - 1];
-						if (temp.getEnPassant()) {
-							if (kingCheck) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
-							} else if (this.isValidMove(curRank - 1, curFile - 1, copy)) {
-								moves.add(new SimpleEntry<>(curRank - 1, curFile - 1));
+								moves.add(new SimpleEntry<>(fwd, diagFile));
+							} else if (this.isValidMove(fwd, diagFile, copy)) {
+								moves.add(new SimpleEntry<>(fwd, diagFile));
 							}
 						}
 					}
 				}
-				if (!madeFirstMove) {
-					if (curRank - 2 >= 0 &&  pieces[curRank - 1][curFile] == null && pieces[curRank - 2][curFile] == null) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank - 2, curFile));
-						} else if (this.isValidMove(curRank - 2, curFile, copy)) {
-							moves.add(new SimpleEntry<>(curRank - 2, curFile));
-						}
+				if (!madeFirstMove && fwd >= 0 && curRank - 2 >= 0
+						&& pieces[fwd][curFile] == null && pieces[curRank - 2][curFile] == null) {
+					if (kingCheck) {
+						moves.add(new SimpleEntry<>(curRank - 2, curFile));
+					} else if (this.isValidMove(curRank - 2, curFile, copy)) {
+						moves.add(new SimpleEntry<>(curRank - 2, curFile));
 					}
 				}
 			}
@@ -311,11 +184,11 @@ public class Pawn extends Piece {
 	}
 
 	/**
-	 * Convert the pawn to a string using the rnak and file
+	 * Convert the pawn to a string using the rank and file
 	 * @return Returns a string of the piece
 	 */
 	@Override
 	public String toString() {
-		return "" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+		return "" + columnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 }

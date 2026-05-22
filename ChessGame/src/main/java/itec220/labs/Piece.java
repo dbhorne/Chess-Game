@@ -13,7 +13,7 @@ public abstract class Piece {
 	private int rank, file;
 	private PieceType type;
 	private Color color;
-	protected final char[] colomnLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
+	protected final char[] columnLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
 
 	/**
 	 * Constructor for every piece
@@ -64,9 +64,8 @@ public abstract class Piece {
 		this.setFile(newFile);
 		copy.calcPieceMoves(true, this.color == Color.WHITE ? Color.BLACK : Color.WHITE);
 		boolean temp = !copy.isKingInCheck(this.color);
-		if (board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE) != null
-				&& board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE).getRank() == newRank
-				&& board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE).getFile() == newFile) {
+		King oppositeKing = board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE);
+		if (oppositeKing != null && oppositeKing.getRank() == newRank && oppositeKing.getFile() == newFile) {
 			temp = true;
 		}
 

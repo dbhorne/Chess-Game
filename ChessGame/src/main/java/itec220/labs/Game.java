@@ -1,19 +1,5 @@
 package itec220.labs;
 
-/* Goals:
- * 1. finish with the logic of all the pieces
- * 		1. DONE!
- * 		2. DONE! (Partially, have to wait till I set up the UI to get an input for what piece you want to promote to)
- * 		3. DONE!
- *	2. After I finish with the logic, begin setting up the layout of the UI, the chess board, and the other parts of the 
- *		UI. The UI will have a start page that asks if you want to play human v human, or against a bot, this will
- *		come into play after I incorporate the bot into the game, this panel can also be used to display the winner 
- *		after a game is over
- *	3. After finishing the UI, then start incorporating the Game class into the UI with the buttons
- *	4. after I have a working model of the game, stress test it, and if it works on all the tests, begin creating
- *		a very simple bot. 
- */
-
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -93,7 +79,7 @@ public class Game {
 	 * @param startX the starting row of the piece
 	 * @param startY the starting column of the piece
 	 * @param endX the destination row of the piece
-	 * @param endY the destination row of the piece
+	 * @param endY the destination column of the piece
 	 * @return Return a boolean based on whether the move was made or not
 	 */
 	public boolean move(int startX, int startY, int endX, int endY) {

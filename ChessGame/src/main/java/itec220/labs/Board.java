@@ -147,7 +147,7 @@ public class Board {
 	 * @return Returns a deep copy of the current Board
 	 */
 	public Board copy() {
-		Board copy = new Board();
+		Board copy = new Board(new Piece[8][8]);
 		Piece[][] tempPieces = new Piece[8][8];
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
@@ -201,11 +201,11 @@ public class Board {
 				&& pieces[startX][startY].getValidMoves(this.copy(), false).contains(new SimpleEntry<>(endX, endY))) {
 			Piece piece = pieces[startX][startY];
 			if (piece instanceof Pawn) {
-				if (piece.getColor() == Color.WHITE && Math.abs(startY - endY) == 1 && endX - startX == 1
+				if (enPassant != null && piece.getColor() == Color.WHITE && Math.abs(startY - endY) == 1 && endX - startX == 1
 						&& pieces[endX][endY] == null) {
 					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
-				} else if (piece.getColor() == Color.BLACK && Math.abs(startY - endY) == 1 && startX - endX == 1
+				} else if (enPassant != null && piece.getColor() == Color.BLACK && Math.abs(startY - endY) == 1 && startX - endX == 1
 						&& pieces[endX][endY] == null) {
 					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
@@ -327,24 +327,6 @@ public class Board {
 	}
 
 	/**
-	 * a method to determine if the king can move, whether it be check or there are simply no possible moves
-	 * 		for the king
-	 * @param colorOfKing the color of the king that you wish to determine
-	 * @return Returns a boolean about whether the king has any possible moves
-	 */
-	public boolean canKingMove(Color colorOfKing) {
-		for (int i = 0; i < BOARD_SIZE; i++) {
-			for (int j = 0; j < BOARD_SIZE; j++) {
-				if (pieces[i][j] != null && pieces[i][j] instanceof King && pieces[i][j].getColor() == colorOfKing) {
-					return pieces[i][j].getValidMoves(this.copy(), true).isEmpty();
-				}
-			}
-		}
-		return false;
-	}
-
-
-	/**
 	 * Return the King of the color specified
 	 * @param color Color of the king you wish to return
 	 * @return Returns a piece of type King
@@ -376,11 +358,7 @@ public class Board {
 	public boolean isKingInCheck(Color colorOfKing) {
 		King king = getKing(colorOfKing);
 		if (king != null) {
-			if (colorOfKing == Color.WHITE) {
-				return king.isInCheck(this.copy());
-			} else {
-				return king.isInCheck(this.copy());
-			}
+			return king.isInCheck(this.copy());
 		}
 		return true;
 	}

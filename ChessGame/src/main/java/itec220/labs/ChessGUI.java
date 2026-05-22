@@ -1,8 +1,8 @@
 package itec220.labs;
 
 import java.util.AbstractMap.SimpleEntry;
-
 import java.util.ArrayList;
+import java.util.EnumMap;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -58,6 +58,8 @@ public class ChessGUI extends Application {
 	private PromoteButton[] promoteButtons = { new PromoteButton("Knight", PieceType.KNIGHT),
 			new PromoteButton("Queen", PieceType.QUEEN), new PromoteButton("Rook", PieceType.ROOK),
 			new PromoteButton("Bishop", PieceType.BISHOP) };
+	private final EnumMap<PieceType, Image> whiteImages = new EnumMap<>(PieceType.class);
+	private final EnumMap<PieceType, Image> blackImages = new EnumMap<>(PieceType.class);
 
 	
 	/**
@@ -133,6 +135,18 @@ public class ChessGUI extends Application {
 	 * Set up the GUI with buttons, and stylesheets
 	 */
 	public void setUpGUI() {
+		whiteImages.put(PieceType.QUEEN,  new Image(ChessGUI.class.getResourceAsStream("WhiteQueen.png")));
+		whiteImages.put(PieceType.KING,   new Image(ChessGUI.class.getResourceAsStream("WhiteKing.png")));
+		whiteImages.put(PieceType.PAWN,   new Image(ChessGUI.class.getResourceAsStream("WhitePawn.png")));
+		whiteImages.put(PieceType.KNIGHT, new Image(ChessGUI.class.getResourceAsStream("WhiteKnight.png")));
+		whiteImages.put(PieceType.ROOK,   new Image(ChessGUI.class.getResourceAsStream("WhiteRook.png")));
+		whiteImages.put(PieceType.BISHOP, new Image(ChessGUI.class.getResourceAsStream("WhiteBishop.png")));
+		blackImages.put(PieceType.QUEEN,  new Image(ChessGUI.class.getResourceAsStream("BlackQueen.png")));
+		blackImages.put(PieceType.KING,   new Image(ChessGUI.class.getResourceAsStream("BlackKing.png")));
+		blackImages.put(PieceType.PAWN,   new Image(ChessGUI.class.getResourceAsStream("BlackPawn.png")));
+		blackImages.put(PieceType.KNIGHT, new Image(ChessGUI.class.getResourceAsStream("BlackKnight.png")));
+		blackImages.put(PieceType.ROOK,   new Image(ChessGUI.class.getResourceAsStream("BlackRook.png")));
+		blackImages.put(PieceType.BISHOP, new Image(ChessGUI.class.getResourceAsStream("BlackBishop.png")));
 		currentColor.setText(String.format("%s's move", game.getCurrMove().name));
 
 		left.getChildren().add(leftRegion);
@@ -242,7 +256,7 @@ public class ChessGUI extends Application {
 									b.setOnAction(event);
 									bottom.getChildren().add(b);
 								}
-							} else if (rank == 0) {
+							} else if (p.getColor() == itec220.labs.Color.BLACK && rank == 0) {
 								lastMove.setText("Looks like black can promote the pawn at: "
 										+ buttons[7 - rank][file].toString());
 								for (Button b : promoteButtons) {
@@ -378,55 +392,8 @@ public class ChessGUI extends Application {
 	 */
 	
 	public Image getImage(Piece piece) {
-		PieceType type = piece.getType();
-		itec220.labs.Color color = piece.getColor();
-		Image image = null;
-		switch (type) {
-		case QUEEN:
-			if (color == itec220.labs.Color.WHITE) {
-				image = new Image(ChessGUI.class.getResourceAsStream("WhiteQueen.png"));
-			} else {
-				image = new Image(ChessGUI.class.getResourceAsStream("BlackQueen.png"));
-			}
-			break;
-		case KING:
-			if (color == itec220.labs.Color.WHITE) {
-				image = new Image(ChessGUI.class.getResourceAsStream("WhiteKing.png"));
-			} else {
-				image = new Image(ChessGUI.class.getResourceAsStream("BlackKing.png"));
-			}
-			break;
-		case PAWN:
-			if (color == itec220.labs.Color.WHITE) {
-				image = new Image(ChessGUI.class.getResourceAsStream("WhitePawn.png"));
-			} else {
-				image = new Image(ChessGUI.class.getResourceAsStream("BlackPawn.png"));
-			}
-			break;
-		case KNIGHT:
-			if (color == itec220.labs.Color.WHITE) {
-				image = new Image(ChessGUI.class.getResourceAsStream("WhiteKnight.png"));
-			} else {
-				image = new Image(ChessGUI.class.getResourceAsStream("BlackKnight.png"));
-			}
-			break;
-		case ROOK:
-			if (color == itec220.labs.Color.WHITE) {
-				image = new Image(ChessGUI.class.getResourceAsStream("WhiteRook.png"));
-			} else {
-				image = new Image(ChessGUI.class.getResourceAsStream("BlackRook.png"));
-			}
-			break;
-		case BISHOP:
-			if (color == itec220.labs.Color.WHITE) {
-				image = new Image(ChessGUI.class.getResourceAsStream("WhiteBishop.png"));
-			} else {
-				image = new Image(ChessGUI.class.getResourceAsStream("BlackBishop.png"));
-			}
-			break;
-		}
-		return image;
-
+		EnumMap<PieceType, Image> cache = piece.getColor() == itec220.labs.Color.WHITE ? whiteImages : blackImages;
+		return cache.get(piece.getType());
 	}
 
 	/**

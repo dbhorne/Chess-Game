@@ -62,7 +62,10 @@ public class King extends Piece {
 						}
 					} else if(check < 8) {
 						if(pieces[newRank][newFile].getColor() != this.getColor()) {
-							if(i == 1 && (pieces[newRank][newFile] instanceof Queen || pieces[newRank][newFile] instanceof Bishop || pieces[newRank][newFile] instanceof Pawn)) {
+							if(i == 1 && (pieces[newRank][newFile] instanceof Queen || pieces[newRank][newFile] instanceof Bishop ||
+								(pieces[newRank][newFile] instanceof Pawn &&
+								((this.getColor() == Color.WHITE && rankOffset > 0) ||
+								 (this.getColor() == Color.BLACK && rankOffset < 0))))) {
 								return true;
 							} else if(pieces[newRank][newFile] instanceof Queen || pieces[newRank][newFile] instanceof Bishop) {
 								return true;
@@ -163,7 +166,7 @@ public class King extends Piece {
 	 */
 	@Override
 	public String toString() {
-		return "K" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+		return "K" + columnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 
 	/**
