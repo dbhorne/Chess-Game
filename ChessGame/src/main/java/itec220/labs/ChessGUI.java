@@ -61,6 +61,8 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final Button restart = new Button("Restart");
 	private final Button exitNoSave = new Button("Exit without Saving");
 	private final Button saveAndExit = new Button("Save and Exit");
+	private final Button muteButton = new Button("Mute");
+	private boolean soundMuted = false;
 	private final Button playerVsPlayerButton = new Button("Player vs. Player");
 	private final Button playerVsBotButton = new Button("Player vs. Bot");
 	private final Button botVsBotButton = new Button("Bot vs. Bot");
@@ -350,9 +352,17 @@ public class ChessGUI extends Application implements GameViewListener {
 		restart.getStyleClass().add("restart");
 		exitNoSave.getStyleClass().add("restart");
 		saveAndExit.getStyleClass().add("restart");
+		muteButton.getStyleClass().add("restart");
+		muteButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				soundMuted = !soundMuted;
+				muteButton.setText(soundMuted ? "Unmute" : "Mute");
+			}
+		});
 		leftButtons.getChildren().add(restart);
 		leftButtons.getChildren().add(exitNoSave);
 		leftButtons.getChildren().add(saveAndExit);
+		leftButtons.getChildren().add(muteButton);
 		left.getChildren().add(leftButtons);
 		bottom.setAlignment(Pos.CENTER_LEFT);
 		bottom.setMinHeight(96);
@@ -974,7 +984,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	}
 
 	private void playSound(Media media) {
-		if (media == null) {
+		if (media == null || soundMuted) {
 			return;
 		}
 		MediaPlayer player = new MediaPlayer(media);
