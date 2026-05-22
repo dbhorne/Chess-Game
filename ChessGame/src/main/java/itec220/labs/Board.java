@@ -254,10 +254,6 @@ public class Board {
 					}
 				}
 			}
-			blackMoves.clear();
-			whiteMoves.clear();
-			calcPieceMoves(false, Color.WHITE);
-			calcPieceMoves(false, Color.BLACK);
 			return true;
 		}
 		return false;
