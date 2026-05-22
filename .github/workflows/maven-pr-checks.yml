@@ -8,14 +8,24 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: maven-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   compile:
     name: mvn compile
-    if: github.event.review.state == 'approved'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    if: >
+      github.event.review.state == 'approved' &&
+      github.event.review.author_association == 'OWNER' &&
+      github.event.review.commit_id == github.event.pull_request.head.sha &&
+      github.event.pull_request.draft == false
 
     steps:
-      - name: Check out reviewed PR head
+      - name: Check out approved PR head
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -24,6 +34,7 @@ jobs:
       - name: Verify checked out SHA
         run: |
           test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git rev-parse HEAD)" = "${{ github.event.review.commit_id }}"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -34,16 +45,22 @@ jobs:
 
       - name: Compile
         working-directory: ChessGame
-        run: mvn compile
+        run: mvn -B -ntp compile
 
   test:
     name: mvn test
-    if: github.event.review.state == 'approved'
     needs: compile
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    if: >
+      github.event.review.state == 'approved' &&
+      github.event.review.author_association == 'OWNER' &&
+      github.event.review.commit_id == github.event.pull_request.head.sha &&
+      github.event.pull_request.draft == false
 
     steps:
-      - name: Check out reviewed PR head
+      - name: Check out approved PR head
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -52,6 +69,7 @@ jobs:
       - name: Verify checked out SHA
         run: |
           test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git rev-parse HEAD)" = "${{ github.event.review.commit_id }}"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -62,4 +80,4 @@ jobs:
 
       - name: Run tests
         working-directory: ChessGame
-        run: mvn test
+        run: mvn -B -ntp test
