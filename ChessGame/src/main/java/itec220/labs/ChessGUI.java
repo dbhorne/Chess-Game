@@ -6,9 +6,13 @@ import java.util.EnumMap;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -44,6 +48,9 @@ public class ChessGUI extends Application {
 	private Button exitNoSave = new Button("Exit without Saving");
 	private Button saveAndExit = new Button("Save and Exit");
 	private Button playGame = new Button("Player vs. Player");
+	private TextField fenField = new TextField();
+	private Button loadFenButton = new Button("Load FEN");
+	private Label fenError = new Label();
 	private Region right = new Region();
 	private HBox bottom = new HBox();
 	private StackPane left = new StackPane();
@@ -73,7 +80,16 @@ public class ChessGUI extends Application {
 
 		BorderPane root = new BorderPane();
 		BorderPane menu = new BorderPane();
-		menu.setCenter(playGame);
+
+		fenField.setPromptText("e.g. rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		fenField.setPrefWidth(500);
+		fenError.setStyle("-fx-text-fill: red;");
+		VBox menuCenter = new VBox(12, playGame, new Separator(),
+				new Label("Start from FEN position"), fenField, loadFenButton, fenError);
+		menuCenter.setAlignment(Pos.CENTER);
+		menuCenter.setPadding(new Insets(20));
+		menu.setCenter(menuCenter);
+
 		root.setTop(currentColor);
 		root.setCenter(grid);
 		root.setRight(right);
@@ -120,9 +136,31 @@ public class ChessGUI extends Application {
 			}
 		};
 
+		EventHandler<ActionEvent> loadFenEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				String fen = fenField.getText().trim();
+				try {
+					if (fen.isEmpty()) throw new IllegalArgumentException("FEN string is empty");
+					game = new Game();
+					game.loadFEN(fen);
+					fenError.setText("");
+					lastMove.setText("");
+					numTakenPieces = game.getNumTakenPieces();
+					currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+					disableButtons();
+					enableButtons();
+					updateBoard();
+					primaryStage.setScene(sceneGame);
+				} catch (IllegalArgumentException ex) {
+					fenError.setText("Invalid FEN: " + ex.getMessage());
+				}
+			}
+		};
+
 		exitNoSave.setOnAction(mainMenuEvent);
 		saveAndExit.setOnAction(mainMenuAndSave);
 		playGame.setOnAction(playGameEvent);
+		loadFenButton.setOnAction(loadFenEvent);
 
 		sceneGame.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
 		sceneMain.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
