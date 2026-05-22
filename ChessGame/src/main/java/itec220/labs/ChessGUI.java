@@ -1,5 +1,6 @@
 package itec220.labs;
 
+import java.net.URL;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -23,10 +24,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 /**
  * To create and handle the GUI of the chess game, and communicate between the game and
@@ -36,33 +35,42 @@ import javafx.util.Duration;
  */
 public class ChessGUI extends Application {
 
-	private MediaPlayer chessMove = new MediaPlayer(
-			new Media(getClass().getResource("/itec220/labs/ChessMove.mp3").toString()));
-	private MediaPlayer chessTake = new MediaPlayer(
-			new Media(getClass().getResource("/itec220/labs/ChessCapture.mp3").toString()));
-	private GridPane grid = new GridPane();
+	private static final int BOARD_SIZE = 8;
+	private static final int PIECE_SIZE = 62;
+	private static final int MOVE_INDICATOR_RADIUS = 10;
+	private static final int CAPTURE_INDICATOR_RADIUS = 28;
+	private static final String MOVE_SOUND = "/itec220/labs/ChessMove.mp3";
+	private static final String CAPTURE_SOUND = "/itec220/labs/ChessCapture.mp3";
+
+	private final Media chessMove = loadMedia(MOVE_SOUND);
+	private final Media chessTake = loadMedia(CAPTURE_SOUND);
+	private final GridPane grid = new GridPane();
 	private Game game = new Game();
-	private Region leftRegion = new Region();
-	private VBox leftButtons = new VBox();
-	private Button restart = new Button("Restart");
-	private Button exitNoSave = new Button("Exit without Saving");
-	private Button saveAndExit = new Button("Save and Exit");
-	private Button playGame = new Button("Player vs. Player");
-	private TextField fenField = new TextField();
-	private Button loadFenButton = new Button("Load FEN");
-	private Label fenError = new Label();
-	private Region right = new Region();
-	private HBox bottom = new HBox();
-	private StackPane left = new StackPane();
-	private Label currentColor = new Label();
-	private Label lastMove = new Label();
-	private ChessButton[][] buttons = new ChessButton[8][8];
-	private ChessStackPane[][] spaces = new ChessStackPane[8][8];
-	private Region[][] spacesBackground = new Region[8][8];
+	private final Region leftRegion = new Region();
+	private final VBox leftButtons = new VBox(12);
+	private final Button restart = new Button("Restart");
+	private final Button exitNoSave = new Button("Exit without Saving");
+	private final Button saveAndExit = new Button("Save and Exit");
+	private final Button playGame = new Button("Player vs. Player");
+	private final TextField fenField = new TextField();
+	private final Button loadFenButton = new Button("Load FEN");
+	private final Label fenError = new Label();
+	private final Region right = new Region();
+	private final HBox bottom = new HBox(12);
+	private final StackPane left = new StackPane();
+	private final Label currentColor = new Label();
+	private final Label lastMove = new Label();
+	private final ChessButton[][] buttons = new ChessButton[BOARD_SIZE][BOARD_SIZE];
+	private final ChessStackPane[][] spaces = new ChessStackPane[BOARD_SIZE][BOARD_SIZE];
+	private final Region[][] spacesBackground = new Region[BOARD_SIZE][BOARD_SIZE];
+	private final Region[][] selectedHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
+	private final Circle[][] moveIndicators = new Circle[BOARD_SIZE][BOARD_SIZE];
+	private final ImageView[][] pieceViews = new ImageView[BOARD_SIZE][BOARD_SIZE];
 	private SimpleEntry<Integer, Integer> moveFrom = null;
 	private int numTakenPieces = 0;
+	private boolean promotionPending = false;
 	private ArrayList<SimpleEntry<Integer, Integer>> moveList = new ArrayList<>();
-	private PromoteButton[] promoteButtons = { new PromoteButton("Knight", PieceType.KNIGHT),
+	private final PromoteButton[] promoteButtons = { new PromoteButton("Knight", PieceType.KNIGHT),
 			new PromoteButton("Queen", PieceType.QUEEN), new PromoteButton("Rook", PieceType.ROOK),
 			new PromoteButton("Bishop", PieceType.BISHOP) };
 	private final EnumMap<PieceType, Image> whiteImages = new EnumMap<>(PieceType.class);
@@ -82,10 +90,11 @@ public class ChessGUI extends Application {
 		BorderPane menu = new BorderPane();
 
 		fenField.setPromptText("e.g. rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-		fenField.setPrefWidth(500);
-		fenError.setStyle("-fx-text-fill: red;");
+		fenField.setPrefWidth(620);
+		fenError.getStyleClass().add("error-label");
 		VBox menuCenter = new VBox(12, playGame, new Separator(),
 				new Label("Start from FEN position"), fenField, loadFenButton, fenError);
+		menuCenter.getStyleClass().add("menu-panel");
 		menuCenter.setAlignment(Pos.CENTER);
 		menuCenter.setPadding(new Insets(20));
 		menu.setCenter(menuCenter);
@@ -99,7 +108,6 @@ public class ChessGUI extends Application {
 		Scene sceneGame = new Scene(root, 1050, 700);
 		Scene sceneMain = new Scene(menu, 1050, 700);
 
-		// event to move the scene back to the main menu and set the game to null
 		EventHandler<ActionEvent> mainMenuEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneMain);
@@ -107,25 +115,21 @@ public class ChessGUI extends Application {
 			}
 		};
 
-		// event to move the scene back to main menu, but don't reset the game to null
 		EventHandler<ActionEvent> mainMenuAndSave = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneMain);
 			}
 		};
 
-		/* event to start a game from main menu, if game is null, create a new game, if not
-		 * check to see if the game wasn't over, if so, update everything
-		 */
-		
 		EventHandler<ActionEvent> playGameEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				primaryStage.setScene(sceneGame);
 				if (game == null) {
 					game = new Game();
 					lastMove.setText("");
+					clearPromotionButtons();
 				}
-				currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+				updateStatusLabel();
 				if (!gameIsOver()) {
 					disableButtons();
 					enableButtons();
@@ -145,8 +149,10 @@ public class ChessGUI extends Application {
 					game.loadFEN(fen);
 					fenError.setText("");
 					lastMove.setText("");
+					clearSelection();
+					clearPromotionButtons();
 					numTakenPieces = game.getNumTakenPieces();
-					currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+					updateStatusLabel();
 					disableButtons();
 					enableButtons();
 					updateBoard();
@@ -185,24 +191,30 @@ public class ChessGUI extends Application {
 		blackImages.put(PieceType.KNIGHT, new Image(ChessGUI.class.getResourceAsStream("BlackKnight.png")));
 		blackImages.put(PieceType.ROOK,   new Image(ChessGUI.class.getResourceAsStream("BlackRook.png")));
 		blackImages.put(PieceType.BISHOP, new Image(ChessGUI.class.getResourceAsStream("BlackBishop.png")));
-		currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+		updateStatusLabel();
 
 		left.getChildren().add(leftRegion);
+		leftButtons.setAlignment(Pos.TOP_CENTER);
+		leftButtons.setPadding(new Insets(18));
 		restart.getStyleClass().add("restart");
+		exitNoSave.getStyleClass().add("restart");
+		saveAndExit.getStyleClass().add("restart");
 		leftButtons.getChildren().add(restart);
 		leftButtons.getChildren().add(exitNoSave);
 		leftButtons.getChildren().add(saveAndExit);
-		exitNoSave.getStyleClass().add("restart");
-		saveAndExit.getStyleClass().add("restart");
 		left.getChildren().add(leftButtons);
+		bottom.setAlignment(Pos.CENTER_LEFT);
+		bottom.setPadding(new Insets(10, 16, 14, 16));
 		EventHandler<ActionEvent> restartEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				game = new Game();
-				currentColor.setText(String.format("%s's move", game.getCurrMove().name));
-				disableButtons();
-				enableButtons();
+				clearSelection();
+				clearPromotionButtons();
 				lastMove.setText("");
 				numTakenPieces = 0;
+				updateStatusLabel();
+				disableButtons();
+				enableButtons();
 				updateBoard();
 			}
 		};
@@ -212,38 +224,51 @@ public class ChessGUI extends Application {
 	}
 	
 	/**
-	 * Set up the board using the buttons, regions, and custom stackpanes
+	 * Set up the board using stable square nodes.
 	 */
 	public void setUpBoard() {
+		grid.getStyleClass().add("chess-board");
+		grid.setAlignment(Pos.CENTER);
 		
-		// Set all the buttons event handler to the click method
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
 				click(tb.rank, tb.file);
 			}
 		};
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
-				spaces[i][j] = new ChessStackPane(7 - i, j);
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				spaces[i][j] = new ChessStackPane(BOARD_SIZE - 1 - i, j);
+				spaces[i][j].getStyleClass().add("chess-square");
 				spacesBackground[i][j] = new Region();
-				buttons[i][j] = new ChessButton(7 - i, j);
+				spacesBackground[i][j].getStyleClass().add((i + j) % 2 == 0
+						? "chess-background-white" : "chess-background-black");
+
+				selectedHighlights[i][j] = new Region();
+				selectedHighlights[i][j].getStyleClass().add("selected-square");
+				selectedHighlights[i][j].setVisible(false);
+				selectedHighlights[i][j].setMouseTransparent(true);
+
+				moveIndicators[i][j] = new Circle(MOVE_INDICATOR_RADIUS);
+				moveIndicators[i][j].getStyleClass().add("move-indicator");
+				moveIndicators[i][j].setVisible(false);
+				moveIndicators[i][j].setMouseTransparent(true);
+
+				pieceViews[i][j] = new ImageView();
+				pieceViews[i][j].setFitWidth(PIECE_SIZE);
+				pieceViews[i][j].setFitHeight(PIECE_SIZE);
+				pieceViews[i][j].setPreserveRatio(true);
+				pieceViews[i][j].setSmooth(true);
+				pieceViews[i][j].setMouseTransparent(true);
+
+				buttons[i][j] = new ChessButton(BOARD_SIZE - 1 - i, j);
 				buttons[i][j].setOnAction(event);
-				if (i % 2 == 0) {
-					if (j % 2 == 0) {
-						spacesBackground[i][j].getStyleClass().add("chess-background-white");
-					} else {
-						spacesBackground[i][j].getStyleClass().add("chess-background-black");
-					}
-				} else {
-					if (j % 2 == 0) {
-						spacesBackground[i][j].getStyleClass().add("chess-background-black");
-					} else {
-						spacesBackground[i][j].getStyleClass().add("chess-background-white");
-					}
-				}
 				buttons[i][j].getStyleClass().add("chess-button-transparent");
+
 				spaces[i][j].getChildren().add(spacesBackground[i][j]);
+				spaces[i][j].getChildren().add(selectedHighlights[i][j]);
+				spaces[i][j].getChildren().add(moveIndicators[i][j]);
+				spaces[i][j].getChildren().add(pieceViews[i][j]);
 				spaces[i][j].getChildren().add(buttons[i][j]);
 				grid.add(spaces[i][j], j, i);
 			}
@@ -256,80 +281,121 @@ public class ChessGUI extends Application {
 	 * @param file Column of the button that was pressed
 	 */
 	public void click(int rank, int file) {
-		if (!moveList.isEmpty() && moveFrom != null && bottom.getChildren().size() == 1) {
-			if (moveList.contains(new SimpleEntry<>(rank, file))) {
-				if (game.move(moveFrom.getKey(), moveFrom.getValue(), rank, file)) {
-					if (game.getNumTakenPieces() != numTakenPieces) {
-						numTakenPieces = game.getNumTakenPieces();
-						chessTake.play();
-						chessTake.seek(Duration.ZERO);
-					} else {
-						chessMove.play();
-						chessMove.seek(Duration.ZERO);
-					}
-					updateBoard();
-					if (!gameIsOver()) {
-						moveFrom = null;
-						moveList.clear();
-						currentColor.setText(String.format("%s's move", game.getCurrMove().name));
-						Board currentBoard = game.getCopyOfCurrBoard();
-						Piece movedPiece = currentBoard.getPiece(rank, file);
-						if (movedPiece instanceof Pawn) {
-							EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
-								public void handle(ActionEvent e) {
-									PromoteButton tb = (PromoteButton) e.getSource();
-									game.promote(rank, file, tb.type);
-									updateBoard();
-									while (bottom.getChildren().size() > 1) {
-										bottom.getChildren().remove(bottom.getChildren().size() - 1);
-									}
-									Piece promotedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
-									lastMove.setText("Last Move: " + promotedPiece.toString());
-								}
-							};
-							Pawn p = (Pawn) movedPiece;
-							if (p.getColor() == itec220.labs.Color.WHITE && rank == 7) {
-								lastMove.setText("Looks like white can promote the pawn at: "
-										+ buttons[7 - rank][file].toString());
-								for (Button b : promoteButtons) {
-									b.setOnAction(event);
-									bottom.getChildren().add(b);
-								}
-							} else if (p.getColor() == itec220.labs.Color.BLACK && rank == 0) {
-								lastMove.setText("Looks like black can promote the pawn at: "
-										+ buttons[7 - rank][file].toString());
-								for (Button b : promoteButtons) {
-									b.setOnAction(event);
-									bottom.getChildren().add(b);
-								}
-							} else {
-								lastMove.setText("Last Move: " + movedPiece.toString());
-							}
-						} else {
-							lastMove.setText("Last Move: " + movedPiece.toString());
-						}
-					}
-				} else {
-					updateBoard();
-					moveFrom = null;
-					moveList.clear();
-					lastMove.setText("Invalid Move, please try again. ");
-				}
+		if (promotionPending) {
+			lastMove.setText("Choose a promotion piece before moving again.");
+			return;
+		}
+		if (moveFrom != null && moveList.contains(new SimpleEntry<>(rank, file))) {
+			moveSelectedPiece(rank, file);
+			return;
+		}
+		selectSquare(rank, file);
+	}
+
+	private void selectSquare(int rank, int file) {
+		clearHighlights();
+		moveFrom = new SimpleEntry<>(rank, file);
+		moveList = game.getValidMoves(rank, file);
+		if (moveList.isEmpty()) {
+			moveFrom = null;
+			lastMove.setText("No legal moves from " + buttons[BOARD_SIZE - 1 - rank][file].toString() + ".");
+			return;
+		}
+		showValidMoves();
+	}
+
+	private void moveSelectedPiece(int rank, int file) {
+		int startRank = moveFrom.getKey();
+		int startFile = moveFrom.getValue();
+		Board beforeMove = game.getCopyOfCurrBoard();
+		Piece movingPiece = beforeMove.getPiece(startRank, startFile);
+		boolean enPassantCapture = movingPiece instanceof Pawn
+				&& startFile != file
+				&& beforeMove.getPiece(rank, file) == null;
+
+		if (game.move(startRank, startFile, rank, file)) {
+			boolean isCapture = game.getNumTakenPieces() != numTakenPieces;
+			if (isCapture) {
+				numTakenPieces = game.getNumTakenPieces();
+				playSound(chessTake);
 			} else {
-				updateBoard();
-				if (bottom.getChildren().size() == 1) {
-					moveFrom = new SimpleEntry<>(rank, file);
-					moveList = game.getValidMoves(rank, file);
-					showValidMoves();
-				}
+				playSound(chessMove);
+			}
+			clearSelection();
+			updateMoveSquares(startRank, startFile, rank, file, movingPiece, enPassantCapture);
+			if (!gameIsOver()) {
+				updateStatusLabel();
+				handlePromotionIfNeeded(rank, file);
+				updateLastMove(rank, file);
 			}
 		} else {
+			clearSelection();
 			updateBoard();
-			if (bottom.getChildren().size() == 1) {
-				moveFrom = new SimpleEntry<>(rank, file);
-				moveList = game.getValidMoves(rank, file);
-				showValidMoves();
+			lastMove.setText("Invalid move, please try again.");
+		}
+	}
+
+	private void updateMoveSquares(int startRank, int startFile, int endRank, int endFile,
+			Piece movingPiece, boolean enPassantCapture) {
+		Board currentBoard = game.getCopyOfCurrBoard();
+		updateSquare(currentBoard, startRank, startFile);
+		updateSquare(currentBoard, endRank, endFile);
+		if (movingPiece instanceof King && Math.abs(endFile - startFile) == 2) {
+			if (endFile > startFile) {
+				updateSquare(currentBoard, startRank, startFile + 3);
+				updateSquare(currentBoard, startRank, startFile + 1);
+			} else {
+				updateSquare(currentBoard, startRank, startFile - 4);
+				updateSquare(currentBoard, startRank, startFile - 1);
 			}
+		}
+		if (enPassantCapture) {
+			updateSquare(currentBoard, startRank, endFile);
+		}
+	}
+
+	private void handlePromotionIfNeeded(final int rank, final int file) {
+		Board currentBoard = game.getCopyOfCurrBoard();
+		Piece movedPiece = currentBoard.getPiece(rank, file);
+		if (!(movedPiece instanceof Pawn)) {
+			return;
+		}
+		Pawn pawn = (Pawn) movedPiece;
+		boolean canPromote = (pawn.getColor() == itec220.labs.Color.WHITE && rank == BOARD_SIZE - 1)
+				|| (pawn.getColor() == itec220.labs.Color.BLACK && rank == 0);
+		if (!canPromote) {
+			return;
+		}
+		promotionPending = true;
+		disableButtons();
+		lastMove.setText("Promote pawn at " + buttons[BOARD_SIZE - 1 - rank][file].toString() + ":");
+		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				PromoteButton tb = (PromoteButton) e.getSource();
+				game.promote(rank, file, tb.type);
+				updateSquare(game.getCopyOfCurrBoard(), rank, file);
+				clearPromotionButtons();
+				enableButtons();
+				updateStatusLabel();
+				Piece promotedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
+				lastMove.setText("Last Move: " + promotedPiece.toString());
+			}
+		};
+		for (Button b : promoteButtons) {
+			b.setOnAction(event);
+			if (!bottom.getChildren().contains(b)) {
+				bottom.getChildren().add(b);
+			}
+		}
+	}
+
+	private void updateLastMove(int rank, int file) {
+		if (promotionPending) {
+			return;
+		}
+		Piece movedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
+		if (movedPiece != null) {
+			lastMove.setText("Last Move: " + movedPiece.toString());
 		}
 	}
 
@@ -344,6 +410,7 @@ public class ChessGUI extends Application {
 		case DRAW:
 		case STALEMATE:
 			disableButtons();
+			clearPromotionButtons();
 			setEndText();
 			return true;
 		case WHITEINCHECK:
@@ -369,6 +436,9 @@ public class ChessGUI extends Application {
 	 * Loop through the buttons and enable their event handler
 	 */
 	public void enableButtons() {
+		if (promotionPending) {
+			return;
+		}
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
@@ -388,16 +458,20 @@ public class ChessGUI extends Application {
 	public void setEndText() {
 		switch (game.getCurrState()) {
 		case WHITEWINS:
-			lastMove.setText("White Won!");
+			currentColor.setText("Game over");
+			lastMove.setText("White won!");
 			break;
 		case BLACKWINS:
-			lastMove.setText("Black Won!");
+			currentColor.setText("Game over");
+			lastMove.setText("Black won!");
 			break;
 		case STALEMATE:
-			lastMove.setText("Dang, looks like a stalemate.");
+			currentColor.setText("Game over");
+			lastMove.setText("Stalemate.");
 			break;
 		case DRAW:
-			lastMove.setText("A game played perfectly always ends in a draw.");
+			currentColor.setText("Game over");
+			lastMove.setText("Draw.");
 			break;
 		default:
 			break;
@@ -405,22 +479,28 @@ public class ChessGUI extends Application {
 	}
 
 	/**
-	 * Update the GUI board, used after a move is made in the game class
+	 * Update the GUI board without rebuilding square children.
 	 */
 	public void updateBoard() {
 		Board brd = game.getCopyOfCurrBoard();
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
-				Piece piece = brd.getPiece(spaces[i][j].rank, spaces[i][j].file);
-				while (spaces[i][j].getChildren().size() >= 2) {
-					spaces[i][j].getChildren().remove(spaces[i][j].getChildren().size() - 1);
-				}
-				if (piece != null) {
-					spaces[i][j].getChildren().add(new ImageView(getImage(piece)));
-				}
-				spaces[i][j].getChildren().add(buttons[i][j]);
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				updateSquare(brd, spaces[i][j].rank, spaces[i][j].file);
 			}
 		}
+	}
+
+	private void updateSquare(Board brd, int rank, int file) {
+		int row = BOARD_SIZE - 1 - rank;
+		Piece piece = brd.getPiece(rank, file);
+		ImageView view = pieceViews[row][file];
+		if (piece == null) {
+			view.setImage(null);
+			view.setVisible(false);
+			return;
+		}
+		view.setImage(getImage(piece));
+		view.setVisible(true);
 	}
 
 	/**
@@ -438,20 +518,80 @@ public class ChessGUI extends Application {
 	 * Show valid moves on the board, used by the click() method
 	 */
 	public void showValidMoves() {
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 8; j++) {
-				if (moveList.contains(new SimpleEntry<>(spaces[i][j].rank, spaces[i][j].file))) {
-					spaces[i][j].getChildren().remove(spaces[i][j].getChildren().size() - 1);
-					Circle circ = new Circle(25);
-					circ.setStroke(Color.BLACK);
-					circ.setFill(Color.TRANSPARENT);
-					circ.setStrokeWidth(5);
-					circ.setOpacity(0.6);
-					spaces[i][j].getChildren().add(circ);
-					spaces[i][j].getChildren().add(buttons[i][j]);
-				}
+		if (moveFrom != null) {
+			selectedHighlights[BOARD_SIZE - 1 - moveFrom.getKey()][moveFrom.getValue()].setVisible(true);
+		}
+		Board board = game.getCopyOfCurrBoard();
+		for (SimpleEntry<Integer, Integer> move : moveList) {
+			int rank = move.getKey();
+			int file = move.getValue();
+			Circle indicator = moveIndicators[BOARD_SIZE - 1 - rank][file];
+			Piece target = board.getPiece(rank, file);
+			indicator.getStyleClass().removeAll("move-indicator", "capture-indicator");
+			if (target == null) {
+				indicator.setRadius(MOVE_INDICATOR_RADIUS);
+				indicator.getStyleClass().add("move-indicator");
+			} else {
+				indicator.setRadius(CAPTURE_INDICATOR_RADIUS);
+				indicator.getStyleClass().add("capture-indicator");
+			}
+			indicator.setVisible(true);
+		}
+	}
+
+	private void clearSelection() {
+		moveFrom = null;
+		moveList.clear();
+		clearHighlights();
+	}
+
+	private void clearHighlights() {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				selectedHighlights[i][j].setVisible(false);
+				moveIndicators[i][j].setVisible(false);
 			}
 		}
+	}
+
+	private void clearPromotionButtons() {
+		for (Button b : promoteButtons) {
+			b.setOnAction(null);
+			bottom.getChildren().remove(b);
+		}
+		promotionPending = false;
+	}
+
+	private void updateStatusLabel() {
+		switch (game.getCurrState()) {
+		case WHITEINCHECK:
+			currentColor.setText("White is in check");
+			break;
+		case BLACKINCHECK:
+			currentColor.setText("Black is in check");
+			break;
+		default:
+			currentColor.setText(String.format("%s's move", game.getCurrMove().name));
+			break;
+		}
+	}
+
+	private Media loadMedia(String resourcePath) {
+		URL resource = getClass().getResource(resourcePath);
+		return resource == null ? null : new Media(resource.toString());
+	}
+
+	private void playSound(Media media) {
+		if (media == null) {
+			return;
+		}
+		MediaPlayer player = new MediaPlayer(media);
+		player.setOnEndOfMedia(new Runnable() {
+			public void run() {
+				player.dispose();
+			}
+		});
+		player.play();
 	}
 
 	

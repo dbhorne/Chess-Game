@@ -1,77 +1,109 @@
+.root {
+    -fx-font-size: 10pt;
+    -fx-font-family: "Courier New";
+    -fx-background-color: #6f7276;
+}
+
 .label {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-text-fill: white;
-    -fx-padding: 15 30 15 30;
-   
-}
-.chess-background-black {
- 	-fx-background-color: rgb(155,103,60);
-    -fx-padding: 15 30 15 30;
-    -fx-padding: 15 30 15 30;
-    
-    -fx-min-width: 70px;
-    -fx-max-width: 70px;
-    
-    -fx-min-height: 70px;
-    -fx-max-height: 70px;
-   
+    -fx-padding: 12 20 12 20;
 }
 
-.chess-button-transparent{
-	-fx-background-color: transparent;
-    -fx-padding: 15 30 15 30;
-    
-    -fx-min-width: 70px;
-    -fx-max-width: 70px;
-    
-    -fx-min-height: 70px;
-    -fx-max-height: 70px;
-   
+.error-label {
+    -fx-text-fill: #ffdddd;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.menu-panel {
+    -fx-background-color: #6f7276;
+}
+
+.chess-board {
+    -fx-padding: 18;
+    -fx-background-color: #3f3832;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.32), 14, 0, 0, 4);
+}
+
+.chess-square,
+.chess-background-black,
+.chess-background-white,
+.chess-button-transparent,
+.selected-square {
+    -fx-min-width: 76px;
+    -fx-pref-width: 76px;
+    -fx-max-width: 76px;
+    -fx-min-height: 76px;
+    -fx-pref-height: 76px;
+    -fx-max-height: 76px;
+}
+
+.chess-background-black {
+    -fx-background-color: #96653f;
 }
 
 .chess-background-white {
- 	-fx-background-color: rgb(252, 228, 194);
-    -fx-padding: 15 30 15 30;
-    
-    -fx-min-width: 70px;
-    -fx-max-width: 70px;
-    
-    -fx-min-height: 70px;
-    -fx-max-height: 70px;
-   
+    -fx-background-color: #f3d9ad;
+}
+
+.selected-square {
+    -fx-background-color: rgba(247, 206, 86, 0.42);
+}
+
+.move-indicator {
+    -fx-fill: rgba(45, 45, 45, 0.34);
+    -fx-stroke: transparent;
+}
+
+.capture-indicator {
+    -fx-fill: transparent;
+    -fx-stroke: rgba(45, 45, 45, 0.48);
+    -fx-stroke-width: 5px;
+}
+
+.chess-button-transparent {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.chess-button-transparent:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+}
+
+.chess-button-transparent:focused {
+    -fx-background-color: rgba(255, 255, 255, 0.10);
+    -fx-border-color: rgba(38, 38, 38, 0.35);
+    -fx-border-width: 2px;
 }
 
 Region {
-    width: 300;
-    height: 300;
-    
-    -fx-min-width: width;
-    -fx-max-width: width;
-    
-    -fx-min-height: height;
-    -fx-max-height: height;
-    -fx-background-color: grey;
-   
+    -fx-min-width: 220px;
+    -fx-pref-width: 220px;
+    -fx-max-width: 220px;
+    -fx-min-height: 220px;
+    -fx-pref-height: 220px;
+    -fx-max-height: 220px;
+    -fx-background-color: #6f7276;
 }
 
-.restart {	
-    -fx-padding: 15 30 15 30;
-    width: 250;
-    
-    -fx-min-width: width;
-    -fx-max-width: width;
-    
+.restart {
+    -fx-padding: 12 18 12 18;
+    -fx-min-width: 190px;
+    -fx-pref-width: 190px;
+    -fx-background-color: #f4f0e8;
+    -fx-text-fill: #2f2f2f;
+    -fx-font-weight: bold;
 }
 
+.restart:hover,
 .button:hover {
-  background-color: #4CAF50; /* Green */
-  color: white;
+    -fx-background-color: #d9ead3;
+    -fx-text-fill: #243424;
 }
 
-.root {
-    -fx-font-size: 10pt;
-    -fx-font-family: "Courier New";
-    -fx-base: rgb(255, 255, 255);
-    -fx-background: grey;
+.chess-button-transparent:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
 }
