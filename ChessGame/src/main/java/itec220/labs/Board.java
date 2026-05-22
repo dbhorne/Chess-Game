@@ -376,11 +376,7 @@ public class Board {
 	public boolean isKingInCheck(Color colorOfKing) {
 		King king = getKing(colorOfKing);
 		if (king != null) {
-			if (colorOfKing == Color.WHITE) {
-				return king.isInCheck(this.copy());
-			} else {
-				return king.isInCheck(this.copy());
-			}
+			return king.isInCheck(this.copy());
 		}
 		return true;
 	}
