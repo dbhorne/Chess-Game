@@ -1,5 +1,6 @@
 /.metadata/
 .claude/
-# Generated JavaDocs (regenerate with: mvn javadoc:javadoc)
-doc/
-target/
+
+# Generated Maven output and JavaDocs
+ChessGame/doc/
+ChessGame/target/
