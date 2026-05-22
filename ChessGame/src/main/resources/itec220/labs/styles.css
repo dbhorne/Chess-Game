@@ -65,7 +65,10 @@
 
 .chess-button-transparent {
     -fx-background-color: transparent;
+    -fx-background-insets: 0;
     -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
     -fx-padding: 0;
 }
 
@@ -75,11 +78,11 @@
 
 .chess-button-transparent:focused {
     -fx-background-color: rgba(255, 255, 255, 0.10);
-    -fx-border-color: rgba(38, 38, 38, 0.35);
-    -fx-border-width: 2px;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
 }
 
-Region {
+.side-panel {
     -fx-min-width: 220px;
     -fx-pref-width: 220px;
     -fx-max-width: 220px;

@@ -171,6 +171,7 @@ public class ChessGUI extends Application {
 		sceneGame.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
 		sceneMain.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
 		primaryStage.setTitle("Chess");
+		primaryStage.setResizable(false);
 		primaryStage.setScene(sceneMain);
 		primaryStage.show();
 	}
@@ -194,6 +195,8 @@ public class ChessGUI extends Application {
 		updateStatusLabel();
 
 		left.getChildren().add(leftRegion);
+		leftRegion.getStyleClass().add("side-panel");
+		right.getStyleClass().add("side-panel");
 		leftButtons.setAlignment(Pos.TOP_CENTER);
 		leftButtons.setPadding(new Insets(18));
 		restart.getStyleClass().add("restart");
