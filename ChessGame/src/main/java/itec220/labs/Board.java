@@ -480,6 +480,47 @@ public class Board {
 	}
 
 	/**
+	 * Return the en passant pawn's position (the pawn that just moved two squares), or null
+	 * @return the en passant entry, or null if none
+	 */
+	public SimpleEntry<Integer, Integer> getEnPassant() {
+		return enPassant;
+	}
+
+	/**
+	 * Set the en passant pawn position directly (used when loading a FEN string)
+	 * @param ep the position of the pawn vulnerable to en passant, or null
+	 */
+	public void setEnPassant(SimpleEntry<Integer, Integer> ep) {
+		this.enPassant = ep;
+	}
+
+	/**
+	 * Generate the piece-placement field of a FEN string (rank 8 down to rank 1)
+	 * @return FEN piece-placement string
+	 */
+	public String toFENPiecePlacement() {
+		StringBuilder sb = new StringBuilder();
+		for (int row = BOARD_SIZE - 1; row >= 0; row--) {
+			int empty = 0;
+			for (int col = 0; col < BOARD_SIZE; col++) {
+				if (pieces[row][col] == null) {
+					empty++;
+				} else {
+					if (empty > 0) {
+						sb.append(empty);
+						empty = 0;
+					}
+					sb.append(pieces[row][col].toFENChar());
+				}
+			}
+			if (empty > 0) sb.append(empty);
+			if (row > 0) sb.append('/');
+		}
+		return sb.toString();
+	}
+
+	/**
 	 * To get a String of the board, used for keeping track of each board state
 	 * @return Returns a single string of the board
 	 */

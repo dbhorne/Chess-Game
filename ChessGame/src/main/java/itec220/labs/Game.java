@@ -178,6 +178,60 @@ public class Game {
 	}
 
 	/**
+	 * Serialize the current game state to a FEN string
+	 * @return FEN string representing the current position
+	 */
+	public String toFEN() {
+		StringBuilder sb = new StringBuilder();
+
+		// 1. Piece placement
+		sb.append(board.toFENPiecePlacement());
+		sb.append(' ');
+
+		// 2. Active color
+		sb.append(currMove == Color.WHITE ? 'w' : 'b');
+		sb.append(' ');
+
+		// 3. Castling availability
+		StringBuilder castling = new StringBuilder();
+		Piece[][] pieces = board.getPieces();
+		if (canCastle(pieces, 0, 4, 0, 7)) castling.append('K');
+		if (canCastle(pieces, 0, 4, 0, 0)) castling.append('Q');
+		if (canCastle(pieces, 7, 4, 7, 7)) castling.append('k');
+		if (canCastle(pieces, 7, 4, 7, 0)) castling.append('q');
+		sb.append(castling.length() == 0 ? "-" : castling.toString());
+		sb.append(' ');
+
+		// 4. En passant target square
+		java.util.AbstractMap.SimpleEntry<Integer, Integer> ep = board.getEnPassant();
+		if (ep == null) {
+			sb.append('-');
+		} else {
+			int pawnRow = ep.getKey();
+			int pawnCol = ep.getValue();
+			Piece epPawn = board.getPiece(pawnRow, pawnCol);
+			int targetRow = (epPawn != null && epPawn.getColor() == Color.WHITE) ? pawnRow - 1 : pawnRow + 1;
+			sb.append((char) ('a' + pawnCol));
+			sb.append((char) ('1' + targetRow));
+		}
+		sb.append(' ');
+
+		// 5 & 6. Halfmove clock and fullmove number
+		sb.append(halfMoveClock);
+		sb.append(' ');
+		sb.append(fullMoveNumber);
+
+		return sb.toString();
+	}
+
+	private boolean canCastle(Piece[][] pieces, int kingRow, int kingCol, int rookRow, int rookCol) {
+		Piece king = pieces[kingRow][kingCol];
+		Piece rook = pieces[rookRow][rookCol];
+		if (!(king instanceof King) || !(rook instanceof Rook)) return false;
+		return !((King) king).getHasMoved() && !((Rook) rook).getHasMoved();
+	}
+
+	/**
 	 * Return the halfmove clock (resets on pawn move or capture; used for 50-move rule)
 	 * @return halfmove clock as an int
 	 */
