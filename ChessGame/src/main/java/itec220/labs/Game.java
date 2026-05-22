@@ -93,7 +93,7 @@ public class Game {
 	 * @param startX the starting row of the piece
 	 * @param startY the starting column of the piece
 	 * @param endX the destination row of the piece
-	 * @param endY the destination row of the piece
+	 * @param endY the destination column of the piece
 	 * @return Return a boolean based on whether the move was made or not
 	 */
 	public boolean move(int startX, int startY, int endX, int endY) {

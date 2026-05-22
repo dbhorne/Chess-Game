@@ -184,7 +184,7 @@ public class Pawn extends Piece {
 	}
 
 	/**
-	 * Convert the pawn to a string using the rnak and file
+	 * Convert the pawn to a string using the rank and file
 	 * @return Returns a string of the piece
 	 */
 	@Override
