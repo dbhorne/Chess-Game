@@ -232,6 +232,132 @@ public class Game {
 	}
 
 	/**
+	 * Load a position from a FEN string, replacing the current game state entirely.
+	 * @param fen the FEN string to parse
+	 * @throws IllegalArgumentException if the FEN is malformed
+	 */
+	public void loadFEN(String fen) {
+		String[] fields = fen.trim().split(" ");
+		if (fields.length != 6) {
+			throw new IllegalArgumentException("FEN must have exactly 6 space-separated fields");
+		}
+
+		// --- 1. Piece placement ---
+		String[] ranks = fields[0].split("/");
+		if (ranks.length != 8) {
+			throw new IllegalArgumentException("FEN piece placement must have exactly 8 ranks");
+		}
+		Pawn.resetPawnID();
+		Piece[][] pieces = new Piece[8][8];
+		for (int fenRank = 0; fenRank < 8; fenRank++) {
+			int row = 7 - fenRank; // FEN rank 0 (rank 8) → board row 7
+			String rankStr = ranks[fenRank];
+			int col = 0;
+			for (char c : rankStr.toCharArray()) {
+				if (col > 8) throw new IllegalArgumentException("Rank " + (8 - fenRank) + " exceeds 8 files");
+				if (Character.isDigit(c)) {
+					col += c - '0';
+				} else {
+					pieces[row][col] = charToPiece(c, row, col);
+					col++;
+				}
+			}
+			if (col != 8) throw new IllegalArgumentException("Rank " + (8 - fenRank) + " does not sum to 8 files");
+		}
+
+		// Set madeFirstMove on pawns not on their starting row
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (pieces[row][col] instanceof Pawn) {
+					Pawn p = (Pawn) pieces[row][col];
+					boolean onStart = (p.getColor() == Color.WHITE && row == 1)
+							|| (p.getColor() == Color.BLACK && row == 6);
+					if (!onStart) p.makeFirstMove();
+				}
+			}
+		}
+
+		// --- 2. Active color ---
+		if (!fields[1].equals("w") && !fields[1].equals("b")) {
+			throw new IllegalArgumentException("Active color must be 'w' or 'b'");
+		}
+		currMove = fields[1].equals("w") ? Color.WHITE : Color.BLACK;
+
+		// --- 3. Castling rights ---
+		// Default all kings/rooks to hasMoved=true, then unlock per castling right
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (pieces[row][col] instanceof King) ((King) pieces[row][col]).setHasMoved(true);
+				if (pieces[row][col] instanceof Rook) ((Rook) pieces[row][col]).setHasMoved(true);
+			}
+		}
+		String castling = fields[2];
+		if (!castling.equals("-")) {
+			for (char c : castling.toCharArray()) {
+				switch (c) {
+					case 'K': unlockCastle(pieces, 0, 4, 0, 7); break;
+					case 'Q': unlockCastle(pieces, 0, 4, 0, 0); break;
+					case 'k': unlockCastle(pieces, 7, 4, 7, 7); break;
+					case 'q': unlockCastle(pieces, 7, 4, 7, 0); break;
+					default: throw new IllegalArgumentException("Invalid castling character: " + c);
+				}
+			}
+		}
+
+		// --- Build board (do this before en passant so getPiece works) ---
+		board = new Board(pieces);
+
+		// --- 4. En passant ---
+		board.setEnPassant(null);
+		if (!fields[3].equals("-")) {
+			if (fields[3].length() != 2) throw new IllegalArgumentException("Invalid en passant square: " + fields[3]);
+			int epCol = fields[3].charAt(0) - 'a';
+			int epTargetRow = fields[3].charAt(1) - '1';
+			if (epCol < 0 || epCol > 7 || epTargetRow < 0 || epTargetRow > 7) {
+				throw new IllegalArgumentException("En passant square out of range: " + fields[3]);
+			}
+			// Target square is where the capturing pawn lands; the vulnerable pawn is one rank beyond
+			int pawnRow = (epTargetRow < 4) ? epTargetRow + 1 : epTargetRow - 1;
+			Piece epPiece = board.getPiece(pawnRow, epCol);
+			if (!(epPiece instanceof Pawn)) {
+				throw new IllegalArgumentException("No pawn found at en passant pawn square");
+			}
+			((Pawn) epPiece).canEnPassant(true);
+			board.setEnPassant(new java.util.AbstractMap.SimpleEntry<>(pawnRow, epCol));
+		}
+
+		// --- 5 & 6. Halfmove clock and fullmove number ---
+		try {
+			halfMoveClock = Integer.parseInt(fields[4]);
+			fullMoveNumber = Integer.parseInt(fields[5]);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Halfmove/fullmove fields must be integers");
+		}
+
+		// --- Reset state tracking ---
+		boardStates.clear();
+		currState = updateGameState();
+	}
+
+	private Piece charToPiece(char c, int row, int col) {
+		Color color = Character.isUpperCase(c) ? Color.WHITE : Color.BLACK;
+		switch (Character.toLowerCase(c)) {
+			case 'k': return new King(color, row, col);
+			case 'q': return new Queen(color, row, col);
+			case 'r': return new Rook(color, row, col);
+			case 'b': return new Bishop(color, row, col);
+			case 'n': return new Knight(color, row, col);
+			case 'p': return new Pawn(color, row, col);
+			default: throw new IllegalArgumentException("Unknown FEN piece character: " + c);
+		}
+	}
+
+	private void unlockCastle(Piece[][] pieces, int kingRow, int kingCol, int rookRow, int rookCol) {
+		if (pieces[kingRow][kingCol] instanceof King) ((King) pieces[kingRow][kingCol]).setHasMoved(false);
+		if (pieces[rookRow][rookCol] instanceof Rook) ((Rook) pieces[rookRow][rookCol]).setHasMoved(false);
+	}
+
+	/**
 	 * Return the halfmove clock (resets on pawn move or capture; used for 50-move rule)
 	 * @return halfmove clock as an int
 	 */
