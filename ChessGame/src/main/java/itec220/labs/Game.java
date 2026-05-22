@@ -15,9 +15,14 @@ public class Game {
 	private Board board;
 	private GameState currState;
 	private Color currMove;
+	private ArrayList<Move> moveHistory = new ArrayList<>();
 	private LinkedList<String> boardStates = new LinkedList<>();
 	private int halfMoveClock = 0;
 	private int fullMoveNumber = 1;
+	private boolean promotionPending = false;
+	private int promotionRank = -1;
+	private int promotionFile = -1;
+	private Move pendingPromotionMove = null;
 
 	/**
 	 * Constructor for the game, create a new board, and update the current move and game state
@@ -36,7 +41,22 @@ public class Game {
 	 * @param type the type of piece the pawn is promoting to
 	 */
 	public void promote(int rank, int file, PieceType type) {
+		if (type == null || type == PieceType.PAWN || type == PieceType.KING) {
+			throw new IllegalArgumentException("Pawns may only promote to queen, rook, bishop, or knight");
+		}
 		board.promote(rank, file, type);
+		if (promotionPending && rank == promotionRank && file == promotionFile) {
+			moveHistory.add(new Move(pendingPromotionMove.startRank, pendingPromotionMove.startFile,
+					pendingPromotionMove.endRank, pendingPromotionMove.endFile, type,
+					pendingPromotionMove.capturedType, pendingPromotionMove.enPassantCapture,
+					pendingPromotionMove.castle));
+			promotionPending = false;
+			promotionRank = -1;
+			promotionFile = -1;
+			pendingPromotionMove = null;
+			currState = updateGameState();
+			updateMoveTracker();
+		}
 	}
 
 	/**
@@ -66,6 +86,50 @@ public class Game {
 	}
 
 	/**
+	 * Get all legal moves for the current side to move.
+	 * @return Returns every legal move for the current side
+	 */
+	public ArrayList<Move> getLegalMoves() {
+		ArrayList<Move> legalMoves = new ArrayList<>();
+		if (promotionPending) {
+			return legalMoves;
+		}
+		Piece[][] pieces = board.getPieces();
+		for (int rank = 0; rank < pieces.length; rank++) {
+			for (int file = 0; file < pieces[rank].length; file++) {
+				Piece piece = pieces[rank][file];
+				if (piece == null || piece.getColor() != currMove) {
+					continue;
+				}
+				for (SimpleEntry<Integer, Integer> destination : piece.getValidMoves(board, false)) {
+					addMoveOptions(legalMoves, piece, destination.getKey(), destination.getValue());
+				}
+			}
+		}
+		return legalMoves;
+	}
+
+	/**
+	 * Get a copy of the moves applied to this game.
+	 * @return defensive copy of move history
+	 */
+	public ArrayList<Move> getMoveHistory() {
+		return new ArrayList<>(moveHistory);
+	}
+
+	/**
+	 * Ask a bot for a legal move without applying it to the game.
+	 * @param bot bot that will select the move
+	 * @return selected move, or null if no move is available
+	 */
+	public Move getBotMove(ChessBot bot) {
+		if (bot == null || bot.getColor() != currMove) {
+			return null;
+		}
+		return bot.chooseMove(getLegalMoves(), board.copy());
+	}
+
+	/**
 	 * Return a boolean of whether the game is over or not
 	 * @return Returns a boolean, true if the game is over, false if it will continue
 	 */
@@ -86,10 +150,40 @@ public class Game {
 	 * @return Return a boolean based on whether the move was made or not
 	 */
 	public boolean move(int startX, int startY, int endX, int endY) {
+		return move(startX, startY, endX, endY, null);
+	}
+
+	/**
+	 * Move using a shared Move model.
+	 * @param move move to apply
+	 * @return true if the move was applied
+	 */
+	public boolean move(Move move) {
+		if (move == null || !matchesLegalMove(move)) {
+			return false;
+		}
+		return applyMove(move);
+	}
+
+	private boolean move(int startX, int startY, int endX, int endY, PieceType promotionType) {
+		return applyMove(new Move(startX, startY, endX, endY, promotionType));
+	}
+
+	private boolean applyMove(Move move) {
+		if (promotionPending) {
+			return false;
+		}
+		int startX = move.startRank;
+		int startY = move.startFile;
+		int endX = move.endRank;
+		int endY = move.endFile;
+		PieceType promotionType = move.promotionType;
 		int takenBefore = board.getNumOfTakenPieces();
+		Piece movingPiece = board.getPiece(startX, startY);
+		Move moveToRecord = copyWithBoardMoveMetadata(move, movingPiece, endX, endY);
 		if (board.move(startX, startY, endX, endY, currMove)) {
 			boolean isCapture = board.getNumOfTakenPieces() > takenBefore;
-			boolean isPawnMove = board.getPiece(endX, endY) instanceof Pawn;
+			boolean isPawnMove = movingPiece instanceof Pawn;
 			if (isPawnMove || isCapture) {
 				halfMoveClock = 0;
 			} else {
@@ -98,6 +192,18 @@ public class Game {
 			if (currMove == Color.BLACK) {
 				fullMoveNumber++;
 			}
+			if (isPromotionMove(movingPiece, endX)) {
+				if (promotionType == null) {
+					promotionPending = true;
+					promotionRank = endX;
+					promotionFile = endY;
+					pendingPromotionMove = moveToRecord;
+					currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
+					return true;
+				}
+				board.promote(endX, endY, promotionType);
+			}
+			moveHistory.add(moveToRecord);
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
 			currState = updateGameState();
 			updateMoveTracker();
@@ -105,6 +211,69 @@ public class Game {
 		} else {
 			return false;
 		}
+	}
+
+	private void addMoveOptions(ArrayList<Move> legalMoves, Piece piece, int endRank, int endFile) {
+		Piece capturedPiece = board.getPiece(endRank, endFile);
+		boolean enPassantCapture = piece instanceof Pawn && piece.getFile() != endFile && capturedPiece == null;
+		PieceType capturedType = capturedPiece == null ? null : capturedPiece.getType();
+		if (enPassantCapture) {
+			SimpleEntry<Integer, Integer> enPassant = board.getEnPassant();
+			if (enPassant != null && board.getPiece(enPassant.getKey(), enPassant.getValue()) != null) {
+				capturedType = board.getPiece(enPassant.getKey(), enPassant.getValue()).getType();
+			}
+		}
+		boolean castle = piece instanceof King && Math.abs(endFile - piece.getFile()) == 2;
+		if (isPromotionMove(piece, endRank)) {
+			legalMoves.add(new Move(piece.getRank(), piece.getFile(), endRank, endFile, PieceType.QUEEN,
+					capturedType, enPassantCapture, castle));
+			legalMoves.add(new Move(piece.getRank(), piece.getFile(), endRank, endFile, PieceType.ROOK,
+					capturedType, enPassantCapture, castle));
+			legalMoves.add(new Move(piece.getRank(), piece.getFile(), endRank, endFile, PieceType.BISHOP,
+					capturedType, enPassantCapture, castle));
+			legalMoves.add(new Move(piece.getRank(), piece.getFile(), endRank, endFile, PieceType.KNIGHT,
+					capturedType, enPassantCapture, castle));
+		} else {
+			legalMoves.add(new Move(piece.getRank(), piece.getFile(), endRank, endFile, null,
+					capturedType, enPassantCapture, castle));
+		}
+	}
+
+	private Move copyWithBoardMoveMetadata(Move move, Piece movingPiece, int endRank, int endFile) {
+		if (move.capturedType != null || move.enPassantCapture || move.castle) {
+			return move;
+		}
+		Piece capturedPiece = board.getPiece(endRank, endFile);
+		PieceType capturedType = capturedPiece == null ? null : capturedPiece.getType();
+		boolean enPassantCapture = movingPiece instanceof Pawn && move.startFile != endFile && capturedPiece == null;
+		if (enPassantCapture) {
+			SimpleEntry<Integer, Integer> enPassant = board.getEnPassant();
+			if (enPassant != null && board.getPiece(enPassant.getKey(), enPassant.getValue()) != null) {
+				capturedType = board.getPiece(enPassant.getKey(), enPassant.getValue()).getType();
+			}
+		}
+		boolean castle = movingPiece instanceof King && Math.abs(endFile - move.startFile) == 2;
+		return new Move(move.startRank, move.startFile, move.endRank, move.endFile,
+				move.promotionType, capturedType, enPassantCapture, castle);
+	}
+
+	private boolean matchesLegalMove(Move requestedMove) {
+		for (Move legalMove : getLegalMoves()) {
+			if (legalMove.startRank == requestedMove.startRank
+					&& legalMove.startFile == requestedMove.startFile
+					&& legalMove.endRank == requestedMove.endRank
+					&& legalMove.endFile == requestedMove.endFile
+					&& legalMove.promotionType == requestedMove.promotionType) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isPromotionMove(Piece piece, int endRank) {
+		return piece instanceof Pawn
+				&& ((piece.getColor() == Color.WHITE && endRank == 7)
+				|| (piece.getColor() == Color.BLACK && endRank == 0));
 	}
 
 	/** game speed issues happen here
@@ -317,6 +486,11 @@ public class Game {
 		// --- Reset state tracking ---
 		boardStates.clear();
 		boardStates.add(getPositionIdentity());
+		moveHistory.clear();
+		promotionPending = false;
+		promotionRank = -1;
+		promotionFile = -1;
+		pendingPromotionMove = null;
 		currState = updateGameState();
 	}
 
