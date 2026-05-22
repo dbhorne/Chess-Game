@@ -114,26 +114,25 @@ public class Game {
 	 */
 	public GameState updateGameState() {
 		GameState tempState = GameState.IN_PROGRESS;
-		if (currMove == Color.WHITE && this.currState != GameState.WHITEINCHECK) {
+		if (currMove == Color.WHITE) {
 			if (board.isKingInCheck(Color.BLACK)) {
 				tempState = GameState.BLACKINCHECK;
 
 				if (board.getBlackMoves().size() == 0) {
 					tempState = GameState.WHITEWINS;
 				}
-			} else if (!board.isKingInCheck(Color.BLACK) && board.getBlackMoves().size() == 0) {
+			} else if (board.getBlackMoves().size() == 0) {
 				tempState = GameState.STALEMATE;
 			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;
 			}
-		} else if (this.currState != GameState.BLACKINCHECK) {
+		} else {
 			if (board.isKingInCheck(Color.WHITE)) {
 				tempState = GameState.WHITEINCHECK;
 				if (board.getWhiteMoves().size() == 0) {
 					tempState = GameState.BLACKWINS;
 				}
-
-			} else if (!board.isKingInCheck(Color.WHITE) && board.getWhiteMoves().size() == 0) {
+			} else if (board.getWhiteMoves().size() == 0) {
 				tempState = GameState.STALEMATE;
 			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
 				tempState = GameState.DRAW;
