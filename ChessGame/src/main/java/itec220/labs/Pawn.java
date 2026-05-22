@@ -32,6 +32,7 @@ public class Pawn extends Piece {
 	Pawn(Pawn pawn) {
 		super(PieceType.PAWN, pawn.getColor(), pawn.getRank(), pawn.getFile());
 		this.thisPawnID = pawn.getThisPawnID();
+		this.madeFirstMove = pawn.getMadeFirstMove();
 		this.canBeEnPassanted = pawn.getEnPassant();
 	}
 
