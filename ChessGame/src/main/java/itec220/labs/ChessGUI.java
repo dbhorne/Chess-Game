@@ -242,7 +242,7 @@ public class ChessGUI extends Application {
 									b.setOnAction(event);
 									bottom.getChildren().add(b);
 								}
-							} else if (rank == 0) {
+							} else if (p.getColor() == itec220.labs.Color.BLACK && rank == 0) {
 								lastMove.setText("Looks like black can promote the pawn at: "
 										+ buttons[7 - rank][file].toString());
 								for (Button b : promoteButtons) {
