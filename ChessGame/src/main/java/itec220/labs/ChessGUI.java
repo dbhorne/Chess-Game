@@ -478,8 +478,10 @@ public class ChessGUI extends Application implements GameViewListener {
 				enableButtons();
 				updateStatusLabel();
 				updateFenDisplay();
-				Piece promotedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
-				lastMove.setText("Last Move: " + promotedPiece.toString());
+				ArrayList<Move> history = game.getMoveHistory();
+				if (!history.isEmpty()) {
+					lastMove.setText("Last Move: " + history.get(history.size() - 1));
+				}
 			}
 		};
 		for (Button b : promoteButtons) {
@@ -494,9 +496,9 @@ public class ChessGUI extends Application implements GameViewListener {
 		if (promotionPending) {
 			return;
 		}
-		Piece movedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
-		if (movedPiece != null) {
-			lastMove.setText("Last Move: " + movedPiece.toString());
+		ArrayList<Move> history = game.getMoveHistory();
+		if (!history.isEmpty()) {
+			lastMove.setText("Last Move: " + history.get(history.size() - 1));
 		}
 	}
 

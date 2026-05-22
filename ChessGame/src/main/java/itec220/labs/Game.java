@@ -47,16 +47,19 @@ public class Game {
 		}
 		board.promote(rank, file, type);
 		if (promotionPending && rank == promotionRank && file == promotionFile) {
-			moveHistory.add(new Move(pendingPromotionMove.startRank, pendingPromotionMove.startFile,
+			Move promotionMove = new Move(pendingPromotionMove.startRank, pendingPromotionMove.startFile,
 					pendingPromotionMove.endRank, pendingPromotionMove.endFile, type,
 					pendingPromotionMove.capturedType, pendingPromotionMove.enPassantCapture,
-					pendingPromotionMove.castle));
+					pendingPromotionMove.castle);
+			// currMove was already flipped in applyMove when promotion became pending
+			Color mover = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
 			promotionPending = false;
 			promotionRank = -1;
 			promotionFile = -1;
 			pendingPromotionMove = null;
 			currState = updateGameState();
 			updateMoveTracker();
+			moveHistory.add(promotionMove.withHistoryMetadata(mover, computeAnnotation(currState)));
 		}
 	}
 
@@ -186,6 +189,12 @@ public class Game {
 		return applyMove(new Move(startX, startY, endX, endY, promotionType));
 	}
 
+	private String computeAnnotation(GameState state) {
+		if (state == GameState.WHITEWINS || state == GameState.BLACKWINS) return "#";
+		if (state == GameState.WHITEINCHECK || state == GameState.BLACKINCHECK) return "+";
+		return "";
+	}
+
 	private boolean applyMove(Move move) {
 		if (promotionPending) {
 			return false;
@@ -220,10 +229,11 @@ public class Game {
 				}
 				board.promote(endX, endY, promotionType);
 			}
-			moveHistory.add(moveToRecord);
+			Color mover = currMove;
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
 			currState = updateGameState();
 			updateMoveTracker();
+			moveHistory.add(moveToRecord.withHistoryMetadata(mover, computeAnnotation(currState)));
 			return true;
 		} else {
 			return false;
