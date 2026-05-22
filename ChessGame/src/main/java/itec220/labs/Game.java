@@ -16,6 +16,8 @@ public class Game {
 	private GameState currState;
 	private Color currMove;
 	private LinkedList<String> boardStates = new LinkedList<>();
+	private int halfMoveClock = 0;
+	private int fullMoveNumber = 1;
 
 	/**
 	 * Constructor for the game, create a new board, and update the current move and game state
@@ -83,7 +85,18 @@ public class Game {
 	 * @return Return a boolean based on whether the move was made or not
 	 */
 	public boolean move(int startX, int startY, int endX, int endY) {
+		int takenBefore = board.getNumOfTakenPieces();
 		if (board.move(startX, startY, endX, endY, currMove)) {
+			boolean isCapture = board.getNumOfTakenPieces() > takenBefore;
+			boolean isPawnMove = board.getPiece(endX, endY) instanceof Pawn;
+			if (isPawnMove || isCapture) {
+				halfMoveClock = 0;
+			} else {
+				halfMoveClock++;
+			}
+			if (currMove == Color.BLACK) {
+				fullMoveNumber++;
+			}
 			currState = updateGameState();
 			updateMoveTracker(board.getBoardString());
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
@@ -162,5 +175,21 @@ public class Game {
 	 */
 	public GameState getGameState() {
 		return this.currState;
+	}
+
+	/**
+	 * Return the halfmove clock (resets on pawn move or capture; used for 50-move rule)
+	 * @return halfmove clock as an int
+	 */
+	public int getHalfMoveClock() {
+		return halfMoveClock;
+	}
+
+	/**
+	 * Return the fullmove number (starts at 1, increments after every black move)
+	 * @return fullmove number as an int
+	 */
+	public int getFullMoveNumber() {
+		return fullMoveNumber;
 	}
 }
