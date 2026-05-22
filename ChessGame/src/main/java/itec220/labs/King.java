@@ -11,8 +11,6 @@ import java.util.ArrayList;
 public class King extends Piece {
 	private static final int[] RANK_OFFSETS = { 0, 0, 1, -1, 1, 1, -1, -1 };
 	private static final int[] FILE_OFFSETS = { 1, -1, 0, 0, 1, -1, 1, -1 };
-	private static final int[] RANK_CHECK_OFFSETS = {0, 0, 1, -1, 1, 1, -1, -1, 2, 1, -1, -2, -2, -1, 1, 2};
-	private static final int[] FILE_CHECK_OFFSETS = {1, -1, 0, 0, 1, -1, 1, -1, 1, 2, 2, 1, -1, -2, -2, -1 };
 	private boolean hasMoved = false;
 
 	/**
@@ -41,46 +39,8 @@ public class King extends Piece {
 	 * @return Returns a boolean of whether the King is in check
 	 */
 	public boolean isInCheck(Board copy) {
-		Piece[][] pieces = copy.getPieces();
-		
-		int curRank = this.getRank();
-		int curFile = this.getFile();
-		for (int check = 0; check < RANK_CHECK_OFFSETS.length; check++) {
-			int rankOffset = RANK_CHECK_OFFSETS[check];
-			int fileOffset = FILE_CHECK_OFFSETS[check];
-
-			for (int i = 1; i < copy.BOARD_SIZE; i++) {
-				int newRank = curRank + (i * rankOffset);
-				int newFile = curFile + (i * fileOffset);
-				if(newRank > 7 || newFile > 7 || newRank < 0 || newFile < 0)
-					break;
-				
-				if(pieces[newRank][newFile] != null) {
-					if(check < 4) {
-						if(pieces[newRank][newFile].getColor() != this.getColor() && (pieces[newRank][newFile] instanceof Rook || pieces[newRank][newFile] instanceof Queen)) {
-							return true;							
-						}
-					} else if(check < 8) {
-						if(pieces[newRank][newFile].getColor() != this.getColor()) {
-							if(i == 1 && (pieces[newRank][newFile] instanceof Queen || pieces[newRank][newFile] instanceof Bishop ||
-								(pieces[newRank][newFile] instanceof Pawn &&
-								((this.getColor() == Color.WHITE && rankOffset > 0) ||
-								 (this.getColor() == Color.BLACK && rankOffset < 0))))) {
-								return true;
-							} else if(pieces[newRank][newFile] instanceof Queen || pieces[newRank][newFile] instanceof Bishop) {
-								return true;
-							}
-						} 
-					} else {
-						if(pieces[newRank][newFile] != null && pieces[newRank][newFile].getColor() != this.getColor() && pieces[newRank][newFile] instanceof Knight) {
-							return true;
-						}
-						break;
-					}
-				}
-			}
-		}
-		return false;
+		Color attackingColor = this.getColor() == Color.WHITE ? Color.BLACK : Color.WHITE;
+		return copy.isSquareAttacked(this.getRank(), this.getFile(), attackingColor);
 	}
 
 	/**
@@ -90,73 +50,68 @@ public class King extends Piece {
 	 * @return Return an ArrayList of valid moves
 	 */
 	@Override
-	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board copy, boolean kingCheck) {
-		Piece[][] pieces = copy.getPieces();
+	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(Board board, boolean kingCheck) {
+		Piece[][] pieces = board.getPieces();
 		ArrayList<SimpleEntry<Integer, Integer>> moves = new ArrayList<>();
 		int curRank = this.getRank();
 		int curFile = this.getFile();
-		if (curRank >= copy.BOARD_SIZE || curRank < 0 || curFile >= copy.BOARD_SIZE || curFile < 0) {
+		if (curRank >= board.BOARD_SIZE || curRank < 0 || curFile >= board.BOARD_SIZE || curFile < 0) {
 			System.out.println("Something went wrong with the king at " + this);
 		} else {
 			for (int i = 0; i < RANK_OFFSETS.length; i++) {
 				int newRank = curRank + (1 * RANK_OFFSETS[i]);
 				int newFile = curFile + (1 * FILE_OFFSETS[i]);
-				if (newRank >= copy.BOARD_SIZE || newRank < 0 || newFile >= copy.BOARD_SIZE || newFile < 0) {
+				if (newRank >= board.BOARD_SIZE || newRank < 0 || newFile >= board.BOARD_SIZE || newFile < 0) {
 					continue;
 				}
 				if (pieces[newRank][newFile] == null || pieces[newRank][newFile].getColor() != this.getColor()) {
 					if (kingCheck) {
 						moves.add(new SimpleEntry<>(newRank, newFile));
-					} else if (this.isValidMove(newRank, newFile, copy)) {
+					} else if (this.isValidMove(newRank, newFile, board)) {
 						moves.add(new SimpleEntry<>(newRank, newFile));
 					}
 				}
 			}
-			if(curFile + 3 < 8) {
-				if (!this.hasMoved && pieces[curRank][curFile + 1] == null && pieces[curRank][curFile + 2] == null
-						&& pieces[curRank][curFile + 3] != null && pieces[curRank][curFile + 3] instanceof Rook) { // check
-																													// castle
-																													// to
-																													// the
-																													// right
-					Rook castle = (Rook) pieces[curRank][curFile + 3];
-					if (!castle.getHasMoved()) {
-						if (kingCheck) {
-							moves.add(new SimpleEntry<>(curRank, curFile + 2));
-						} else {
-							Board copyOfCopy = copy.copy();
-							copyOfCopy.move(curRank, curFile, curRank, curFile+2, getColor());
-							copyOfCopy.move(curRank, curFile+3, curRank, curFile+1, getColor());
-							if(!copyOfCopy.isKingInCheck(getColor())) {
-								moves.add(new SimpleEntry<>(curRank, curFile + 2));
-							}
-						}
-	
-					}
-				}
-			}
-			if(curFile - 4 >= 0) {
-				if (!this.hasMoved && pieces[curRank][curFile - 1] == null && pieces[curRank][curFile - 2] == null
-						&& pieces[curRank][curFile - 3] == null && pieces[curRank][curFile - 4] != null
-						&& pieces[curRank][curFile - 4] instanceof Rook) {
-					Rook castle = (Rook) pieces[curRank][curFile - 4]; // check castle to the left
-					if(!castle.getHasMoved()) {
-						if(kingCheck) {
-							moves.add(new SimpleEntry<>(curRank, curFile - 2));
-						} else {
-							Board copyOfCopy = copy.copy();
-							copyOfCopy.move(curRank, curFile, curRank, curFile-2, getColor());
-							copyOfCopy.move(curRank, curFile-4, curRank, curFile-1, getColor());
-							if(!copyOfCopy.isKingInCheck(getColor())) {
-								moves.add(new SimpleEntry<>(curRank, curFile - 2));
-							}
-						}
-					}
-	
-				}
-			}
+			addCastleMove(board, pieces, moves, kingCheck, curRank, curFile, 1, 3, 2);
+			addCastleMove(board, pieces, moves, kingCheck, curRank, curFile, -1, 4, -2);
 		}
 		return moves;
+	}
+
+	private void addCastleMove(Board board, Piece[][] pieces, ArrayList<SimpleEntry<Integer, Integer>> moves,
+			boolean kingCheck, int curRank, int curFile, int direction, int rookOffset, int kingOffset) {
+		int rookFile = curFile + (direction * rookOffset);
+		int destinationFile = curFile + kingOffset;
+		if (this.hasMoved || rookFile < 0 || rookFile >= board.BOARD_SIZE || destinationFile < 0
+				|| destinationFile >= board.BOARD_SIZE) {
+			return;
+		}
+		for (int file = curFile + direction; file != rookFile; file += direction) {
+			if (pieces[curRank][file] != null) {
+				return;
+			}
+		}
+		if (!(pieces[curRank][rookFile] instanceof Rook)) {
+			return;
+		}
+		Rook rook = (Rook) pieces[curRank][rookFile];
+		if (rook.getColor() != this.getColor() || rook.getHasMoved()) {
+			return;
+		}
+		if (kingCheck) {
+			moves.add(new SimpleEntry<>(curRank, destinationFile));
+			return;
+		}
+		Color opposingColor = this.getColor() == Color.WHITE ? Color.BLACK : Color.WHITE;
+		if (board.isSquareAttacked(curRank, curFile, opposingColor)
+				|| board.isSquareAttacked(curRank, curFile + direction, opposingColor)
+				|| board.isSquareAttacked(curRank, destinationFile, opposingColor)) {
+			return;
+		}
+		Board simulatedBoard = board.simulateMove(curRank, curFile, curRank, destinationFile);
+		if (simulatedBoard != null && !simulatedBoard.isKingInCheck(this.getColor())) {
+			moves.add(new SimpleEntry<>(curRank, destinationFile));
+		}
 	}
 
 	

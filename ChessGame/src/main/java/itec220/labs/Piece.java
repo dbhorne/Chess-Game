@@ -53,25 +53,7 @@ public abstract class Piece {
 	 * @return Return a boolean of whether the move is valid
 	 */
 	public boolean isValidMove(int newRank, int newFile, Board board) {
-		Board copy = board.copy();
-		Piece[][] pieces = copy.getPieces();
-		pieces[this.rank][this.file] = null;
-		pieces[newRank][newFile] = this;
-		int origRank = this.rank;
-		int origFile = this.file;
-
-		this.setRank(newRank);
-		this.setFile(newFile);
-		copy.calcPieceMoves(true, this.color == Color.WHITE ? Color.BLACK : Color.WHITE);
-		boolean temp = !copy.isKingInCheck(this.color);
-		King oppositeKing = board.getKing(this.color == Color.WHITE ? Color.BLACK : Color.WHITE);
-		if (oppositeKing != null && oppositeKing.getRank() == newRank && oppositeKing.getFile() == newFile) {
-			temp = true;
-		}
-
-		this.setRank(origRank);
-		this.setFile(origFile);
-		return temp;
+		return board.isLegalMove(this, newRank, newFile);
 	}
 
 	/**

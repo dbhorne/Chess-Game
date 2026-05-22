@@ -26,6 +26,7 @@ public class Game {
 		board = new Board();
 		currState = GameState.IN_PROGRESS;
 		currMove = Color.WHITE;
+		boardStates.add(getPositionIdentity());
 	}
 
 	/**
@@ -97,9 +98,9 @@ public class Game {
 			if (currMove == Color.BLACK) {
 				fullMoveNumber++;
 			}
-			currState = updateGameState();
-			updateMoveTracker(board.getBoardString());
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
+			currState = updateGameState();
+			updateMoveTracker();
 			return true;
 		} else {
 			return false;
@@ -112,44 +113,34 @@ public class Game {
 	 *  @return Return the GameState enum
 	 */
 	public GameState updateGameState() {
-		GameState tempState = GameState.IN_PROGRESS;
-		if (currMove == Color.WHITE) {
-			if (board.isKingInCheck(Color.BLACK)) {
-				tempState = GameState.BLACKINCHECK;
-
-				if (board.getBlackMoves().size() == 0) {
-					tempState = GameState.WHITEWINS;
-				}
-			} else if (board.getBlackMoves().size() == 0) {
-				tempState = GameState.STALEMATE;
-			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
-				tempState = GameState.DRAW;
+		Color sideToMove = currMove;
+		boolean inCheck = board.isKingInCheck(sideToMove);
+		ArrayList<SimpleEntry<Integer, Integer>> legalMoves =
+				sideToMove == Color.WHITE ? board.getWhiteMoves() : board.getBlackMoves();
+		if (legalMoves.isEmpty()) {
+			if (inCheck) {
+				return sideToMove == Color.WHITE ? GameState.BLACKWINS : GameState.WHITEWINS;
 			}
-		} else {
-			if (board.isKingInCheck(Color.WHITE)) {
-				tempState = GameState.WHITEINCHECK;
-				if (board.getWhiteMoves().size() == 0) {
-					tempState = GameState.BLACKWINS;
-				}
-			} else if (board.getWhiteMoves().size() == 0) {
-				tempState = GameState.STALEMATE;
-			} else if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
-				tempState = GameState.DRAW;
-			}
+			return GameState.STALEMATE;
 		}
-		return tempState;
+		if (inCheck) {
+			return sideToMove == Color.WHITE ? GameState.WHITEINCHECK : GameState.BLACKINCHECK;
+		}
+		if (board.getNumOfPieces(Color.BLACK) == 1 && board.getNumOfPieces(Color.WHITE) == 1) {
+			return GameState.DRAW;
+		}
+		return GameState.IN_PROGRESS;
 	}
 	
 	
 	/** 
-	 * W.I.P Used to track 3 move repeting, should work
-	 * @param newBoardState a string of the current board state
+	 * Used to track threefold repetition based on full position identity.
 	 */
-	public void updateMoveTracker(String newBoardState) {
-		if(Collections.frequency(boardStates, newBoardState) == 2) {
+	public void updateMoveTracker() {
+		String newBoardState = getPositionIdentity();
+		boardStates.add(newBoardState);
+		if(Collections.frequency(boardStates, newBoardState) >= 3) {
 			currState = GameState.DRAW;
-		} else {
-			boardStates.add(newBoardState);
 		}
 	}
 
@@ -193,27 +184,11 @@ public class Game {
 		sb.append(' ');
 
 		// 3. Castling availability
-		StringBuilder castling = new StringBuilder();
-		Piece[][] pieces = board.getPieces();
-		if (canCastle(pieces, 0, 4, 0, 7)) castling.append('K');
-		if (canCastle(pieces, 0, 4, 0, 0)) castling.append('Q');
-		if (canCastle(pieces, 7, 4, 7, 7)) castling.append('k');
-		if (canCastle(pieces, 7, 4, 7, 0)) castling.append('q');
-		sb.append(castling.length() == 0 ? "-" : castling.toString());
+		sb.append(getCastlingAvailability());
 		sb.append(' ');
 
 		// 4. En passant target square
-		java.util.AbstractMap.SimpleEntry<Integer, Integer> ep = board.getEnPassant();
-		if (ep == null) {
-			sb.append('-');
-		} else {
-			int pawnRow = ep.getKey();
-			int pawnCol = ep.getValue();
-			Piece epPawn = board.getPiece(pawnRow, pawnCol);
-			int targetRow = (epPawn != null && epPawn.getColor() == Color.WHITE) ? pawnRow - 1 : pawnRow + 1;
-			sb.append((char) ('a' + pawnCol));
-			sb.append((char) ('1' + targetRow));
-		}
+		sb.append(getEnPassantTarget());
 		sb.append(' ');
 
 		// 5 & 6. Halfmove clock and fullmove number
@@ -229,6 +204,11 @@ public class Game {
 		Piece rook = pieces[rookRow][rookCol];
 		if (!(king instanceof King) || !(rook instanceof Rook)) return false;
 		return !((King) king).getHasMoved() && !((Rook) rook).getHasMoved();
+	}
+
+	String getPositionIdentity() {
+		return board.toFENPiecePlacement() + " " + (currMove == Color.WHITE ? "w" : "b") + " "
+				+ getCastlingAvailability() + " " + getEnPassantTarget();
 	}
 
 	/**
@@ -336,6 +316,7 @@ public class Game {
 
 		// --- Reset state tracking ---
 		boardStates.clear();
+		boardStates.add(getPositionIdentity());
 		currState = updateGameState();
 	}
 
@@ -371,5 +352,27 @@ public class Game {
 	 */
 	public int getFullMoveNumber() {
 		return fullMoveNumber;
+	}
+
+	private String getCastlingAvailability() {
+		StringBuilder castling = new StringBuilder();
+		Piece[][] pieces = board.getPieces();
+		if (canCastle(pieces, 0, 4, 0, 7)) castling.append('K');
+		if (canCastle(pieces, 0, 4, 0, 0)) castling.append('Q');
+		if (canCastle(pieces, 7, 4, 7, 7)) castling.append('k');
+		if (canCastle(pieces, 7, 4, 7, 0)) castling.append('q');
+		return castling.length() == 0 ? "-" : castling.toString();
+	}
+
+	private String getEnPassantTarget() {
+		java.util.AbstractMap.SimpleEntry<Integer, Integer> ep = board.getEnPassant();
+		if (ep == null) {
+			return "-";
+		}
+		int pawnRow = ep.getKey();
+		int pawnCol = ep.getValue();
+		Piece epPawn = board.getPiece(pawnRow, pawnCol);
+		int targetRow = (epPawn != null && epPawn.getColor() == Color.WHITE) ? pawnRow - 1 : pawnRow + 1;
+		return "" + (char) ('a' + pawnCol) + (char) ('1' + targetRow);
 	}
 }
