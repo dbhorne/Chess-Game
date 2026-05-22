@@ -445,11 +445,35 @@ public class ChessGUI extends Application implements GameViewListener {
 			moveRows.getChildren().add(buildMoveRow(moveNum, whiteMove, blackMove));
 			moveNum++;
 		}
+		scrollHistoryToBottom();
+	}
+
+	private void scrollHistoryToBottom() {
 		javafx.application.Platform.runLater(new Runnable() {
 			public void run() {
 				moveScroll.setVvalue(1.0);
 			}
 		});
+	}
+
+	private void appendLatestMoveToHistory() {
+		ArrayList<Move> history = game.getMoveHistory();
+		if (history.isEmpty()) return;
+		Move latest = history.get(history.size() - 1);
+		if (latest.moverColor == Color.BLACK && !moveRows.getChildren().isEmpty()) {
+			HBox lastRow = (HBox) moveRows.getChildren().get(moveRows.getChildren().size() - 1);
+			Label blackLabel = (Label) lastRow.getChildren().get(2);
+			if (blackLabel.getText().isEmpty()) {
+				blackLabel.setText(formatMoveForPanel(latest));
+				scrollHistoryToBottom();
+				return;
+			}
+		}
+		int moveNum = moveRows.getChildren().size() + 1;
+		Move whiteMove = latest.moverColor != Color.BLACK ? latest : null;
+		Move blackMove = latest.moverColor == Color.BLACK ? latest : null;
+		moveRows.getChildren().add(buildMoveRow(moveNum, whiteMove, blackMove));
+		scrollHistoryToBottom();
 	}
 
 	private HBox buildMoveRow(int num, Move whiteMove, Move blackMove) {
@@ -645,7 +669,7 @@ public class ChessGUI extends Application implements GameViewListener {
 				clearPromotionButtons();
 				enableButtons();
 				updateStatusLabel();
-				refreshMoveHistory();
+				appendLatestMoveToHistory();
 				updateFenDisplay();
 				ArrayList<Move> history = game.getMoveHistory();
 				if (!history.isEmpty()) {
@@ -703,7 +727,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		}
 		updateStatusLabel();
 		updateLastMove(move.endRank, move.endFile);
-		refreshMoveHistory();
+		appendLatestMoveToHistory();
 		updateFenDisplay();
 		if (!gameIsOver()) {
 			enableButtons();
