@@ -46,9 +46,11 @@ public class ChessGUI extends Application implements GameViewListener {
 	private static final int SCENE_HEIGHT = 780;
 	private static final String MOVE_SOUND = "/itec220/labs/ChessMove.mp3";
 	private static final String CAPTURE_SOUND = "/itec220/labs/ChessCapture.mp3";
+	private static final String CHECK_SOUND = "/itec220/labs/move-check.mp3";
 
 	private final Media chessMove = loadMedia(MOVE_SOUND);
 	private final Media chessTake = loadMedia(CAPTURE_SOUND);
+	private final Media chessCheck = loadMedia(CHECK_SOUND);
 	private final GridPane grid = new GridPane();
 	private Game game = new Game();
 	private GameController controller;
@@ -517,7 +519,9 @@ public class ChessGUI extends Application implements GameViewListener {
 				&& beforeMove.getPiece(move.endRank, move.endFile) == null);
 		boolean isCapture = game.getNumTakenPieces() != numTakenPieces;
 		numTakenPieces = game.getNumTakenPieces();
-		playSound(isCapture ? chessTake : chessMove);
+		GameState state = game.getCurrState();
+		boolean inCheck = state == GameState.WHITEINCHECK || state == GameState.BLACKINCHECK;
+		playSound(inCheck ? chessCheck : isCapture ? chessTake : chessMove);
 		clearSelection();
 		updateMoveSquares(move.startRank, move.startFile, move.endRank, move.endFile, movingPiece, enPassantCapture);
 		handlePromotionIfNeeded(move.endRank, move.endFile);
