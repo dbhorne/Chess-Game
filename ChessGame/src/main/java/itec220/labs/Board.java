@@ -147,7 +147,7 @@ public class Board {
 	 * @return Returns a deep copy of the current Board
 	 */
 	public Board copy() {
-		Board copy = new Board();
+		Board copy = new Board(new Piece[8][8]);
 		Piece[][] tempPieces = new Piece[8][8];
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
