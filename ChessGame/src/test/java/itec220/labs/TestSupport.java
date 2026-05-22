@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 final class TestSupport {
 	private TestSupport() {
@@ -51,7 +52,7 @@ final class TestSupport {
 			return false;
 		}
 
-		public Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot) {
+		public Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot, List<String> priorPositions) {
 			return legalMoves.isEmpty() ? null : legalMoves.get(0);
 		}
 	}

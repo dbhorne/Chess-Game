@@ -82,6 +82,82 @@
     -fx-border-width: 0;
 }
 
+/* ── Move history panel ── */
+
+.move-history-panel {
+    -fx-min-width: 220px;
+    -fx-pref-width: 220px;
+    -fx-max-width: 220px;
+    -fx-background-color: #5c6066;
+    -fx-padding: 10 8 8 8;
+    -fx-spacing: 4;
+}
+
+.move-history-header {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f0f0f0;
+    -fx-padding: 0 0 4 2;
+}
+
+.move-col-header-row {
+    -fx-padding: 0 0 2 0;
+}
+
+.move-col-header {
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #b8c0cc;
+    -fx-font-family: "Courier New";
+}
+
+.move-scroll {
+    -fx-background: #5c6066;
+    -fx-background-color: #5c6066;
+    -fx-border-color: transparent;
+}
+
+.move-scroll > .viewport {
+    -fx-background-color: #5c6066;
+}
+
+.move-rows {
+    -fx-background-color: #5c6066;
+    -fx-spacing: 1;
+    -fx-padding: 0;
+}
+
+.move-row {
+    -fx-padding: 1 0 1 0;
+}
+
+.move-entry {
+    -fx-font-size: 11px;
+    -fx-font-family: "Courier New";
+    -fx-text-fill: #e8e8e8;
+    -fx-padding: 0 2 0 2;
+}
+
+.move-entry-num {
+    -fx-min-width: 26px;
+    -fx-max-width: 26px;
+    -fx-text-fill: #b8c0cc;
+}
+
+.move-entry-col {
+    -fx-min-width: 88px;
+    -fx-max-width: 88px;
+}
+
+.copy-moves-button {
+    -fx-padding: 6 10 6 10;
+    -fx-background-color: #f4f0e8;
+    -fx-text-fill: #2f2f2f;
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+    -fx-pref-width: 200px;
+}
+
 .side-panel {
     -fx-min-width: 220px;
     -fx-pref-width: 220px;

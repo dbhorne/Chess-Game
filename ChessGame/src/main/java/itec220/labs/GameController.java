@@ -1,6 +1,7 @@
 package itec220.labs;
 
 import java.util.ArrayList;
+import java.util.List;
 import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -160,9 +161,10 @@ final class GameController {
 		final ChessPlayer scheduledPlayer = getCurrentPlayer();
 		final ArrayList<Move> legalMoves = scheduledGame.getLegalMoves();
 		final Board boardSnapshot = scheduledGame.getCopyOfCurrBoard();
+		final List<String> positionHistory = scheduledGame.getPositionHistory();
 		activeBotTask = new Task<Move>() {
 			protected Move call() {
-				return scheduledPlayer.chooseMove(legalMoves, boardSnapshot);
+				return scheduledPlayer.chooseMove(legalMoves, boardSnapshot, positionHistory);
 			}
 		};
 		activeBotTask.setOnSucceeded(event -> {
@@ -183,7 +185,7 @@ final class GameController {
 	private Move chooseCurrentBotMove() {
 		ArrayList<Move> legalMoves = game.getLegalMoves();
 		Board boardSnapshot = game.getCopyOfCurrBoard();
-		return getCurrentPlayer().chooseMove(legalMoves, boardSnapshot);
+		return getCurrentPlayer().chooseMove(legalMoves, boardSnapshot, game.getPositionHistory());
 	}
 
 	private void applyBotMove(Game scheduledGame, Move move) {

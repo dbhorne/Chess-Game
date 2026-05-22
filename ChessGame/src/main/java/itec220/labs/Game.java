@@ -4,6 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * To create a class that communicated with the board, which will handle piece logic,
@@ -46,16 +47,19 @@ public class Game {
 		}
 		board.promote(rank, file, type);
 		if (promotionPending && rank == promotionRank && file == promotionFile) {
-			moveHistory.add(new Move(pendingPromotionMove.startRank, pendingPromotionMove.startFile,
+			Move promotionMove = new Move(pendingPromotionMove.startRank, pendingPromotionMove.startFile,
 					pendingPromotionMove.endRank, pendingPromotionMove.endFile, type,
 					pendingPromotionMove.capturedType, pendingPromotionMove.enPassantCapture,
-					pendingPromotionMove.castle));
+					pendingPromotionMove.castle);
+			// currMove was already flipped in applyMove when promotion became pending
+			Color mover = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
 			promotionPending = false;
 			promotionRank = -1;
 			promotionFile = -1;
 			pendingPromotionMove = null;
 			currState = updateGameState();
 			updateMoveTracker();
+			moveHistory.add(promotionMove.withHistoryMetadata(mover, computeAnnotation(currState)));
 		}
 	}
 
@@ -134,7 +138,15 @@ public class Game {
 		if (bot == null || bot.getColor() != currMove) {
 			return null;
 		}
-		return bot.chooseMove(getLegalMoves(), board.copy());
+		return bot.chooseMove(getLegalMoves(), board.copy(), getPositionHistory());
+	}
+
+	/**
+	 * Return a snapshot of all prior position identity strings for repetition detection.
+	 * @return copy of the position history list
+	 */
+	public List<String> getPositionHistory() {
+		return new ArrayList<>(boardStates);
 	}
 
 	/**
@@ -177,6 +189,12 @@ public class Game {
 		return applyMove(new Move(startX, startY, endX, endY, promotionType));
 	}
 
+	private String computeAnnotation(GameState state) {
+		if (state == GameState.WHITEWINS || state == GameState.BLACKWINS) return "#";
+		if (state == GameState.WHITEINCHECK || state == GameState.BLACKINCHECK) return "+";
+		return "";
+	}
+
 	private boolean applyMove(Move move) {
 		if (promotionPending) {
 			return false;
@@ -211,10 +229,11 @@ public class Game {
 				}
 				board.promote(endX, endY, promotionType);
 			}
-			moveHistory.add(moveToRecord);
+			Color mover = currMove;
 			currMove = currMove == Color.WHITE ? Color.BLACK : Color.WHITE;
 			currState = updateGameState();
 			updateMoveTracker();
+			moveHistory.add(moveToRecord.withHistoryMetadata(mover, computeAnnotation(currState)));
 			return true;
 		} else {
 			return false;
@@ -289,7 +308,7 @@ public class Game {
 	 *  the board
 	 *  @return Return the GameState enum
 	 */
-	public GameState updateGameState() {
+	private GameState updateGameState() {
 		Color sideToMove = currMove;
 		boolean inCheck = board.isKingInCheck(sideToMove);
 		ArrayList<SimpleEntry<Integer, Integer>> legalMoves =
@@ -310,10 +329,10 @@ public class Game {
 	}
 	
 	
-	/** 
+	/**
 	 * Used to track threefold repetition based on full position identity.
 	 */
-	public void updateMoveTracker() {
+	private void updateMoveTracker() {
 		String newBoardState = getPositionIdentity();
 		boardStates.add(newBoardState);
 		if(Collections.frequency(boardStates, newBoardState) >= 3) {

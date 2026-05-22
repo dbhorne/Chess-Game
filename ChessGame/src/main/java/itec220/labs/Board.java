@@ -55,7 +55,7 @@ public class Board {
 	/**
 	 * calculate the current number of pieces on the board for each color
 	 */
-	public void calcNumOfPieces() {
+	private void calcNumOfPieces() {
 		numOfBlackPieces = 0;
 		numOfWhitePieces = 0;
 		for (int i = 0; i < BOARD_SIZE; i++) {

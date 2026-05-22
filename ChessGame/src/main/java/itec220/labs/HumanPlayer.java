@@ -1,6 +1,7 @@
 package itec220.labs;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Human-controlled side. The GUI supplies moves through board input.
@@ -23,7 +24,7 @@ final class HumanPlayer implements ChessPlayer {
 		return true;
 	}
 
-	public Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot) {
+	public Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot, List<String> priorPositions) {
 		return null;
 	}
 }

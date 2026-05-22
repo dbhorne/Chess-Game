@@ -12,6 +12,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
@@ -46,9 +48,11 @@ public class ChessGUI extends Application implements GameViewListener {
 	private static final int SCENE_HEIGHT = 780;
 	private static final String MOVE_SOUND = "/itec220/labs/ChessMove.mp3";
 	private static final String CAPTURE_SOUND = "/itec220/labs/ChessCapture.mp3";
+	private static final String CHECK_SOUND = "/itec220/labs/move-check.mp3";
 
 	private final Media chessMove = loadMedia(MOVE_SOUND);
 	private final Media chessTake = loadMedia(CAPTURE_SOUND);
+	private final Media chessCheck = loadMedia(CHECK_SOUND);
 	private final GridPane grid = new GridPane();
 	private Game game = new Game();
 	private GameController controller;
@@ -66,7 +70,10 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final TextField fenField = new TextField();
 	private final Button loadFenButton = new Button("Load FEN");
 	private final Label fenError = new Label();
-	private final Region right = new Region();
+	private final VBox moveHistoryPanel = new VBox(0);
+	private final VBox moveRows = new VBox(0);
+	private final ScrollPane moveScroll = new ScrollPane(moveRows);
+	private final Button copyMovesButton = new Button("Copy Moves");
 	private final VBox bottom = new VBox(8);
 	private final HBox moveBar = new HBox(12);
 	private final HBox fenBar = new HBox(8);
@@ -126,7 +133,7 @@ public class ChessGUI extends Application implements GameViewListener {
 
 		root.setTop(currentColor);
 		root.setCenter(grid);
-		root.setRight(right);
+		root.setRight(moveHistoryPanel);
 		moveBar.getChildren().add(lastMove);
 		bottom.getChildren().add(moveBar);
 		bottom.getChildren().add(fenBar);
@@ -259,6 +266,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		numTakenPieces = game.getNumTakenPieces();
 		updateStatusLabel();
 		updateFenDisplay();
+		refreshMoveHistory();
 		disableButtons();
 		enableButtons();
 		updateBoard();
@@ -282,7 +290,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Set up the GUI with buttons, and stylesheets
 	 */
-	public void setUpGUI() {
+	private void setUpGUI() {
 		whiteImages.put(PieceType.QUEEN,  new Image(ChessGUI.class.getResourceAsStream("WhiteQueen.png")));
 		whiteImages.put(PieceType.KING,   new Image(ChessGUI.class.getResourceAsStream("WhiteKing.png")));
 		whiteImages.put(PieceType.PAWN,   new Image(ChessGUI.class.getResourceAsStream("WhitePawn.png")));
@@ -299,7 +307,7 @@ public class ChessGUI extends Application implements GameViewListener {
 
 		left.getChildren().add(leftRegion);
 		leftRegion.getStyleClass().add("side-panel");
-		right.getStyleClass().add("side-panel");
+		setUpMoveHistoryPanel();
 		leftButtons.setAlignment(Pos.TOP_CENTER);
 		leftButtons.setPadding(new Insets(18));
 		restart.getStyleClass().add("restart");
@@ -340,10 +348,123 @@ public class ChessGUI extends Application implements GameViewListener {
 		setUpBoard();
 	}
 	
+	private void setUpMoveHistoryPanel() {
+		moveHistoryPanel.getStyleClass().add("move-history-panel");
+		VBox.setVgrow(moveScroll, Priority.ALWAYS);
+
+		Label header = new Label("Moves");
+		header.getStyleClass().add("move-history-header");
+
+		Label numHeader = new Label("#");
+		numHeader.getStyleClass().addAll("move-col-header", "move-entry-num");
+		Label whiteHeader = new Label("White");
+		whiteHeader.getStyleClass().addAll("move-col-header", "move-entry-col");
+		Label blackHeader = new Label("Black");
+		blackHeader.getStyleClass().addAll("move-col-header", "move-entry-col");
+		HBox colHeaders = new HBox(2, numHeader, whiteHeader, blackHeader);
+		colHeaders.getStyleClass().add("move-col-header-row");
+
+		moveScroll.setFitToWidth(true);
+		moveScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
+		moveScroll.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		moveScroll.getStyleClass().add("move-scroll");
+
+		moveRows.getStyleClass().add("move-rows");
+
+		copyMovesButton.getStyleClass().add("copy-moves-button");
+		copyMovesButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				ClipboardContent content = new ClipboardContent();
+				content.putString(buildMovesText());
+				Clipboard.getSystemClipboard().setContent(content);
+			}
+		});
+
+		moveHistoryPanel.getChildren().addAll(header, colHeaders, moveScroll, copyMovesButton);
+	}
+
+	private void refreshMoveHistory() {
+		moveRows.getChildren().clear();
+		ArrayList<Move> history = game.getMoveHistory();
+		int i = 0;
+		int moveNum = 1;
+		// If the first mover is Black (from a FEN), show an empty White slot for row 1
+		if (!history.isEmpty() && history.get(0).moverColor == Color.BLACK) {
+			HBox row = buildMoveRow(moveNum, null, history.get(0));
+			moveRows.getChildren().add(row);
+			i = 1;
+			moveNum = 2;
+		}
+		while (i < history.size()) {
+			Move whiteMove = history.get(i).moverColor != Color.BLACK ? history.get(i) : null;
+			Move blackMove = null;
+			if (whiteMove != null) {
+				if (i + 1 < history.size()) blackMove = history.get(i + 1);
+				i += 2;
+			} else {
+				blackMove = history.get(i);
+				i += 1;
+			}
+			moveRows.getChildren().add(buildMoveRow(moveNum, whiteMove, blackMove));
+			moveNum++;
+		}
+		javafx.application.Platform.runLater(new Runnable() {
+			public void run() {
+				moveScroll.setVvalue(1.0);
+			}
+		});
+	}
+
+	private HBox buildMoveRow(int num, Move whiteMove, Move blackMove) {
+		Label numLabel = new Label(num + ".");
+		numLabel.getStyleClass().addAll("move-entry", "move-entry-num");
+		Label whiteLabel = new Label(whiteMove != null ? formatMoveForPanel(whiteMove) : "...");
+		whiteLabel.getStyleClass().addAll("move-entry", "move-entry-col");
+		Label blackLabel = new Label(blackMove != null ? formatMoveForPanel(blackMove) : "");
+		blackLabel.getStyleClass().addAll("move-entry", "move-entry-col");
+		HBox row = new HBox(2, numLabel, whiteLabel, blackLabel);
+		row.getStyleClass().add("move-row");
+		return row;
+	}
+
+	private String formatMoveForPanel(Move move) {
+		if (move == null) return "";
+		char[] files = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
+		String from = "" + files[move.startFile] + (move.startRank + 1);
+		String to   = "" + files[move.endFile]   + (move.endRank  + 1);
+		String text = from + "→" + to;
+		if (move.promotionType != null) {
+			text += "=" + move.promotionType.name().charAt(0);
+		}
+		return text + move.annotation;
+	}
+
+	private String buildMovesText() {
+		StringBuilder sb = new StringBuilder();
+		ArrayList<Move> history = game.getMoveHistory();
+		int i = 0;
+		int moveNum = 1;
+		if (!history.isEmpty() && history.get(0).moverColor == Color.BLACK) {
+			sb.append(moveNum).append(". ... ").append(formatMoveForPanel(history.get(0))).append("\n");
+			i = 1;
+			moveNum = 2;
+		}
+		while (i < history.size()) {
+			sb.append(moveNum).append(". ").append(formatMoveForPanel(history.get(i)));
+			if (i + 1 < history.size()) {
+				sb.append("  ").append(formatMoveForPanel(history.get(i + 1)));
+			}
+			sb.append("\n");
+			i += 2;
+			moveNum++;
+		}
+		return sb.toString().trim();
+	}
+
 	/**
 	 * Set up the board using stable square nodes.
 	 */
-	public void setUpBoard() {
+	private void setUpBoard() {
 		grid.getStyleClass().add("chess-board");
 		grid.setAlignment(Pos.CENTER);
 		
@@ -397,7 +518,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	 * @param rank Row of the button that was pressed
 	 * @param file Column of the button that was pressed
 	 */
-	public void click(int rank, int file) {
+	private void click(int rank, int file) {
 		if (isBotTurn()) {
 			return;
 		}
@@ -475,9 +596,12 @@ public class ChessGUI extends Application implements GameViewListener {
 				clearPromotionButtons();
 				enableButtons();
 				updateStatusLabel();
+				refreshMoveHistory();
 				updateFenDisplay();
-				Piece promotedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
-				lastMove.setText("Last Move: " + promotedPiece.toString());
+				ArrayList<Move> history = game.getMoveHistory();
+				if (!history.isEmpty()) {
+					lastMove.setText("Last Move: " + history.get(history.size() - 1));
+				}
 			}
 		};
 		for (Button b : promoteButtons) {
@@ -492,9 +616,9 @@ public class ChessGUI extends Application implements GameViewListener {
 		if (promotionPending) {
 			return;
 		}
-		Piece movedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
-		if (movedPiece != null) {
-			lastMove.setText("Last Move: " + movedPiece.toString());
+		ArrayList<Move> history = game.getMoveHistory();
+		if (!history.isEmpty()) {
+			lastMove.setText("Last Move: " + history.get(history.size() - 1));
 		}
 	}
 
@@ -517,7 +641,9 @@ public class ChessGUI extends Application implements GameViewListener {
 				&& beforeMove.getPiece(move.endRank, move.endFile) == null);
 		boolean isCapture = game.getNumTakenPieces() != numTakenPieces;
 		numTakenPieces = game.getNumTakenPieces();
-		playSound(isCapture ? chessTake : chessMove);
+		GameState state = game.getCurrState();
+		boolean inCheck = state == GameState.WHITEINCHECK || state == GameState.BLACKINCHECK;
+		playSound(inCheck ? chessCheck : isCapture ? chessTake : chessMove);
 		clearSelection();
 		updateMoveSquares(move.startRank, move.startFile, move.endRank, move.endFile, movingPiece, enPassantCapture);
 		handlePromotionIfNeeded(move.endRank, move.endFile);
@@ -527,6 +653,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		}
 		updateStatusLabel();
 		updateLastMove(move.endRank, move.endFile);
+		refreshMoveHistory();
 		updateFenDisplay();
 		if (!gameIsOver()) {
 			enableButtons();
@@ -551,7 +678,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	 * Check the current game state to see if the game is over, if so disable all the buttons
 	 * @return Returns a boolean, true if the game is over, false if it is still continuing
 	 */
-	public boolean gameIsOver() {
+	private boolean gameIsOver() {
 		switch (game.getCurrState()) {
 		case BLACKWINS:
 		case WHITEWINS:
@@ -572,7 +699,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Loop through the buttons and disable their event handler
 	 */
-	public void disableButtons() {
+	private void disableButtons() {
 		for (ChessButton[] bArray : buttons) {
 			for (ChessButton b : bArray) {
 				b.setOnAction(null);
@@ -583,7 +710,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Loop through the buttons and enable their event handler
 	 */
-	public void enableButtons() {
+	private void enableButtons() {
 		if (promotionPending || isBotTurn()) {
 			return;
 		}
@@ -603,7 +730,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Set the end text based on the current game state
 	 */
-	public void setEndText() {
+	private void setEndText() {
 		switch (game.getCurrState()) {
 		case WHITEWINS:
 			currentColor.setText("Game over");
@@ -629,7 +756,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Update the GUI board without rebuilding square children.
 	 */
-	public void updateBoard() {
+	private void updateBoard() {
 		Board brd = game.getCopyOfCurrBoard();
 		for (int i = 0; i < BOARD_SIZE; i++) {
 			for (int j = 0; j < BOARD_SIZE; j++) {
@@ -657,8 +784,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	 * @param piece The piece that you are getting the image for
 	 * @return Returns an image created based on the piece
 	 */
-	
-	public Image getImage(Piece piece) {
+	private Image getImage(Piece piece) {
 		EnumMap<PieceType, Image> cache = piece.getColor() == itec220.labs.Color.WHITE ? whiteImages : blackImages;
 		return cache.get(piece.getType());
 	}
@@ -666,7 +792,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Show valid moves on the board, used by the click() method
 	 */
-	public void showValidMoves() {
+	private void showValidMoves() {
 		if (moveFrom != null) {
 			selectedHighlights[BOARD_SIZE - 1 - moveFrom.getKey()][moveFrom.getValue()].setVisible(true);
 		}

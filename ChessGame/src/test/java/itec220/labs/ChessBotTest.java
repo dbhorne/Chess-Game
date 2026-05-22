@@ -32,6 +32,22 @@ class ChessBotTest {
 	}
 
 	@Test
+	void effectiveDepthIncreasesInLowPieceEndgamesAndRespectsConstructorMinimum() {
+		Game kingAndQueenEndgame = TestSupport.gameFromFen("7k/5K2/5Q2/8/8/8/8/8 w - - 0 1");
+		ChessBot defaultBot = new ChessBot(Color.WHITE, 2, new Random(1), 1);
+		ChessBot deeperBot = new ChessBot(Color.WHITE, 4, new Random(1), 1);
+
+		assertEquals(7, defaultBot.effectiveDepthForTesting(kingAndQueenEndgame.getCopyOfCurrBoard(),
+				kingAndQueenEndgame.getLegalMoves().size()));
+		assertEquals(7, deeperBot.effectiveDepthForTesting(kingAndQueenEndgame.getCopyOfCurrBoard(),
+				kingAndQueenEndgame.getLegalMoves().size()));
+
+		Game startingPosition = new Game();
+		assertEquals(4, deeperBot.effectiveDepthForTesting(startingPosition.getCopyOfCurrBoard(),
+				startingPosition.getLegalMoves().size()));
+	}
+
+	@Test
 	void defaultDepthChoosesStartingMoveQuickly() {
 		Game game = new Game();
 
@@ -97,6 +113,44 @@ class ChessBotTest {
 		assertNotNull(move);
 		assertTrue(game.move(move));
 		assertEquals(GameState.WHITEWINS, game.getCurrState());
+	}
+
+	@Test
+	void botPrefersImmediateMateOverStalemateInWinningEndgame() {
+		Game game = TestSupport.gameFromFen("7k/5K2/5Q2/8/8/8/8/8 w - - 0 1");
+
+		Move move = game.getBotMove(new ChessBot(Color.WHITE, 2, new Random(1), 1));
+
+		assertNotEquals(new Move(5, 5, 5, 6), move);
+		assertTrue(game.move(move));
+		assertEquals(GameState.WHITEWINS, game.getCurrState());
+	}
+
+	@Test
+	void botAvoidsImmediateStalemateWhenMateriallyAhead() {
+		Game game = TestSupport.gameFromFen("7k/5K2/5Q2/8/8/8/8/8 w - - 0 1");
+		Move stalemateMove = new Move(5, 5, 5, 6);
+
+		Move move = game.getBotMove(new ChessBot(Color.WHITE, 2, new Random(2), 1));
+
+		assertNotEquals(stalemateMove, move);
+		assertTrue(game.move(move));
+		assertNotEquals(GameState.STALEMATE, game.getCurrState());
+	}
+
+	@Test
+	void botConstrainsEnemyKingInSimpleWinningEndgame() {
+		Game game = TestSupport.gameFromFen("8/8/8/3k4/8/8/8/1Q2K3 w - - 0 1");
+		int blackMobilityBefore = TestSupport.gameFromFen("8/8/8/3k4/8/8/8/1Q2K3 b - - 0 1")
+				.getLegalMoves().size();
+
+		Move move = game.getBotMove(new ChessBot(Color.WHITE, 2, new Random(3), 1));
+
+		assertNotNull(move);
+		assertTrue(game.move(move));
+		int blackMobilityAfter = game.getLegalMoves().size();
+		assertTrue(game.getCopyOfCurrBoard().isKingInCheck(Color.BLACK)
+				|| blackMobilityAfter < blackMobilityBefore);
 	}
 
 	@Test

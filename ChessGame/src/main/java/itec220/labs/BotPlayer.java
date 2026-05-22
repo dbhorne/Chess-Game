@@ -1,6 +1,7 @@
 package itec220.labs;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Bot-controlled side.
@@ -20,7 +21,7 @@ final class BotPlayer implements ChessPlayer {
 		return false;
 	}
 
-	public Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot) {
-		return bot.chooseMove(legalMoves, boardSnapshot);
+	public Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot, List<String> priorPositions) {
+		return bot.chooseMove(legalMoves, boardSnapshot, priorPositions);
 	}
 }
