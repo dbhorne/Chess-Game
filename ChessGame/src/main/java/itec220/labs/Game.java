@@ -76,6 +76,14 @@ public class Game {
 	}
 
 	/**
+	 * Return whether a GUI-style pawn promotion is waiting for a selected piece type.
+	 * @return true if a promotion choice is pending
+	 */
+	public boolean isPromotionPending() {
+		return promotionPending;
+	}
+
+	/**
 	 * Get the valid moves for a specific piece
 	 * @param rank the row of the piece
 	 * @param file the column of the piece

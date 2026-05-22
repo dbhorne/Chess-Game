@@ -6,12 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 class GameEngineTest {
@@ -214,6 +216,42 @@ class GameEngineTest {
 	}
 
 	@Test
+	void botDepthConstructorRejectsInvalidDepth() {
+		assertThrows(IllegalArgumentException.class, () -> new ChessBot(Color.WHITE, 0));
+	}
+
+	@Test
+	void botLooksAheadToAvoidImmediateRecapture() {
+		Game game = gameFromFen("r3k3/1b6/8/8/8/8/8/QR2K3 w - - 0 1");
+
+		Move move = game.getBotMove(new ChessBot(Color.WHITE, 2, new Random(1), 1));
+
+		assertNotEquals(new Move(0, 0, 7, 0, null, PieceType.ROOK, false, false), move);
+		assertTrue(game.getLegalMoves().contains(move));
+	}
+
+	@Test
+	void botFindsMateInOne() {
+		Game game = gameFromFen("7k/8/5KQ1/8/8/8/8/8 w - - 0 1");
+
+		Move move = game.getBotMove(new ChessBot(Color.WHITE, 2, new Random(1), 1));
+
+		assertNotNull(move);
+		assertTrue(game.move(move));
+		assertEquals(GameState.WHITEWINS, game.getCurrState());
+	}
+
+	@Test
+	void seededRandomTieBreakingReturnsLegalEqualMove() {
+		Game game = gameFromFen("4k3/8/8/8/8/8/8/4K3 w - - 0 1");
+		ArrayList<Move> legalMoves = game.getLegalMoves();
+
+		Move move = game.getBotMove(new ChessBot(Color.WHITE, 1, new Random(4), 1));
+
+		assertTrue(legalMoves.contains(move));
+	}
+
+	@Test
 	void botChoosesHighestValueCapture() {
 		Game game = gameFromFen("q3k3/8/8/8/8/8/8/R3K3 w Q - 0 1");
 
@@ -270,6 +308,56 @@ class GameEngineTest {
 		assertTrue(game.getMoveHistory().isEmpty());
 	}
 
+	@Test
+	void humanVsHumanControllerDoesNotAutoMoveOnPoll() {
+		Game game = new Game();
+		GameController controller = new GameController(game,
+				new HumanPlayer(Color.WHITE), new HumanPlayer(Color.BLACK), null);
+
+		controller.pollMove();
+
+		assertEquals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", game.toFEN());
+		assertTrue(controller.isHumanTurn());
+	}
+
+	@Test
+	void humanVsBotControllerWaitsWhenHumanIsToMove() {
+		Game game = new Game();
+		GameController controller = new GameController(game,
+				new HumanPlayer(Color.WHITE), new FirstMoveBot(Color.BLACK), null);
+
+		controller.pollMove();
+
+		assertEquals(Color.WHITE, game.getCurrMove());
+		assertTrue(controller.isHumanTurn());
+	}
+
+	@Test
+	void botVsBotControllerCanAdvanceOneFullMovePair() {
+		Game game = new Game();
+		GameController controller = new GameController(game,
+				new FirstMoveBot(Color.WHITE), new FirstMoveBot(Color.BLACK), null);
+
+		assertTrue(controller.pollMoveSynchronouslyForTesting());
+		assertTrue(controller.pollMoveSynchronouslyForTesting());
+
+		assertEquals(Color.WHITE, game.getCurrMove());
+		assertEquals(2, game.getMoveHistory().size());
+		assertEquals(2, game.getFullMoveNumber());
+	}
+
+	@Test
+	void controllerLoadedFenWithBotToMoveCanPollBotMove() {
+		Game game = gameFromFen("4k3/8/8/8/8/8/4p3/4K3 b - - 0 1");
+		GameController controller = new GameController(game,
+				new HumanPlayer(Color.WHITE), new FirstMoveBot(Color.BLACK), null);
+
+		assertTrue(controller.pollMoveSynchronouslyForTesting());
+
+		assertEquals(Color.WHITE, game.getCurrMove());
+		assertEquals(1, game.getMoveHistory().size());
+	}
+
 	private Game gameFromFen(String fen) {
 		Game game = new Game();
 		game.loadFEN(fen);
@@ -295,5 +383,25 @@ class GameEngineTest {
 		Field field = Game.class.getDeclaredField("boardStates");
 		field.setAccessible(true);
 		return (LinkedList<String>) field.get(game);
+	}
+
+	private static final class FirstMoveBot implements ChessPlayer {
+		private final Color color;
+
+		private FirstMoveBot(Color color) {
+			this.color = color;
+		}
+
+		public Color getColor() {
+			return color;
+		}
+
+		public boolean isHuman() {
+			return false;
+		}
+
+		public Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot) {
+			return legalMoves.isEmpty() ? null : legalMoves.get(0);
+		}
 	}
 }
