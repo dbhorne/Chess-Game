@@ -14,11 +14,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -33,12 +36,14 @@ import javafx.stage.Stage;
  * @author Donovan Horne
  *
  */
-public class ChessGUI extends Application {
+public class ChessGUI extends Application implements GameViewListener {
 
 	private static final int BOARD_SIZE = 8;
 	private static final int PIECE_SIZE = 62;
 	private static final int MOVE_INDICATOR_RADIUS = 10;
 	private static final int CAPTURE_INDICATOR_RADIUS = 28;
+	private static final int SCENE_WIDTH = 1120;
+	private static final int SCENE_HEIGHT = 780;
 	private static final String MOVE_SOUND = "/itec220/labs/ChessMove.mp3";
 	private static final String CAPTURE_SOUND = "/itec220/labs/ChessCapture.mp3";
 
@@ -46,17 +51,27 @@ public class ChessGUI extends Application {
 	private final Media chessTake = loadMedia(CAPTURE_SOUND);
 	private final GridPane grid = new GridPane();
 	private Game game = new Game();
+	private GameController controller;
 	private final Region leftRegion = new Region();
 	private final VBox leftButtons = new VBox(12);
 	private final Button restart = new Button("Restart");
 	private final Button exitNoSave = new Button("Exit without Saving");
 	private final Button saveAndExit = new Button("Save and Exit");
-	private final Button playGame = new Button("Player vs. Player");
+	private final Button playerVsPlayerButton = new Button("Player vs. Player");
+	private final Button playerVsBotButton = new Button("Player vs. Bot");
+	private final Button botVsBotButton = new Button("Bot vs. Bot");
+	private final Button playWhiteButton = new Button("Play White");
+	private final Button playBlackButton = new Button("Play Black");
+	private final Button startGameButton = new Button("Start Game");
 	private final TextField fenField = new TextField();
 	private final Button loadFenButton = new Button("Load FEN");
 	private final Label fenError = new Label();
 	private final Region right = new Region();
-	private final HBox bottom = new HBox(12);
+	private final VBox bottom = new VBox(8);
+	private final HBox moveBar = new HBox(12);
+	private final HBox fenBar = new HBox(8);
+	private final TextField currentFenField = new TextField();
+	private final Button copyFenButton = new Button("Copy FEN");
 	private final StackPane left = new StackPane();
 	private final Label currentColor = new Label();
 	private final Label lastMove = new Label();
@@ -69,12 +84,20 @@ public class ChessGUI extends Application {
 	private SimpleEntry<Integer, Integer> moveFrom = null;
 	private int numTakenPieces = 0;
 	private boolean promotionPending = false;
+	private GameMode gameMode = GameMode.PLAYER_VS_PLAYER;
+	private Color humanColor = Color.WHITE;
 	private ArrayList<SimpleEntry<Integer, Integer>> moveList = new ArrayList<>();
 	private final PromoteButton[] promoteButtons = { new PromoteButton("Knight", PieceType.KNIGHT),
 			new PromoteButton("Queen", PieceType.QUEEN), new PromoteButton("Rook", PieceType.ROOK),
 			new PromoteButton("Bishop", PieceType.BISHOP) };
 	private final EnumMap<PieceType, Image> whiteImages = new EnumMap<>(PieceType.class);
 	private final EnumMap<PieceType, Image> blackImages = new EnumMap<>(PieceType.class);
+
+	private enum GameMode {
+		PLAYER_VS_PLAYER,
+		PLAYER_VS_BOT,
+		BOT_VS_BOT
+	}
 
 	
 	/**
@@ -84,6 +107,7 @@ public class ChessGUI extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		setUpGUI();
+		controller = createController(game);
 		updateBoard();
 
 		BorderPane root = new BorderPane();
@@ -92,7 +116,8 @@ public class ChessGUI extends Application {
 		fenField.setPromptText("e.g. rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 		fenField.setPrefWidth(620);
 		fenError.getStyleClass().add("error-label");
-		VBox menuCenter = new VBox(12, playGame, new Separator(),
+		VBox menuCenter = new VBox(12, playerVsPlayerButton, playerVsBotButton, botVsBotButton,
+				new HBox(10, playWhiteButton, playBlackButton), startGameButton, new Separator(),
 				new Label("Start from FEN position"), fenField, loadFenButton, fenError);
 		menuCenter.getStyleClass().add("menu-panel");
 		menuCenter.setAlignment(Pos.CENTER);
@@ -102,41 +127,72 @@ public class ChessGUI extends Application {
 		root.setTop(currentColor);
 		root.setCenter(grid);
 		root.setRight(right);
-		bottom.getChildren().add(lastMove);
+		moveBar.getChildren().add(lastMove);
+		bottom.getChildren().add(moveBar);
+		bottom.getChildren().add(fenBar);
 		root.setBottom(bottom);
 		root.setLeft(left);
-		Scene sceneGame = new Scene(root, 1050, 700);
-		Scene sceneMain = new Scene(menu, 1050, 700);
+		Scene sceneGame = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+		Scene sceneMain = new Scene(menu, SCENE_WIDTH, SCENE_HEIGHT);
 
 		EventHandler<ActionEvent> mainMenuEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
+				if (controller != null) {
+					controller.stop();
+				}
 				primaryStage.setScene(sceneMain);
-				game = null;
 			}
 		};
 
 		EventHandler<ActionEvent> mainMenuAndSave = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
+				if (controller != null) {
+					controller.stop();
+				}
 				primaryStage.setScene(sceneMain);
 			}
 		};
 
-		EventHandler<ActionEvent> playGameEvent = new EventHandler<ActionEvent>() {
+		EventHandler<ActionEvent> playerVsPlayerEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				primaryStage.setScene(sceneGame);
-				if (game == null) {
-					game = new Game();
-					lastMove.setText("");
-					clearPromotionButtons();
-				}
-				updateStatusLabel();
-				if (!gameIsOver()) {
-					disableButtons();
-					enableButtons();
-					numTakenPieces = game.getNumTakenPieces();
-					updateBoard();
-				}
+				gameMode = GameMode.PLAYER_VS_PLAYER;
+				updateMenuModeButtons();
+			}
+		};
 
+		EventHandler<ActionEvent> playerVsBotEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				gameMode = GameMode.PLAYER_VS_BOT;
+				updateMenuModeButtons();
+			}
+		};
+
+		EventHandler<ActionEvent> botVsBotEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				gameMode = GameMode.BOT_VS_BOT;
+				updateMenuModeButtons();
+			}
+		};
+
+		EventHandler<ActionEvent> playWhiteEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				humanColor = Color.WHITE;
+				updateMenuModeButtons();
+			}
+		};
+
+		EventHandler<ActionEvent> playBlackEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				humanColor = Color.BLACK;
+				updateMenuModeButtons();
+			}
+		};
+
+		EventHandler<ActionEvent> startGameEvent = new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				game = new Game();
+				controller = createController(game);
+				startGameScene(primaryStage, sceneGame);
 			}
 		};
 
@@ -146,17 +202,11 @@ public class ChessGUI extends Application {
 				try {
 					if (fen.isEmpty()) throw new IllegalArgumentException("FEN string is empty");
 					game = new Game();
-					game.loadFEN(fen);
+					controller = createController(game);
+					controller.loadFen(fen);
+					game = controller.getGame();
 					fenError.setText("");
-					lastMove.setText("");
-					clearSelection();
-					clearPromotionButtons();
-					numTakenPieces = game.getNumTakenPieces();
-					updateStatusLabel();
-					disableButtons();
-					enableButtons();
-					updateBoard();
-					primaryStage.setScene(sceneGame);
+					startGameScene(primaryStage, sceneGame);
 				} catch (IllegalArgumentException ex) {
 					fenError.setText("Invalid FEN: " + ex.getMessage());
 				}
@@ -165,8 +215,14 @@ public class ChessGUI extends Application {
 
 		exitNoSave.setOnAction(mainMenuEvent);
 		saveAndExit.setOnAction(mainMenuAndSave);
-		playGame.setOnAction(playGameEvent);
+		playerVsPlayerButton.setOnAction(playerVsPlayerEvent);
+		playerVsBotButton.setOnAction(playerVsBotEvent);
+		botVsBotButton.setOnAction(botVsBotEvent);
+		playWhiteButton.setOnAction(playWhiteEvent);
+		playBlackButton.setOnAction(playBlackEvent);
+		startGameButton.setOnAction(startGameEvent);
 		loadFenButton.setOnAction(loadFenEvent);
+		updateMenuModeButtons();
 
 		sceneGame.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
 		sceneMain.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
@@ -174,6 +230,53 @@ public class ChessGUI extends Application {
 		primaryStage.setResizable(false);
 		primaryStage.setScene(sceneMain);
 		primaryStage.show();
+	}
+
+	private void startGameScene(Stage primaryStage, Scene sceneGame) {
+		resetGameView();
+		primaryStage.setScene(sceneGame);
+		controller.pollMove();
+	}
+
+	private GameController createController(Game game) {
+		switch (gameMode) {
+		case PLAYER_VS_BOT:
+			return humanColor == Color.WHITE
+					? new GameController(game, new HumanPlayer(Color.WHITE), new BotPlayer(Color.BLACK), this)
+					: new GameController(game, new BotPlayer(Color.WHITE), new HumanPlayer(Color.BLACK), this);
+		case BOT_VS_BOT:
+			return new GameController(game, new BotPlayer(Color.WHITE), new BotPlayer(Color.BLACK), this);
+		case PLAYER_VS_PLAYER:
+		default:
+			return new GameController(game, new HumanPlayer(Color.WHITE), new HumanPlayer(Color.BLACK), this);
+		}
+	}
+
+	private void resetGameView() {
+		lastMove.setText("");
+		clearSelection();
+		clearPromotionButtons();
+		numTakenPieces = game.getNumTakenPieces();
+		updateStatusLabel();
+		updateFenDisplay();
+		disableButtons();
+		enableButtons();
+		updateBoard();
+	}
+
+	private void updateMenuModeButtons() {
+		playerVsPlayerButton.setText(gameMode == GameMode.PLAYER_VS_PLAYER
+				? "Player vs. Player *" : "Player vs. Player");
+		playerVsBotButton.setText(gameMode == GameMode.PLAYER_VS_BOT ? "Player vs. Bot *" : "Player vs. Bot");
+		botVsBotButton.setText(gameMode == GameMode.BOT_VS_BOT ? "Bot vs. Bot *" : "Bot vs. Bot");
+		playWhiteButton.setDisable(gameMode != GameMode.PLAYER_VS_BOT);
+		playBlackButton.setDisable(gameMode != GameMode.PLAYER_VS_BOT);
+		playWhiteButton.setText(humanColor == Color.WHITE ? "Play White *" : "Play White");
+		playBlackButton.setText(humanColor == Color.BLACK ? "Play Black *" : "Play Black");
+	}
+
+	private boolean isBotTurn() {
+		return controller != null && !controller.isHumanTurn();
 	}
 
 	/**
@@ -207,18 +310,29 @@ public class ChessGUI extends Application {
 		leftButtons.getChildren().add(saveAndExit);
 		left.getChildren().add(leftButtons);
 		bottom.setAlignment(Pos.CENTER_LEFT);
+		bottom.setMinHeight(96);
 		bottom.setPadding(new Insets(10, 16, 14, 16));
+		moveBar.setAlignment(Pos.CENTER_LEFT);
+		moveBar.setMinHeight(38);
+		fenBar.setAlignment(Pos.CENTER_LEFT);
+		currentFenField.setEditable(false);
+		currentFenField.setFocusTraversable(false);
+		currentFenField.setPrefWidth(760);
+		HBox.setHgrow(currentFenField, Priority.ALWAYS);
+		copyFenButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				ClipboardContent content = new ClipboardContent();
+				content.putString(currentFenField.getText());
+				Clipboard.getSystemClipboard().setContent(content);
+			}
+		});
+		fenBar.getChildren().add(currentFenField);
+		fenBar.getChildren().add(copyFenButton);
 		EventHandler<ActionEvent> restartEvent = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
-				game = new Game();
-				clearSelection();
-				clearPromotionButtons();
-				lastMove.setText("");
-				numTakenPieces = 0;
-				updateStatusLabel();
-				disableButtons();
-				enableButtons();
-				updateBoard();
+				controller.restart();
+				game = controller.getGame();
+				resetGameView();
 			}
 		};
 		restart.setOnAction(restartEvent);
@@ -284,6 +398,9 @@ public class ChessGUI extends Application {
 	 * @param file Column of the button that was pressed
 	 */
 	public void click(int rank, int file) {
+		if (isBotTurn()) {
+			return;
+		}
 		if (promotionPending) {
 			lastMove.setText("Choose a promotion piece before moving again.");
 			return;
@@ -310,31 +427,9 @@ public class ChessGUI extends Application {
 	private void moveSelectedPiece(int rank, int file) {
 		int startRank = moveFrom.getKey();
 		int startFile = moveFrom.getValue();
-		Board beforeMove = game.getCopyOfCurrBoard();
-		Piece movingPiece = beforeMove.getPiece(startRank, startFile);
-		boolean enPassantCapture = movingPiece instanceof Pawn
-				&& startFile != file
-				&& beforeMove.getPiece(rank, file) == null;
-
-		if (game.move(startRank, startFile, rank, file)) {
-			boolean isCapture = game.getNumTakenPieces() != numTakenPieces;
-			if (isCapture) {
-				numTakenPieces = game.getNumTakenPieces();
-				playSound(chessTake);
-			} else {
-				playSound(chessMove);
-			}
-			clearSelection();
-			updateMoveSquares(startRank, startFile, rank, file, movingPiece, enPassantCapture);
-			if (!gameIsOver()) {
-				updateStatusLabel();
-				handlePromotionIfNeeded(rank, file);
-				updateLastMove(rank, file);
-			}
-		} else {
+		if (!controller.submitHumanMove(startRank, startFile, rank, file)) {
 			clearSelection();
 			updateBoard();
-			lastMove.setText("Invalid move, please try again.");
 		}
 	}
 
@@ -375,19 +470,20 @@ public class ChessGUI extends Application {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				PromoteButton tb = (PromoteButton) e.getSource();
-				game.promote(rank, file, tb.type);
+				controller.promote(rank, file, tb.type);
 				updateSquare(game.getCopyOfCurrBoard(), rank, file);
 				clearPromotionButtons();
 				enableButtons();
 				updateStatusLabel();
+				updateFenDisplay();
 				Piece promotedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
 				lastMove.setText("Last Move: " + promotedPiece.toString());
 			}
 		};
 		for (Button b : promoteButtons) {
 			b.setOnAction(event);
-			if (!bottom.getChildren().contains(b)) {
-				bottom.getChildren().add(b);
+			if (!moveBar.getChildren().contains(b)) {
+				moveBar.getChildren().add(b);
 			}
 		}
 	}
@@ -400,6 +496,55 @@ public class ChessGUI extends Application {
 		if (movedPiece != null) {
 			lastMove.setText("Last Move: " + movedPiece.toString());
 		}
+	}
+
+	public void onGameStateChanged(Move move, Board beforeMove) {
+		game = controller.getGame();
+		if (move == null || beforeMove == null) {
+			updateBoard();
+			updateStatusLabel();
+			updateFenDisplay();
+			if (!gameIsOver()) {
+				enableButtons();
+			}
+			return;
+		}
+
+		Piece movingPiece = beforeMove.getPiece(move.startRank, move.startFile);
+		boolean enPassantCapture = move.enPassantCapture
+				|| (movingPiece instanceof Pawn
+				&& move.startFile != move.endFile
+				&& beforeMove.getPiece(move.endRank, move.endFile) == null);
+		boolean isCapture = game.getNumTakenPieces() != numTakenPieces;
+		numTakenPieces = game.getNumTakenPieces();
+		playSound(isCapture ? chessTake : chessMove);
+		clearSelection();
+		updateMoveSquares(move.startRank, move.startFile, move.endRank, move.endFile, movingPiece, enPassantCapture);
+		handlePromotionIfNeeded(move.endRank, move.endFile);
+		if (promotionPending) {
+			updateFenDisplay();
+			return;
+		}
+		updateStatusLabel();
+		updateLastMove(move.endRank, move.endFile);
+		updateFenDisplay();
+		if (!gameIsOver()) {
+			enableButtons();
+		}
+	}
+
+	public void onBotThinkingChanged(boolean thinking) {
+		if (thinking) {
+			clearSelection();
+			disableButtons();
+		} else {
+			enableButtons();
+		}
+	}
+
+	public void onInvalidMove(String message) {
+		lastMove.setText(message);
+		enableButtons();
 	}
 
 	/**
@@ -439,7 +584,7 @@ public class ChessGUI extends Application {
 	 * Loop through the buttons and enable their event handler
 	 */
 	public void enableButtons() {
-		if (promotionPending) {
+		if (promotionPending || isBotTurn()) {
 			return;
 		}
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
@@ -491,6 +636,7 @@ public class ChessGUI extends Application {
 				updateSquare(brd, spaces[i][j].rank, spaces[i][j].file);
 			}
 		}
+		updateFenDisplay();
 	}
 
 	private void updateSquare(Board brd, int rank, int file) {
@@ -560,9 +706,17 @@ public class ChessGUI extends Application {
 	private void clearPromotionButtons() {
 		for (Button b : promoteButtons) {
 			b.setOnAction(null);
-			bottom.getChildren().remove(b);
+			moveBar.getChildren().remove(b);
 		}
 		promotionPending = false;
+	}
+
+	private void updateFenDisplay() {
+		if (game != null) {
+			currentFenField.setText(game.toFEN());
+		} else {
+			currentFenField.setText("");
+		}
 	}
 
 	private void updateStatusLabel() {

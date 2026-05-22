@@ -1,0 +1,83 @@
+name: Maven PR Checks
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: mvn compile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    if: >
+      github.event.review.state == 'approved' &&
+      github.event.review.author_association == 'OWNER' &&
+      github.event.review.commit_id == github.event.pull_request.head.sha &&
+      github.event.pull_request.draft == false
+
+    steps:
+      - name: Check out approved PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify checked out SHA
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git rev-parse HEAD)" = "${{ github.event.review.commit_id }}"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: maven
+
+      - name: Compile
+        working-directory: ChessGame
+        run: mvn -B -ntp compile
+
+  test:
+    name: mvn test
+    needs: compile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    if: >
+      github.event.review.state == 'approved' &&
+      github.event.review.author_association == 'OWNER' &&
+      github.event.review.commit_id == github.event.pull_request.head.sha &&
+      github.event.pull_request.draft == false
+
+    steps:
+      - name: Check out approved PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify checked out SHA
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git rev-parse HEAD)" = "${{ github.event.review.commit_id }}"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: maven
+
+      - name: Run tests
+        working-directory: ChessGame
+        run: mvn -B -ntp test
