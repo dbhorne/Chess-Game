@@ -260,7 +260,7 @@ public class ChessGUI extends Application implements GameViewListener {
 			public void handle(ActionEvent e) { botDepth = 2; updateMenuModeButtons(); }
 		});
 		hardButton.setOnAction(new EventHandler<ActionEvent>() {
-			public void handle(ActionEvent e) { botDepth = 4; updateMenuModeButtons(); }
+			public void handle(ActionEvent e) { botDepth = 3; updateMenuModeButtons(); }
 		});
 		updateMenuModeButtons();
 
@@ -317,7 +317,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		playBlackButton.setText(humanColor == Color.BLACK ? "Play Black *" : "Play Black");
 		easyButton.setText(botDepth == 1 ? "Easy *" : "Easy");
 		mediumButton.setText(botDepth == 2 ? "Medium *" : "Medium");
-		hardButton.setText(botDepth == 4 ? "Hard *" : "Hard");
+		hardButton.setText(botDepth == 3 ? "Hard *" : "Hard");
 	}
 
 	private boolean isBotTurn() {
