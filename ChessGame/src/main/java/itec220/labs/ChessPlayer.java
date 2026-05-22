@@ -1,6 +1,7 @@
 package itec220.labs;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A controller for one side of a chess game.
@@ -10,5 +11,5 @@ interface ChessPlayer {
 
 	boolean isHuman();
 
-	Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot);
+	Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot, List<String> priorPositions);
 }

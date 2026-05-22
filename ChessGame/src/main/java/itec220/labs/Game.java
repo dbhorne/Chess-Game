@@ -4,6 +4,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * To create a class that communicated with the board, which will handle piece logic,
@@ -134,7 +135,15 @@ public class Game {
 		if (bot == null || bot.getColor() != currMove) {
 			return null;
 		}
-		return bot.chooseMove(getLegalMoves(), board.copy());
+		return bot.chooseMove(getLegalMoves(), board.copy(), getPositionHistory());
+	}
+
+	/**
+	 * Return a snapshot of all prior position identity strings for repetition detection.
+	 * @return copy of the position history list
+	 */
+	public List<String> getPositionHistory() {
+		return new ArrayList<>(boardStates);
 	}
 
 	/**

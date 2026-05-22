@@ -131,7 +131,7 @@ public class ChessBot {
 		return color;
 	}
 
-	Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot) {
+	Move chooseMove(ArrayList<Move> legalMoves, Board boardSnapshot, List<String> priorPositions) {
 		if (legalMoves == null || legalMoves.isEmpty() || boardSnapshot == null) {
 			return null;
 		}
@@ -143,19 +143,21 @@ public class ChessBot {
 			return immediateMates.get(random.nextInt(immediateMates.size()));
 		}
 		int effectiveDepth = effectiveDepth(boardSnapshot, legalMoves.size());
-		ArrayList<ScoredMove> scoredMoves = scoreSequentially(orderedMoves, boardSnapshot, effectiveDepth);
+		ArrayList<ScoredMove> scoredMoves = scoreSequentially(orderedMoves, boardSnapshot, effectiveDepth, priorPositions);
 		int bestScore = Integer.MIN_VALUE;
-		ArrayList<Move> bestMoves = new ArrayList<>();
 		for (ScoredMove scoredMove : scoredMoves) {
 			if (scoredMove.score > bestScore) {
 				bestScore = scoredMove.score;
-				bestMoves.clear();
-				bestMoves.add(scoredMove.move);
-			} else if (scoredMove.score == bestScore) {
-				bestMoves.add(scoredMove.move);
 			}
 		}
-		return bestMoves.get(random.nextInt(bestMoves.size()));
+		int tolerance = Math.abs(bestScore) < CHECKMATE_SCORE / 2 ? 12 : 0;
+		ArrayList<Move> candidates = new ArrayList<>();
+		for (ScoredMove scoredMove : scoredMoves) {
+			if (scoredMove.score >= bestScore - tolerance) {
+				candidates.add(scoredMove.move);
+			}
+		}
+		return candidates.get(random.nextInt(candidates.size()));
 	}
 
 	private ArrayList<Move> immediateMatingMoves(ArrayList<Move> legalMoves, Board boardSnapshot) {
@@ -171,15 +173,17 @@ public class ChessBot {
 		return mates;
 	}
 
-	private ArrayList<ScoredMove> scoreSequentially(ArrayList<Move> legalMoves, Board boardSnapshot, int effectiveDepth) {
+	private ArrayList<ScoredMove> scoreSequentially(ArrayList<Move> legalMoves, Board boardSnapshot,
+			int effectiveDepth, List<String> priorPositions) {
 		ArrayList<ScoredMove> scoredMoves = new ArrayList<>();
 		for (Move move : legalMoves) {
-			scoredMoves.add(scoreRootMove(move, boardSnapshot, effectiveDepth));
+			scoredMoves.add(scoreRootMove(move, boardSnapshot, effectiveDepth, priorPositions));
 		}
 		return scoredMoves;
 	}
 
-	private ScoredMove scoreRootMove(Move move, Board boardSnapshot, int effectiveDepth) {
+	private ScoredMove scoreRootMove(Move move, Board boardSnapshot, int effectiveDepth,
+			List<String> priorPositions) {
 		Board afterMove = applyMove(boardSnapshot, move);
 		int score = afterMove == null ? Integer.MIN_VALUE
 				: minimax(afterMove, effectiveDepth - 1, opponent(color), Integer.MIN_VALUE + 1,
@@ -187,6 +191,13 @@ public class ChessBot {
 		if (score != Integer.MIN_VALUE && Math.abs(score) < CHECKMATE_SCORE) {
 			score += moveOrderingScore(boardSnapshot, move, color) / 100;
 			score -= immediateRecapturePenalty(boardSnapshot, afterMove, move);
+			String posKey = transpositionKey(afterMove, opponent(color));
+			int repeats = Collections.frequency(priorPositions, posKey);
+			if (repeats >= 2) {
+				score -= 500_000;
+			} else if (repeats >= 1) {
+				score -= 20_000;
+			}
 		}
 		return new ScoredMove(move, score);
 	}
