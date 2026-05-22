@@ -290,7 +290,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Set up the GUI with buttons, and stylesheets
 	 */
-	public void setUpGUI() {
+	private void setUpGUI() {
 		whiteImages.put(PieceType.QUEEN,  new Image(ChessGUI.class.getResourceAsStream("WhiteQueen.png")));
 		whiteImages.put(PieceType.KING,   new Image(ChessGUI.class.getResourceAsStream("WhiteKing.png")));
 		whiteImages.put(PieceType.PAWN,   new Image(ChessGUI.class.getResourceAsStream("WhitePawn.png")));
@@ -518,7 +518,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	 * @param rank Row of the button that was pressed
 	 * @param file Column of the button that was pressed
 	 */
-	public void click(int rank, int file) {
+	private void click(int rank, int file) {
 		if (isBotTurn()) {
 			return;
 		}
@@ -678,7 +678,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	 * Check the current game state to see if the game is over, if so disable all the buttons
 	 * @return Returns a boolean, true if the game is over, false if it is still continuing
 	 */
-	public boolean gameIsOver() {
+	private boolean gameIsOver() {
 		switch (game.getCurrState()) {
 		case BLACKWINS:
 		case WHITEWINS:
@@ -699,7 +699,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Loop through the buttons and disable their event handler
 	 */
-	public void disableButtons() {
+	private void disableButtons() {
 		for (ChessButton[] bArray : buttons) {
 			for (ChessButton b : bArray) {
 				b.setOnAction(null);
@@ -710,7 +710,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Loop through the buttons and enable their event handler
 	 */
-	public void enableButtons() {
+	private void enableButtons() {
 		if (promotionPending || isBotTurn()) {
 			return;
 		}
@@ -730,7 +730,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Set the end text based on the current game state
 	 */
-	public void setEndText() {
+	private void setEndText() {
 		switch (game.getCurrState()) {
 		case WHITEWINS:
 			currentColor.setText("Game over");
@@ -756,7 +756,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Update the GUI board without rebuilding square children.
 	 */
-	public void updateBoard() {
+	private void updateBoard() {
 		Board brd = game.getCopyOfCurrBoard();
 		for (int i = 0; i < BOARD_SIZE; i++) {
 			for (int j = 0; j < BOARD_SIZE; j++) {
@@ -784,8 +784,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	 * @param piece The piece that you are getting the image for
 	 * @return Returns an image created based on the piece
 	 */
-	
-	public Image getImage(Piece piece) {
+	private Image getImage(Piece piece) {
 		EnumMap<PieceType, Image> cache = piece.getColor() == itec220.labs.Color.WHITE ? whiteImages : blackImages;
 		return cache.get(piece.getType());
 	}
@@ -793,7 +792,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	/**
 	 * Show valid moves on the board, used by the click() method
 	 */
-	public void showValidMoves() {
+	private void showValidMoves() {
 		if (moveFrom != null) {
 			selectedHighlights[BOARD_SIZE - 1 - moveFrom.getKey()][moveFrom.getValue()].setVisible(true);
 		}

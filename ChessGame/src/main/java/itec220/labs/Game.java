@@ -308,7 +308,7 @@ public class Game {
 	 *  the board
 	 *  @return Return the GameState enum
 	 */
-	public GameState updateGameState() {
+	private GameState updateGameState() {
 		Color sideToMove = currMove;
 		boolean inCheck = board.isKingInCheck(sideToMove);
 		ArrayList<SimpleEntry<Integer, Integer>> legalMoves =
@@ -329,10 +329,10 @@ public class Game {
 	}
 	
 	
-	/** 
+	/**
 	 * Used to track threefold repetition based on full position identity.
 	 */
-	public void updateMoveTracker() {
+	private void updateMoveTracker() {
 		String newBoardState = getPositionIdentity();
 		boardStates.add(newBoardState);
 		if(Collections.frequency(boardStates, newBoardState) >= 3) {
