@@ -64,7 +64,9 @@ public class Bishop extends Piece {
 						}
 					} else {
 						if (pieces[newRank][newFile].getColor() != this.getColor()) {
-							if(this.isValidMove(newRank, newFile, copy)) {
+							if(kingCheck) {
+								moves.add(new SimpleEntry<>(newRank, newFile));
+							} else if(this.isValidMove(newRank, newFile, copy)) {
 								moves.add(new SimpleEntry<>(newRank, newFile));
 							}
 						}
