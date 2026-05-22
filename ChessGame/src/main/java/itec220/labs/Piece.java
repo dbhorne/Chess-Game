@@ -13,7 +13,7 @@ public abstract class Piece {
 	private int rank, file;
 	private PieceType type;
 	private Color color;
-	protected final char[] colomnLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
+	protected final char[] columnLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
 
 	/**
 	 * Constructor for every piece

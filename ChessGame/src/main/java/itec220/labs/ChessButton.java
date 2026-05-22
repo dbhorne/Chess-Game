@@ -24,7 +24,7 @@ public class ChessButton extends Button {
 	public final int file;
 	/** array of characters to go with each file/column, commonly used in chess, 
 	 * 		i.e F7 is a square on the board*/
-	protected final char[] colomnLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
+	protected final char[] columnLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
 	
 	
 	/**
@@ -33,6 +33,6 @@ public class ChessButton extends Button {
 	 */
 	@Override
 	public String toString() {
-		return colomnLetters[this.file] + "" + (this.rank + 1);
+		return columnLetters[this.file] + "" + (this.rank + 1);
 	}
 }

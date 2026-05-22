@@ -189,6 +189,6 @@ public class Pawn extends Piece {
 	 */
 	@Override
 	public String toString() {
-		return "" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+		return "" + columnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 }
