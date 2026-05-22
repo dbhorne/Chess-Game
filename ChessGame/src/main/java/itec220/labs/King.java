@@ -166,7 +166,7 @@ public class King extends Piece {
 	 */
 	@Override
 	public String toString() {
-		return "K" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+		return "K" + columnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 
 	/**

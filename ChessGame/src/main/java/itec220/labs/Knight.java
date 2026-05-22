@@ -68,6 +68,6 @@ public class Knight extends Piece {
 	 */
 	@Override
 	public String toString() {
-		return "N" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+		return "N" + columnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 }

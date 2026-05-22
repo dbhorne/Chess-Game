@@ -85,6 +85,6 @@ public class Bishop extends Piece {
 	 */
 	@Override
 	public String toString() {
-		return "B" + colomnLetters[this.getFile()] + (this.getRank() + 1);
+		return "B" + columnLetters[this.getFile()] + (this.getRank() + 1);
 	}
 }
