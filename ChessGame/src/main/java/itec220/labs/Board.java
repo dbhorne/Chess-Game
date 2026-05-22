@@ -9,6 +9,14 @@ import java.util.ArrayList;
  * @author Donovan Horne
  */
 public class Board {
+	private static final int[][] ROOK_DIRECTIONS = { { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 } };
+	private static final int[][] BISHOP_DIRECTIONS = { { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } };
+	private static final int[][] KING_DIRECTIONS = {
+		{ 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 }, { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 }
+	};
+	private static final int[][] KNIGHT_OFFSETS = {
+		{ 2, 1 }, { 1, 2 }, { -1, 2 }, { -2, 1 }, { -2, -1 }, { -1, -2 }, { 1, -2 }, { 2, -1 }
+	};
 	private Piece[][] pieces = new Piece[8][8];
 	/** The board size */
 	public final int BOARD_SIZE = pieces.length; 
@@ -32,11 +40,7 @@ public class Board {
 	 */
 	public ArrayList<SimpleEntry<Integer, Integer>> getWhiteMoves() {
 		calcPieceMoves(false, Color.WHITE);
-		ArrayList<SimpleEntry<Integer, Integer>> temp = new ArrayList<>();
-		for (SimpleEntry<Integer, Integer> pair : whiteMoves) {
-			temp.add(new SimpleEntry<>(pair.getKey(), pair.getValue()));
-		}
-		return temp;
+		return copyMoves(whiteMoves);
 	}
 
 	/**
@@ -45,11 +49,7 @@ public class Board {
 	 */
 	public ArrayList<SimpleEntry<Integer, Integer>> getBlackMoves() {
 		calcPieceMoves(false, Color.BLACK);
-		ArrayList<SimpleEntry<Integer, Integer>> temp = new ArrayList<>();
-		for (SimpleEntry<Integer, Integer> pair : blackMoves) {
-			temp.add(new SimpleEntry<>(pair.getKey(), pair.getValue()));
-		}
-		return temp;
+		return copyMoves(blackMoves);
 	}
 
 	/**
@@ -198,62 +198,8 @@ public class Board {
 	 */
 	public boolean move(int startX, int startY, int endX, int endY, Color currColor) {
 		if (pieces[startX][startY] != null && pieces[startX][startY].getColor() == currColor
-				&& pieces[startX][startY].getValidMoves(this.copy(), false).contains(new SimpleEntry<>(endX, endY))) {
-			Piece piece = pieces[startX][startY];
-			if (piece instanceof Pawn) {
-				if (enPassant != null && piece.getColor() == Color.WHITE && Math.abs(startY - endY) == 1 && endX - startX == 1
-						&& pieces[endX][endY] == null) {
-					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
-					pieces[enPassant.getKey()][enPassant.getValue()] = null;
-				} else if (enPassant != null && piece.getColor() == Color.BLACK && Math.abs(startY - endY) == 1 && startX - endX == 1
-						&& pieces[endX][endY] == null) {
-					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
-					pieces[enPassant.getKey()][enPassant.getValue()] = null;
-				}
-			} else if (piece instanceof King) {
-				if (endY - startY == 2) {
-					((King) pieces[startX][startY]).setHasMoved(true);
-					Rook castle = ((Rook) pieces[startX][startY + 3]);
-					castle.setHasMoved(true);
-					pieces[startX][startY + 1] = castle;
-					pieces[startX][startY + 3] = null;
-					castle.setRank(startX);
-					castle.setFile(startY + 1);
-				} else if (startY - endY == 2) {
-					((King) pieces[startX][startY]).setHasMoved(true);
-					Rook castle = ((Rook) pieces[startX][startY - 4]);
-					castle.setHasMoved(true);
-					pieces[startX][startY - 1] = castle;
-					pieces[startX][startY - 4] = null;
-					castle.setRank(startX);
-					castle.setFile(startY - 1);
-				} else {
-					((King) pieces[startX][startY]).setHasMoved(true);
-				}
-			} else if (piece instanceof Rook) {
-				((Rook) piece).setHasMoved(true);
-			}
-			if(pieces[endX][endY] != null) {
-				takenPieces.add(pieces[endX][endY]);
-			}
-			updateEnPassant();
-			pieces[endX][endY] = piece;
-			piece.setRank(endX);
-			piece.setFile(endY);
-			pieces[startX][startY] = null;
-			if (piece instanceof Pawn) {
-				Pawn pawn = (Pawn) piece;
-				if (pawn.getMadeFirstMove() == false) {
-					pawn.makeFirstMove();
-					if (pawn.getColor() == Color.WHITE && endX - startX == 2) {
-						pawn.canEnPassant(true);
-						enPassant = new SimpleEntry<>(endX, endY);
-					} else if (piece.getColor() == Color.BLACK && startX - endX == 2) {
-						pawn.canEnPassant(true);
-						enPassant = new SimpleEntry<>(endX, endY);
-					}
-				}
-			}
+				&& pieces[startX][startY].getValidMoves(this, false).contains(new SimpleEntry<>(endX, endY))) {
+			applyMoveUnchecked(startX, startY, endX, endY, true);
 			return true;
 		}
 		return false;
@@ -358,7 +304,7 @@ public class Board {
 	public boolean isKingInCheck(Color colorOfKing) {
 		King king = getKing(colorOfKing);
 		if (king != null) {
-			return king.isInCheck(this.copy());
+			return king.isInCheck(this);
 		}
 		return true;
 	}
@@ -400,7 +346,7 @@ public class Board {
 	public ArrayList<SimpleEntry<Integer, Integer>> getValidMoves(int rank, int file, Color currMove) {
 		if (pieces[rank][file] != null) {
 			if (pieces[rank][file].getColor() == currMove) {
-				return pieces[rank][file].getValidMoves(this.copy(), false);
+				return pieces[rank][file].getValidMoves(this, false);
 			}
 		}
 		return new ArrayList<SimpleEntry<Integer, Integer>>();
@@ -412,28 +358,11 @@ public class Board {
 	 * @param color the color of pieces you wish to calculate all the moves for
 	 */
 	public void calcPieceMoves(boolean kingFlag, Color color) {
+		ArrayList<SimpleEntry<Integer, Integer>> moves = collectMoves(color, kingFlag);
 		if(color == Color.WHITE) {
-			whiteMoves.clear();
+			whiteMoves = moves;
 		} else {
-			blackMoves.clear();
-		}
-		ArrayList<SimpleEntry<Integer, Integer>> moves;
-		for (int i = 0; i < pieces.length; i++) {
-			for (int j = 0; j < pieces[i].length; j++) {
-				if (pieces[i][j] != null) {
-					if (pieces[i][j].getColor() == Color.WHITE && pieces[i][j].getColor() == color) {
-						moves = pieces[i][j].getValidMoves(this.copy(), kingFlag);
-						for (SimpleEntry<Integer, Integer> move : moves) {
-							whiteMoves.add(move);
-						}
-					} else if (pieces[i][j].getColor() == color) {
-						moves = pieces[i][j].getValidMoves(this.copy(), kingFlag);
-						for (SimpleEntry<Integer, Integer> move : moves) {
-							blackMoves.add(move);
-						}
-					}
-				}
-			}
+			blackMoves = moves;
 		}
 	}
 
@@ -480,6 +409,47 @@ public class Board {
 	}
 
 	/**
+	 * Return the en passant pawn's position (the pawn that just moved two squares), or null
+	 * @return the en passant entry, or null if none
+	 */
+	public SimpleEntry<Integer, Integer> getEnPassant() {
+		return enPassant;
+	}
+
+	/**
+	 * Set the en passant pawn position directly (used when loading a FEN string)
+	 * @param ep the position of the pawn vulnerable to en passant, or null
+	 */
+	public void setEnPassant(SimpleEntry<Integer, Integer> ep) {
+		this.enPassant = ep;
+	}
+
+	/**
+	 * Generate the piece-placement field of a FEN string (rank 8 down to rank 1)
+	 * @return FEN piece-placement string
+	 */
+	public String toFENPiecePlacement() {
+		StringBuilder sb = new StringBuilder();
+		for (int row = BOARD_SIZE - 1; row >= 0; row--) {
+			int empty = 0;
+			for (int col = 0; col < BOARD_SIZE; col++) {
+				if (pieces[row][col] == null) {
+					empty++;
+				} else {
+					if (empty > 0) {
+						sb.append(empty);
+						empty = 0;
+					}
+					sb.append(pieces[row][col].toFENChar());
+				}
+			}
+			if (empty > 0) sb.append(empty);
+			if (row > 0) sb.append('/');
+		}
+		return sb.toString();
+	}
+
+	/**
 	 * To get a String of the board, used for keeping track of each board state
 	 * @return Returns a single string of the board
 	 */
@@ -506,5 +476,166 @@ public class Board {
 	public int getNumOfPieces(Color color) {
 		calcNumOfPieces();
 		return color == Color.WHITE ? numOfWhitePieces : numOfBlackPieces;
+	}
+
+	public boolean isLegalMove(Piece piece, int newRank, int newFile) {
+		Piece destinationPiece = pieces[newRank][newFile];
+		if (destinationPiece instanceof King && destinationPiece.getColor() != piece.getColor()) {
+			return false;
+		}
+		Board simulatedBoard = simulateMove(piece.getRank(), piece.getFile(), newRank, newFile);
+		return simulatedBoard != null && !simulatedBoard.isKingInCheck(piece.getColor());
+	}
+
+	public Board simulateMove(int startX, int startY, int endX, int endY) {
+		if (!isWithinBounds(startX, startY) || !isWithinBounds(endX, endY) || pieces[startX][startY] == null) {
+			return null;
+		}
+		Board copy = copy();
+		copy.applyMoveUnchecked(startX, startY, endX, endY, false);
+		return copy;
+	}
+
+	public boolean isSquareAttacked(int rank, int file, Color attackingColor) {
+		for (int[] direction : ROOK_DIRECTIONS) {
+			if (isSlidingAttack(rank, file, attackingColor, direction[0], direction[1], PieceType.ROOK, PieceType.QUEEN)) {
+				return true;
+			}
+		}
+		for (int[] direction : BISHOP_DIRECTIONS) {
+			if (isSlidingAttack(rank, file, attackingColor, direction[0], direction[1], PieceType.BISHOP, PieceType.QUEEN)) {
+				return true;
+			}
+		}
+		for (int[] offset : KNIGHT_OFFSETS) {
+			int attackRank = rank + offset[0];
+			int attackFile = file + offset[1];
+			if (isWithinBounds(attackRank, attackFile)) {
+				Piece piece = pieces[attackRank][attackFile];
+				if (piece instanceof Knight && piece.getColor() == attackingColor) {
+					return true;
+				}
+			}
+		}
+		int pawnRank = attackingColor == Color.WHITE ? rank - 1 : rank + 1;
+		for (int pawnFileOffset : new int[] { -1, 1 }) {
+			int pawnFile = file + pawnFileOffset;
+			if (isWithinBounds(pawnRank, pawnFile)) {
+				Piece piece = pieces[pawnRank][pawnFile];
+				if (piece instanceof Pawn && piece.getColor() == attackingColor) {
+					return true;
+				}
+			}
+		}
+		for (int[] direction : KING_DIRECTIONS) {
+			int attackRank = rank + direction[0];
+			int attackFile = file + direction[1];
+			if (isWithinBounds(attackRank, attackFile)) {
+				Piece piece = pieces[attackRank][attackFile];
+				if (piece instanceof King && piece.getColor() == attackingColor) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private ArrayList<SimpleEntry<Integer, Integer>> copyMoves(ArrayList<SimpleEntry<Integer, Integer>> moves) {
+		ArrayList<SimpleEntry<Integer, Integer>> copy = new ArrayList<>();
+		for (SimpleEntry<Integer, Integer> pair : moves) {
+			copy.add(new SimpleEntry<>(pair.getKey(), pair.getValue()));
+		}
+		return copy;
+	}
+
+	private ArrayList<SimpleEntry<Integer, Integer>> collectMoves(Color color, boolean kingFlag) {
+		ArrayList<SimpleEntry<Integer, Integer>> moves = new ArrayList<>();
+		for (int i = 0; i < pieces.length; i++) {
+			for (int j = 0; j < pieces[i].length; j++) {
+				Piece piece = pieces[i][j];
+				if (piece != null && piece.getColor() == color) {
+					moves.addAll(piece.getValidMoves(this, kingFlag));
+				}
+			}
+		}
+		return moves;
+	}
+
+	private void applyMoveUnchecked(int startX, int startY, int endX, int endY, boolean trackTakenPieces) {
+		Piece piece = pieces[startX][startY];
+		Piece capturedPiece = pieces[endX][endY];
+		Piece enPassantCapture = null;
+		if (piece instanceof Pawn && enPassant != null && startY != endY && capturedPiece == null) {
+			enPassantCapture = pieces[enPassant.getKey()][enPassant.getValue()];
+			pieces[enPassant.getKey()][enPassant.getValue()] = null;
+		}
+		if (trackTakenPieces) {
+			if (capturedPiece != null) {
+				takenPieces.add(capturedPiece);
+			}
+			if (enPassantCapture != null) {
+				takenPieces.add(enPassantCapture);
+			}
+		}
+
+		updateEnPassant();
+		pieces[endX][endY] = piece;
+		pieces[startX][startY] = null;
+		piece.setRank(endX);
+		piece.setFile(endY);
+
+		if (piece instanceof King) {
+			King king = (King) piece;
+			king.setHasMoved(true);
+			if (endY - startY == 2) {
+				moveRookForCastle(startX, startY + 3, startY + 1);
+			} else if (startY - endY == 2) {
+				moveRookForCastle(startX, startY - 4, startY - 1);
+			}
+		} else if (piece instanceof Rook) {
+			((Rook) piece).setHasMoved(true);
+		}
+
+		if (piece instanceof Pawn) {
+			Pawn pawn = (Pawn) piece;
+			if (!pawn.getMadeFirstMove()) {
+				pawn.makeFirstMove();
+			}
+			if (Math.abs(endX - startX) == 2) {
+				pawn.canEnPassant(true);
+				enPassant = new SimpleEntry<>(endX, endY);
+			}
+		}
+	}
+
+	private void moveRookForCastle(int rank, int rookStartFile, int rookEndFile) {
+		Rook rook = (Rook) pieces[rank][rookStartFile];
+		pieces[rank][rookEndFile] = rook;
+		pieces[rank][rookStartFile] = null;
+		rook.setRank(rank);
+		rook.setFile(rookEndFile);
+		rook.setHasMoved(true);
+	}
+
+	private boolean isSlidingAttack(int rank, int file, Color attackingColor, int rankStep, int fileStep,
+			PieceType firstType, PieceType secondType) {
+		for (int distance = 1; distance < BOARD_SIZE; distance++) {
+			int attackRank = rank + (distance * rankStep);
+			int attackFile = file + (distance * fileStep);
+			if (!isWithinBounds(attackRank, attackFile)) {
+				return false;
+			}
+			Piece piece = pieces[attackRank][attackFile];
+			if (piece == null) {
+				continue;
+			}
+			return piece.getColor() == attackingColor
+					&& (piece.getType() == firstType || piece.getType() == secondType);
+		}
+		return false;
+	}
+
+	private boolean isWithinBounds(int rank, int file) {
+		return rank >= 0 && rank < BOARD_SIZE && file >= 0 && file < BOARD_SIZE;
 	}
 }
