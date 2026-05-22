@@ -272,8 +272,9 @@ public class ChessGUI extends Application {
 						moveFrom = null;
 						moveList.clear();
 						currentColor.setText(String.format("%s's move", game.getCurrMove().name));
-
-						if (game.getCopyOfCurrBoard().getPiece(rank, file) instanceof Pawn) {
+						Board currentBoard = game.getCopyOfCurrBoard();
+						Piece movedPiece = currentBoard.getPiece(rank, file);
+						if (movedPiece instanceof Pawn) {
 							EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 								public void handle(ActionEvent e) {
 									PromoteButton tb = (PromoteButton) e.getSource();
@@ -282,11 +283,11 @@ public class ChessGUI extends Application {
 									while (bottom.getChildren().size() > 1) {
 										bottom.getChildren().remove(bottom.getChildren().size() - 1);
 									}
-									lastMove.setText(
-											"Last Move: " + game.getCopyOfCurrBoard().getPiece(rank, file).toString());
+									Piece promotedPiece = game.getCopyOfCurrBoard().getPiece(rank, file);
+									lastMove.setText("Last Move: " + promotedPiece.toString());
 								}
 							};
-							Pawn p = (Pawn) game.getCopyOfCurrBoard().getPiece(rank, file);
+							Pawn p = (Pawn) movedPiece;
 							if (p.getColor() == itec220.labs.Color.WHITE && rank == 7) {
 								lastMove.setText("Looks like white can promote the pawn at: "
 										+ buttons[7 - rank][file].toString());
@@ -302,11 +303,10 @@ public class ChessGUI extends Application {
 									bottom.getChildren().add(b);
 								}
 							} else {
-								lastMove.setText(
-										"Last Move: " + game.getCopyOfCurrBoard().getPiece(rank, file).toString());
+								lastMove.setText("Last Move: " + movedPiece.toString());
 							}
 						} else {
-							lastMove.setText("Last Move: " + game.getCopyOfCurrBoard().getPiece(rank, file).toString());
+							lastMove.setText("Last Move: " + movedPiece.toString());
 						}
 					}
 				} else {
