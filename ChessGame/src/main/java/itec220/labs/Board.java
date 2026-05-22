@@ -182,6 +182,7 @@ public class Board {
 			}
 		}
 		copy.setPieces(tempPieces);
+		copy.enPassant = (this.enPassant != null) ? new SimpleEntry<>(this.enPassant.getKey(), this.enPassant.getValue()) : null;
 		return copy;
 	}
 
