@@ -12,6 +12,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
@@ -68,7 +70,10 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final TextField fenField = new TextField();
 	private final Button loadFenButton = new Button("Load FEN");
 	private final Label fenError = new Label();
-	private final Region right = new Region();
+	private final VBox moveHistoryPanel = new VBox(0);
+	private final VBox moveRows = new VBox(0);
+	private final ScrollPane moveScroll = new ScrollPane(moveRows);
+	private final Button copyMovesButton = new Button("Copy Moves");
 	private final VBox bottom = new VBox(8);
 	private final HBox moveBar = new HBox(12);
 	private final HBox fenBar = new HBox(8);
@@ -128,7 +133,7 @@ public class ChessGUI extends Application implements GameViewListener {
 
 		root.setTop(currentColor);
 		root.setCenter(grid);
-		root.setRight(right);
+		root.setRight(moveHistoryPanel);
 		moveBar.getChildren().add(lastMove);
 		bottom.getChildren().add(moveBar);
 		bottom.getChildren().add(fenBar);
@@ -261,6 +266,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		numTakenPieces = game.getNumTakenPieces();
 		updateStatusLabel();
 		updateFenDisplay();
+		refreshMoveHistory();
 		disableButtons();
 		enableButtons();
 		updateBoard();
@@ -301,7 +307,7 @@ public class ChessGUI extends Application implements GameViewListener {
 
 		left.getChildren().add(leftRegion);
 		leftRegion.getStyleClass().add("side-panel");
-		right.getStyleClass().add("side-panel");
+		setUpMoveHistoryPanel();
 		leftButtons.setAlignment(Pos.TOP_CENTER);
 		leftButtons.setPadding(new Insets(18));
 		restart.getStyleClass().add("restart");
@@ -342,10 +348,123 @@ public class ChessGUI extends Application implements GameViewListener {
 		setUpBoard();
 	}
 	
+	private void setUpMoveHistoryPanel() {
+		moveHistoryPanel.getStyleClass().add("move-history-panel");
+		VBox.setVgrow(moveScroll, Priority.ALWAYS);
+
+		Label header = new Label("Moves");
+		header.getStyleClass().add("move-history-header");
+
+		Label numHeader = new Label("#");
+		numHeader.getStyleClass().addAll("move-col-header", "move-entry-num");
+		Label whiteHeader = new Label("White");
+		whiteHeader.getStyleClass().addAll("move-col-header", "move-entry-col");
+		Label blackHeader = new Label("Black");
+		blackHeader.getStyleClass().addAll("move-col-header", "move-entry-col");
+		HBox colHeaders = new HBox(2, numHeader, whiteHeader, blackHeader);
+		colHeaders.getStyleClass().add("move-col-header-row");
+
+		moveScroll.setFitToWidth(true);
+		moveScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
+		moveScroll.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		moveScroll.getStyleClass().add("move-scroll");
+
+		moveRows.getStyleClass().add("move-rows");
+
+		copyMovesButton.getStyleClass().add("copy-moves-button");
+		copyMovesButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				ClipboardContent content = new ClipboardContent();
+				content.putString(buildMovesText());
+				Clipboard.getSystemClipboard().setContent(content);
+			}
+		});
+
+		moveHistoryPanel.getChildren().addAll(header, colHeaders, moveScroll, copyMovesButton);
+	}
+
+	private void refreshMoveHistory() {
+		moveRows.getChildren().clear();
+		ArrayList<Move> history = game.getMoveHistory();
+		int i = 0;
+		int moveNum = 1;
+		// If the first mover is Black (from a FEN), show an empty White slot for row 1
+		if (!history.isEmpty() && history.get(0).moverColor == Color.BLACK) {
+			HBox row = buildMoveRow(moveNum, null, history.get(0));
+			moveRows.getChildren().add(row);
+			i = 1;
+			moveNum = 2;
+		}
+		while (i < history.size()) {
+			Move whiteMove = history.get(i).moverColor != Color.BLACK ? history.get(i) : null;
+			Move blackMove = null;
+			if (whiteMove != null) {
+				if (i + 1 < history.size()) blackMove = history.get(i + 1);
+				i += 2;
+			} else {
+				blackMove = history.get(i);
+				i += 1;
+			}
+			moveRows.getChildren().add(buildMoveRow(moveNum, whiteMove, blackMove));
+			moveNum++;
+		}
+		javafx.application.Platform.runLater(new Runnable() {
+			public void run() {
+				moveScroll.setVvalue(1.0);
+			}
+		});
+	}
+
+	private HBox buildMoveRow(int num, Move whiteMove, Move blackMove) {
+		Label numLabel = new Label(num + ".");
+		numLabel.getStyleClass().addAll("move-entry", "move-entry-num");
+		Label whiteLabel = new Label(whiteMove != null ? formatMoveForPanel(whiteMove) : "...");
+		whiteLabel.getStyleClass().addAll("move-entry", "move-entry-col");
+		Label blackLabel = new Label(blackMove != null ? formatMoveForPanel(blackMove) : "");
+		blackLabel.getStyleClass().addAll("move-entry", "move-entry-col");
+		HBox row = new HBox(2, numLabel, whiteLabel, blackLabel);
+		row.getStyleClass().add("move-row");
+		return row;
+	}
+
+	private String formatMoveForPanel(Move move) {
+		if (move == null) return "";
+		char[] files = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
+		String from = "" + files[move.startFile] + (move.startRank + 1);
+		String to   = "" + files[move.endFile]   + (move.endRank  + 1);
+		String text = from + "→" + to;
+		if (move.promotionType != null) {
+			text += "=" + move.promotionType.name().charAt(0);
+		}
+		return text + move.annotation;
+	}
+
+	private String buildMovesText() {
+		StringBuilder sb = new StringBuilder();
+		ArrayList<Move> history = game.getMoveHistory();
+		int i = 0;
+		int moveNum = 1;
+		if (!history.isEmpty() && history.get(0).moverColor == Color.BLACK) {
+			sb.append(moveNum).append(". ... ").append(formatMoveForPanel(history.get(0))).append("\n");
+			i = 1;
+			moveNum = 2;
+		}
+		while (i < history.size()) {
+			sb.append(moveNum).append(". ").append(formatMoveForPanel(history.get(i)));
+			if (i + 1 < history.size()) {
+				sb.append("  ").append(formatMoveForPanel(history.get(i + 1)));
+			}
+			sb.append("\n");
+			i += 2;
+			moveNum++;
+		}
+		return sb.toString().trim();
+	}
+
 	/**
 	 * Set up the board using stable square nodes.
 	 */
-	public void setUpBoard() {
+	private void setUpBoard() {
 		grid.getStyleClass().add("chess-board");
 		grid.setAlignment(Pos.CENTER);
 		
@@ -477,6 +596,7 @@ public class ChessGUI extends Application implements GameViewListener {
 				clearPromotionButtons();
 				enableButtons();
 				updateStatusLabel();
+				refreshMoveHistory();
 				updateFenDisplay();
 				ArrayList<Move> history = game.getMoveHistory();
 				if (!history.isEmpty()) {
@@ -533,6 +653,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		}
 		updateStatusLabel();
 		updateLastMove(move.endRank, move.endFile);
+		refreshMoveHistory();
 		updateFenDisplay();
 		if (!gameIsOver()) {
 			enableButtons();
