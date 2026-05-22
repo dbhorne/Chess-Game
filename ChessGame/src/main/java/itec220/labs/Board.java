@@ -201,11 +201,11 @@ public class Board {
 				&& pieces[startX][startY].getValidMoves(this.copy(), false).contains(new SimpleEntry<>(endX, endY))) {
 			Piece piece = pieces[startX][startY];
 			if (piece instanceof Pawn) {
-				if (piece.getColor() == Color.WHITE && Math.abs(startY - endY) == 1 && endX - startX == 1
+				if (enPassant != null && piece.getColor() == Color.WHITE && Math.abs(startY - endY) == 1 && endX - startX == 1
 						&& pieces[endX][endY] == null) {
 					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
-				} else if (piece.getColor() == Color.BLACK && Math.abs(startY - endY) == 1 && startX - endX == 1
+				} else if (enPassant != null && piece.getColor() == Color.BLACK && Math.abs(startY - endY) == 1 && startX - endX == 1
 						&& pieces[endX][endY] == null) {
 					takenPieces.add(pieces[enPassant.getKey()][enPassant.getValue()]);
 					pieces[enPassant.getKey()][enPassant.getValue()] = null;
