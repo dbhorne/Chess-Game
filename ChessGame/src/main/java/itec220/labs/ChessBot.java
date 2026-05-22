@@ -16,6 +16,10 @@ public class ChessBot {
 	private static final int DEFAULT_DEPTH = 2;
 	private static final int CHECKMATE_SCORE = 1_000_000;
 	private static final int STALEMATE_SCORE = 0;
+	private static final int STALEMATE_WHILE_AHEAD_SCORE = -200_000;
+	private static final int STALEMATE_WHILE_BEHIND_SCORE = 200_000;
+	private static final int WINNING_MATERIAL_MARGIN = 300;
+	private static final int ENDGAME_MAX_DEPTH = 7;
 	private static final int CHECK_BONUS = 35;
 	private static final int MAX_QUIESCENCE_DEPTH = 4;
 	private static final int TT_EXACT = 0;
@@ -134,7 +138,12 @@ public class ChessBot {
 		transpositionTable.clear();
 		ArrayList<Move> orderedMoves = new ArrayList<>(legalMoves);
 		orderMoves(boardSnapshot, orderedMoves, color, null);
-		ArrayList<ScoredMove> scoredMoves = scoreSequentially(orderedMoves, boardSnapshot);
+		ArrayList<Move> immediateMates = immediateMatingMoves(orderedMoves, boardSnapshot);
+		if (!immediateMates.isEmpty()) {
+			return immediateMates.get(random.nextInt(immediateMates.size()));
+		}
+		int effectiveDepth = effectiveDepth(boardSnapshot, legalMoves.size());
+		ArrayList<ScoredMove> scoredMoves = scoreSequentially(orderedMoves, boardSnapshot, effectiveDepth);
 		int bestScore = Integer.MIN_VALUE;
 		ArrayList<Move> bestMoves = new ArrayList<>();
 		for (ScoredMove scoredMove : scoredMoves) {
@@ -149,18 +158,32 @@ public class ChessBot {
 		return bestMoves.get(random.nextInt(bestMoves.size()));
 	}
 
-	private ArrayList<ScoredMove> scoreSequentially(ArrayList<Move> legalMoves, Board boardSnapshot) {
+	private ArrayList<Move> immediateMatingMoves(ArrayList<Move> legalMoves, Board boardSnapshot) {
+		ArrayList<Move> mates = new ArrayList<>();
+		Color enemy = opponent(color);
+		for (Move move : legalMoves) {
+			Board afterMove = applyMove(boardSnapshot, move);
+			if (afterMove != null && afterMove.isKingInCheck(enemy)
+					&& generateLegalMoves(afterMove, enemy).isEmpty()) {
+				mates.add(move);
+			}
+		}
+		return mates;
+	}
+
+	private ArrayList<ScoredMove> scoreSequentially(ArrayList<Move> legalMoves, Board boardSnapshot, int effectiveDepth) {
 		ArrayList<ScoredMove> scoredMoves = new ArrayList<>();
 		for (Move move : legalMoves) {
-			scoredMoves.add(scoreRootMove(move, boardSnapshot));
+			scoredMoves.add(scoreRootMove(move, boardSnapshot, effectiveDepth));
 		}
 		return scoredMoves;
 	}
 
-	private ScoredMove scoreRootMove(Move move, Board boardSnapshot) {
+	private ScoredMove scoreRootMove(Move move, Board boardSnapshot, int effectiveDepth) {
 		Board afterMove = applyMove(boardSnapshot, move);
 		int score = afterMove == null ? Integer.MIN_VALUE
-				: minimax(afterMove, depth - 1, opponent(color), Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1);
+				: minimax(afterMove, effectiveDepth - 1, opponent(color), Integer.MIN_VALUE + 1,
+						Integer.MAX_VALUE - 1, 1);
 		if (score != Integer.MIN_VALUE && Math.abs(score) < CHECKMATE_SCORE) {
 			score += moveOrderingScore(boardSnapshot, move, color) / 100;
 			score -= immediateRecapturePenalty(boardSnapshot, afterMove, move);
@@ -168,18 +191,40 @@ public class ChessBot {
 		return new ScoredMove(move, score);
 	}
 
-	private int minimax(Board board, int remainingDepth, Color sideToMove, int alpha, int beta) {
+	private int effectiveDepth(Board board, int legalMoveCount) {
+		int pieceCount = totalPieceCount(board);
+		int dynamicDepth = depth;
+		if (pieceCount <= 3) {
+			dynamicDepth = 7;
+		} else if (pieceCount <= 5) {
+			dynamicDepth = 6;
+		} else if (pieceCount <= 8) {
+			dynamicDepth = 5;
+		} else if (pieceCount <= 12) {
+			dynamicDepth = 4;
+		}
+		if (legalMoveCount > 35) {
+			dynamicDepth = Math.min(dynamicDepth, 5);
+		}
+		return Math.max(depth, Math.min(ENDGAME_MAX_DEPTH, dynamicDepth));
+	}
+
+	int effectiveDepthForTesting(Board board, int legalMoveCount) {
+		return effectiveDepth(board, legalMoveCount);
+	}
+
+	private int minimax(Board board, int remainingDepth, Color sideToMove, int alpha, int beta, int plyFromRoot) {
 		ArrayList<Move> moves = generateLegalMoves(board, sideToMove);
 		if (moves.isEmpty()) {
-			return terminalScore(board, sideToMove);
+			return terminalScore(board, sideToMove, plyFromRoot);
 		}
 		if (remainingDepth == 0) {
-			return quiescence(board, sideToMove, alpha, beta, MAX_QUIESCENCE_DEPTH);
+			return quiescence(board, sideToMove, alpha, beta, MAX_QUIESCENCE_DEPTH, plyFromRoot);
 		}
 
 		int originalAlpha = alpha;
 		int originalBeta = beta;
-		String key = transpositionKey(board, sideToMove);
+		String key = transpositionKey(board, sideToMove) + " " + plyFromRoot;
 		TranspositionEntry entry = transpositionTable.get(key);
 		Move tableMove = null;
 		if (entry != null) {
@@ -209,7 +254,8 @@ public class ChessBot {
 				if (afterMove == null) {
 					continue;
 				}
-				int score = minimax(afterMove, remainingDepth - 1, opponent(sideToMove), alpha, beta);
+				int score = minimax(afterMove, remainingDepth - 1, opponent(sideToMove), alpha, beta,
+						plyFromRoot + 1);
 				if (score > bestScore) {
 					bestScore = score;
 					bestMove = move;
@@ -226,7 +272,8 @@ public class ChessBot {
 				if (afterMove == null) {
 					continue;
 				}
-				int score = minimax(afterMove, remainingDepth - 1, opponent(sideToMove), alpha, beta);
+				int score = minimax(afterMove, remainingDepth - 1, opponent(sideToMove), alpha, beta,
+						plyFromRoot + 1);
 				if (score < bestScore) {
 					bestScore = score;
 					bestMove = move;
@@ -241,7 +288,12 @@ public class ChessBot {
 		return bestScore;
 	}
 
-	private int quiescence(Board board, Color sideToMove, int alpha, int beta, int remainingCapturesDepth) {
+	private int quiescence(Board board, Color sideToMove, int alpha, int beta, int remainingCapturesDepth,
+			int plyFromRoot) {
+		ArrayList<Move> allMoves = generateLegalMoves(board, sideToMove);
+		if (allMoves.isEmpty()) {
+			return terminalScore(board, sideToMove, plyFromRoot);
+		}
 		int standPat = evaluate(board, sideToMove);
 		if (remainingCapturesDepth == 0) {
 			return standPat;
@@ -258,7 +310,7 @@ public class ChessBot {
 			beta = Math.min(beta, standPat);
 		}
 
-		ArrayList<Move> moves = tacticalMoves(generateLegalMoves(board, sideToMove));
+		ArrayList<Move> moves = tacticalMoves(allMoves);
 		orderMoves(board, moves, sideToMove, null);
 		if (sideToMove == color) {
 			int bestScore = standPat;
@@ -268,7 +320,8 @@ public class ChessBot {
 					continue;
 				}
 				bestScore = Math.max(bestScore,
-						quiescence(afterMove, opponent(sideToMove), alpha, beta, remainingCapturesDepth - 1));
+						quiescence(afterMove, opponent(sideToMove), alpha, beta, remainingCapturesDepth - 1,
+								plyFromRoot + 1));
 				alpha = Math.max(alpha, bestScore);
 				if (beta <= alpha) {
 					break;
@@ -283,7 +336,8 @@ public class ChessBot {
 				continue;
 			}
 			bestScore = Math.min(bestScore,
-					quiescence(afterMove, opponent(sideToMove), alpha, beta, remainingCapturesDepth - 1));
+					quiescence(afterMove, opponent(sideToMove), alpha, beta, remainingCapturesDepth - 1,
+							plyFromRoot + 1));
 			beta = Math.min(beta, bestScore);
 			if (beta <= alpha) {
 				break;
@@ -313,9 +367,16 @@ public class ChessBot {
 		transpositionTable.put(key, new TranspositionEntry(remainingDepth, score, flag, bestMove));
 	}
 
-	private int terminalScore(Board board, Color sideToMove) {
+	private int terminalScore(Board board, Color sideToMove, int plyFromRoot) {
 		if (board.isKingInCheck(sideToMove)) {
-			return sideToMove == color ? -CHECKMATE_SCORE : CHECKMATE_SCORE;
+			return sideToMove == color ? -CHECKMATE_SCORE + plyFromRoot : CHECKMATE_SCORE - plyFromRoot;
+		}
+		int balance = materialBalance(board);
+		if (balance > WINNING_MATERIAL_MARGIN) {
+			return STALEMATE_WHILE_AHEAD_SCORE;
+		}
+		if (balance < -WINNING_MATERIAL_MARGIN) {
+			return STALEMATE_WHILE_BEHIND_SCORE;
 		}
 		return STALEMATE_SCORE;
 	}
@@ -364,6 +425,7 @@ public class ChessBot {
 		score += bishopPairScore(whiteBishops, blackBishops);
 		score += castlingAndKingSafetyScore(board, pieces, phaseMaterial);
 		score += mobilityScore(board);
+		score += endgameMatingScore(board, pieces);
 
 		Color opponent = opponent(color);
 		if (board.isKingInCheck(opponent)) {
@@ -374,7 +436,7 @@ public class ChessBot {
 		}
 		ArrayList<Move> moves = generateLegalMoves(board, sideToMove);
 		if (moves.isEmpty()) {
-			score += terminalScore(board, sideToMove);
+			score += terminalScore(board, sideToMove, 0);
 		}
 		return score;
 	}
@@ -423,12 +485,19 @@ public class ChessBot {
 	private int developmentValue(Piece piece) {
 		if (piece.getType() == PieceType.KNIGHT || piece.getType() == PieceType.BISHOP) {
 			int homeRank = piece.getColor() == Color.WHITE ? 0 : 7;
-			return piece.getRank() == homeRank ? -18 : 18;
+			return piece.getRank() == homeRank ? -8 : 8;
 		}
 		if (piece.getType() == PieceType.QUEEN) {
 			int homeRank = piece.getColor() == Color.WHITE ? 0 : 7;
 			if (piece.getRank() != homeRank || piece.getFile() != 3) {
 				return -16;
+			}
+		}
+		if (piece.getType() == PieceType.PAWN) {
+			int homeRank = piece.getColor() == Color.WHITE ? 1 : 6;
+			int file = piece.getFile();
+			if ((file == 3 || file == 4) && piece.getRank() != homeRank) {
+				return 45;
 			}
 		}
 		return 0;
@@ -544,6 +613,72 @@ public class ChessBot {
 		return (ownMoves - enemyMoves) * 3;
 	}
 
+	private int endgameMatingScore(Board board, Piece[][] pieces) {
+		int ownMaterial = nonKingMaterial(pieces, color);
+		int enemyMaterial = nonKingMaterial(pieces, opponent(color));
+		int balance = ownMaterial - enemyMaterial;
+		if (Math.abs(balance) <= WINNING_MATERIAL_MARGIN || Math.max(ownMaterial, enemyMaterial) < 500
+				|| Math.min(ownMaterial, enemyMaterial) > 100) {
+			return 0;
+		}
+
+		Color winningSide = balance > 0 ? color : opponent(color);
+		Color losingSide = opponent(winningSide);
+		King winningKing = board.getKing(winningSide);
+		King losingKing = board.getKing(losingSide);
+		if (winningKing == null || losingKing == null) {
+			return 0;
+		}
+
+		int losingKingRank = losingKing.getRank();
+		int losingKingFile = losingKing.getFile();
+		int edgeDistance = Math.min(Math.min(losingKingRank, 7 - losingKingRank),
+				Math.min(losingKingFile, 7 - losingKingFile));
+		int nearestCornerDistance = Math.min(
+				Math.min(losingKingRank + losingKingFile, losingKingRank + (7 - losingKingFile)),
+				Math.min((7 - losingKingRank) + losingKingFile, (7 - losingKingRank) + (7 - losingKingFile)));
+		int kingDistance = Math.abs(winningKing.getRank() - losingKingRank)
+				+ Math.abs(winningKing.getFile() - losingKingFile);
+		int score = (3 - edgeDistance) * 45 + (6 - nearestCornerDistance) * 10 + (14 - kingDistance) * 12;
+
+		ArrayList<Move> losingMoves = generateLegalMoves(board, losingSide);
+		if (winningSide == color && losingMoves.size() <= 2 && !board.isKingInCheck(losingSide)) {
+			score -= (3 - losingMoves.size()) * 70;
+		}
+		return winningSide == color ? score : -score;
+	}
+
+	private int nonKingMaterial(Piece[][] pieces, Color side) {
+		int material = 0;
+		for (int rank = 0; rank < pieces.length; rank++) {
+			for (int file = 0; file < pieces[rank].length; file++) {
+				Piece piece = pieces[rank][file];
+				if (piece != null && piece.getColor() == side && piece.getType() != PieceType.KING) {
+					material += pieceValue(piece.getType());
+				}
+			}
+		}
+		return material;
+	}
+
+	private int materialBalance(Board board) {
+		Piece[][] pieces = board.getPieces();
+		return nonKingMaterial(pieces, color) - nonKingMaterial(pieces, opponent(color));
+	}
+
+	private int totalPieceCount(Board board) {
+		int count = 0;
+		Piece[][] pieces = board.getPieces();
+		for (int rank = 0; rank < pieces.length; rank++) {
+			for (int file = 0; file < pieces[rank].length; file++) {
+				if (pieces[rank][file] != null) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
 	private int totalNonPawnMaterial(Piece[][] pieces) {
 		int material = 0;
 		for (int rank = 0; rank < pieces.length; rank++) {
@@ -620,20 +755,22 @@ public class ChessBot {
 	}
 
 	private void orderMoves(final Board board, ArrayList<Move> moves, final Color sideToMove, final Move tableMove) {
-		Collections.sort(moves, new Comparator<Move>() {
-			public int compare(Move first, Move second) {
-				return Integer.compare(moveOrderingScore(board, second, sideToMove),
-						moveOrderingScore(board, first, sideToMove));
+		ArrayList<OrderedMove> orderedMoves = new ArrayList<>();
+		for (Move move : moves) {
+			int score = moveOrderingScore(board, move, sideToMove);
+			if (sameMove(move, tableMove)) {
+				score += 2_000_000;
+			}
+			orderedMoves.add(new OrderedMove(move, score));
+		}
+		Collections.sort(orderedMoves, new Comparator<OrderedMove>() {
+			public int compare(OrderedMove first, OrderedMove second) {
+				return Integer.compare(second.score, first.score);
 			}
 		});
-		if (tableMove != null) {
-			for (int i = 0; i < moves.size(); i++) {
-				if (sameMove(moves.get(i), tableMove)) {
-					Move move = moves.remove(i);
-					moves.add(0, move);
-					return;
-				}
-			}
+		moves.clear();
+		for (OrderedMove orderedMove : orderedMoves) {
+			moves.add(orderedMove.move);
 		}
 	}
 
@@ -646,6 +783,8 @@ public class ChessBot {
 				score += 1_000_000;
 			} else if (afterMove.isKingInCheck(opponent(sideToMove))) {
 				score += 25_000;
+			} else if (sideToMove == color && replies.isEmpty() && materialBalance(board) > WINNING_MATERIAL_MARGIN) {
+				score -= 500_000;
 			}
 		}
 		if (move.capturedType != null) {
@@ -772,6 +911,16 @@ public class ChessBot {
 		private final int score;
 
 		private ScoredMove(Move move, int score) {
+			this.move = move;
+			this.score = score;
+		}
+	}
+
+	private static final class OrderedMove {
+		private final Move move;
+		private final int score;
+
+		private OrderedMove(Move move, int score) {
 			this.move = move;
 			this.score = score;
 		}
