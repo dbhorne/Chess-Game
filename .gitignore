@@ -1,1 +1,5 @@
 /.metadata/
+
+# Generated JavaDocs (regenerate with: mvn javadoc:javadoc)
+ChessGame/doc/
+ChessGame/target/*
