@@ -67,6 +67,10 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final Button playWhiteButton = new Button("Play White");
 	private final Button playBlackButton = new Button("Play Black");
 	private final Button startGameButton = new Button("Start Game");
+	private final Button easyButton = new Button("Easy");
+	private final Button mediumButton = new Button("Medium");
+	private final Button hardButton = new Button("Hard");
+	private int botDepth = 2;
 	private final TextField fenField = new TextField();
 	private final Button loadFenButton = new Button("Load FEN");
 	private final Label fenError = new Label();
@@ -127,7 +131,8 @@ public class ChessGUI extends Application implements GameViewListener {
 		fenError.getStyleClass().add("error-label");
 		VBox menuCenter = new VBox(12, playerVsPlayerButton, playerVsBotButton, botVsBotButton,
 				new HBox(10, playWhiteButton, playBlackButton), startGameButton, new Separator(),
-				new Label("Start from FEN position"), fenField, loadFenButton, fenError);
+				new Label("Bot difficulty"), new HBox(8, easyButton, mediumButton, hardButton),
+				new Separator(), new Label("Start from FEN position"), fenField, loadFenButton, fenError);
 		menuCenter.getStyleClass().add("menu-panel");
 		menuCenter.setAlignment(Pos.CENTER);
 		menuCenter.setPadding(new Insets(20));
@@ -248,6 +253,15 @@ public class ChessGUI extends Application implements GameViewListener {
 		playBlackButton.setOnAction(playBlackEvent);
 		startGameButton.setOnAction(startGameEvent);
 		loadFenButton.setOnAction(loadFenEvent);
+		easyButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) { botDepth = 1; updateMenuModeButtons(); }
+		});
+		mediumButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) { botDepth = 2; updateMenuModeButtons(); }
+		});
+		hardButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) { botDepth = 4; updateMenuModeButtons(); }
+		});
 		updateMenuModeButtons();
 
 		sceneGame.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
@@ -268,10 +282,10 @@ public class ChessGUI extends Application implements GameViewListener {
 		switch (gameMode) {
 		case PLAYER_VS_BOT:
 			return humanColor == Color.WHITE
-					? new GameController(game, new HumanPlayer(Color.WHITE), new BotPlayer(Color.BLACK), this)
-					: new GameController(game, new BotPlayer(Color.WHITE), new HumanPlayer(Color.BLACK), this);
+					? new GameController(game, new HumanPlayer(Color.WHITE), new BotPlayer(Color.BLACK, botDepth), this)
+					: new GameController(game, new BotPlayer(Color.WHITE, botDepth), new HumanPlayer(Color.BLACK), this);
 		case BOT_VS_BOT:
-			return new GameController(game, new BotPlayer(Color.WHITE), new BotPlayer(Color.BLACK), this);
+			return new GameController(game, new BotPlayer(Color.WHITE, botDepth), new BotPlayer(Color.BLACK, botDepth), this);
 		case PLAYER_VS_PLAYER:
 		default:
 			return new GameController(game, new HumanPlayer(Color.WHITE), new HumanPlayer(Color.BLACK), this);
@@ -301,6 +315,9 @@ public class ChessGUI extends Application implements GameViewListener {
 		playBlackButton.setDisable(gameMode != GameMode.PLAYER_VS_BOT);
 		playWhiteButton.setText(humanColor == Color.WHITE ? "Play White *" : "Play White");
 		playBlackButton.setText(humanColor == Color.BLACK ? "Play Black *" : "Play Black");
+		easyButton.setText(botDepth == 1 ? "Easy *" : "Easy");
+		mediumButton.setText(botDepth == 2 ? "Medium *" : "Medium");
+		hardButton.setText(botDepth == 4 ? "Hard *" : "Hard");
 	}
 
 	private boolean isBotTurn() {
@@ -877,6 +894,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	}
 
 	private void updateCheckHighlight() {
+		if (checkHighlights[0][0] == null) return;
 		for (int i = 0; i < BOARD_SIZE; i++) {
 			for (int j = 0; j < BOARD_SIZE; j++) {
 				checkHighlights[i][j].setVisible(false);
