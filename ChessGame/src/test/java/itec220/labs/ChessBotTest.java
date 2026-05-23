@@ -125,6 +125,45 @@ class ChessBotTest {
 	}
 
 	@Test
+	void evaluationRewardsCastlingRightsAvailability() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// White retains castling rights (KQ) vs black has none; only white's rights differ
+		Game withRights = TestSupport.gameFromFen("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQ - 0 1");
+		Game withoutRights = TestSupport.gameFromFen("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - - 0 1");
+
+		int withScore = bot.evaluateForTesting(withRights.getCopyOfCurrBoard(), Color.WHITE);
+		int withoutScore = bot.evaluateForTesting(withoutRights.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(withScore > withoutScore, "Having castling rights should improve evaluation");
+	}
+
+	@Test
+	void evaluationRewardsRookOnOpenFile() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// Rook at a1 behind own a-pawn vs rook at b1 on open b-file; same material
+		Game rookBlocked = TestSupport.gameFromFen("4k3/8/8/8/8/8/P7/RK6 w - - 0 1");
+		Game rookOpen = TestSupport.gameFromFen("4k3/8/8/8/8/8/P7/1RK5 w - - 0 1");
+
+		int blockedScore = bot.evaluateForTesting(rookBlocked.getCopyOfCurrBoard(), Color.WHITE);
+		int openScore = bot.evaluateForTesting(rookOpen.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(openScore > blockedScore, "Rook on open file should score higher than rook behind own pawn");
+	}
+
+	@Test
+	void evaluationRewardsFlankPawnAdvancement() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// a-pawn advanced vs a-pawn at home — same material
+		Game advancedFlank = TestSupport.gameFromFen("4k3/8/8/8/8/P7/8/4K3 w - - 0 1");
+		Game homeFlank = TestSupport.gameFromFen("4k3/8/8/8/8/8/P7/4K3 w - - 0 1");
+
+		int advancedScore = bot.evaluateForTesting(advancedFlank.getCopyOfCurrBoard(), Color.WHITE);
+		int homeScore = bot.evaluateForTesting(homeFlank.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(advancedScore > homeScore, "Flank pawn advanced off home rank should score higher");
+	}
+
+	@Test
 	void botLooksAheadToAvoidImmediateRecapture() {
 		Game game = TestSupport.gameFromFen("r3k3/1b6/8/8/8/8/8/QR2K3 w - - 0 1");
 

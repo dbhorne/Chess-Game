@@ -521,6 +521,9 @@ public class ChessBot {
 			if ((file == 3 || file == 4) && piece.getRank() != homeRank) {
 				return 45;
 			}
+			if (piece.getRank() != homeRank) {
+				return 12;
+			}
 		}
 		return 0;
 	}
@@ -671,7 +674,7 @@ public class ChessBot {
 		int enemyMaterial = nonKingMaterial(pieces, opponent(color));
 		int balance = ownMaterial - enemyMaterial;
 		if (Math.abs(balance) <= WINNING_MATERIAL_MARGIN || Math.max(ownMaterial, enemyMaterial) < 500
-				|| Math.min(ownMaterial, enemyMaterial) > 100) {
+				|| Math.min(ownMaterial, enemyMaterial) > 300) {
 			return 0;
 		}
 
@@ -695,8 +698,8 @@ public class ChessBot {
 		int score = (3 - edgeDistance) * 45 + (6 - nearestCornerDistance) * 10 + (14 - kingDistance) * 12;
 
 		ArrayList<Move> losingMoves = generateLegalMoves(board, losingSide);
-		if (winningSide == color && losingMoves.size() <= 2 && !board.isKingInCheck(losingSide)) {
-			score -= (3 - losingMoves.size()) * 70;
+		if (winningSide == color && losingMoves.size() <= 1 && !board.isKingInCheck(losingSide)) {
+			score -= (2 - losingMoves.size()) * 80;
 		}
 		return winningSide == color ? score : -score;
 	}
