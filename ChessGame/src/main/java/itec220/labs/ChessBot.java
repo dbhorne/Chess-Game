@@ -463,10 +463,6 @@ public class ChessBot {
 		if (board.isKingInCheck(color)) {
 			score -= CHECK_BONUS;
 		}
-		ArrayList<Move> moves = generateLegalMoves(board, sideToMove);
-		if (moves.isEmpty()) {
-			score += terminalScore(board, sideToMove, 0);
-		}
 		return score;
 	}
 
