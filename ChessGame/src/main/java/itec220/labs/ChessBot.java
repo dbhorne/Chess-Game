@@ -541,7 +541,7 @@ public class ChessBot {
 	}
 
 	private int pawnStructureScore(int[] whitePawnsByFile, int[] blackPawnsByFile) {
-		return pawnStructureFor(Color.WHITE, whitePawnsByFile) - pawnStructureFor(Color.BLACK, blackPawnsByFile);
+		return pawnStructureFor(Color.WHITE, whitePawnsByFile) + pawnStructureFor(Color.BLACK, blackPawnsByFile);
 	}
 
 	private int pawnStructureFor(Color side, int[] pawnsByFile) {

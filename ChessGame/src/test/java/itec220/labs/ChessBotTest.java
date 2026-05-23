@@ -95,6 +95,21 @@ class ChessBotTest {
 	}
 
 	@Test
+	void evaluationBenefitsFromOpponentDoubledPawns() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// Black has doubled c-pawns; white has clean d/e pawns
+		Game opponentDoubled = TestSupport.gameFromFen("4k3/2p5/2p5/8/8/8/3PP3/4K3 w - - 0 1");
+		// Black has normal c/e pawns; same material counts
+		Game opponentClean = TestSupport.gameFromFen("4k3/2p1p3/8/8/8/8/3PP3/4K3 w - - 0 1");
+
+		int doubledScore = bot.evaluateForTesting(opponentDoubled.getCopyOfCurrBoard(), Color.WHITE);
+		int cleanScore = bot.evaluateForTesting(opponentClean.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(doubledScore > cleanScore,
+				"Opponent's doubled pawns should benefit the bot; got doubled=" + doubledScore + " clean=" + cleanScore);
+	}
+
+	@Test
 	void botLooksAheadToAvoidImmediateRecapture() {
 		Game game = TestSupport.gameFromFen("r3k3/1b6/8/8/8/8/8/QR2K3 w - - 0 1");
 
