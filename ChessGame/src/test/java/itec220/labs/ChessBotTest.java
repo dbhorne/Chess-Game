@@ -59,6 +59,21 @@ class ChessBotTest {
 	}
 
 	@Test
+	void evaluationDoesNotPenalizeActiveQueen() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// Equal-material (Q+K vs Q+K) so endgame-mating heuristic is inactive;
+		// only the white queen's position differs between the two FENs.
+		Game queenCentral = TestSupport.gameFromFen("4k3/8/8/3Q4/3q4/8/8/4K3 w - - 0 1");
+		Game queenHome = TestSupport.gameFromFen("4k3/8/8/8/3q4/8/8/3QK3 w - - 0 1");
+
+		int centralScore = bot.evaluateForTesting(queenCentral.getCopyOfCurrBoard(), Color.WHITE);
+		int homeScore = bot.evaluateForTesting(queenHome.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(centralScore >= homeScore,
+				"Active queen should not be penalized vs queen at home; got central=" + centralScore + " home=" + homeScore);
+	}
+
+	@Test
 	void evaluationPrefersMinorPieceDevelopmentOverEarlyQueenMove() {
 		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
 		Game developed = TestSupport.gameFromFen("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 0 1");
@@ -92,6 +107,60 @@ class ChessBotTest {
 		int weakScore = bot.evaluateForTesting(weakPawns.getCopyOfCurrBoard(), Color.WHITE);
 
 		assertTrue(connectedScore > weakScore);
+	}
+
+	@Test
+	void evaluationBenefitsFromOpponentDoubledPawns() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// Black has doubled c-pawns; white has clean d/e pawns
+		Game opponentDoubled = TestSupport.gameFromFen("4k3/2p5/2p5/8/8/8/3PP3/4K3 w - - 0 1");
+		// Black has normal c/e pawns; same material counts
+		Game opponentClean = TestSupport.gameFromFen("4k3/2p1p3/8/8/8/8/3PP3/4K3 w - - 0 1");
+
+		int doubledScore = bot.evaluateForTesting(opponentDoubled.getCopyOfCurrBoard(), Color.WHITE);
+		int cleanScore = bot.evaluateForTesting(opponentClean.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(doubledScore > cleanScore,
+				"Opponent's doubled pawns should benefit the bot; got doubled=" + doubledScore + " clean=" + cleanScore);
+	}
+
+	@Test
+	void evaluationRewardsCastlingRightsAvailability() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// White retains castling rights (KQ) vs black has none; only white's rights differ
+		Game withRights = TestSupport.gameFromFen("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQ - 0 1");
+		Game withoutRights = TestSupport.gameFromFen("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w - - 0 1");
+
+		int withScore = bot.evaluateForTesting(withRights.getCopyOfCurrBoard(), Color.WHITE);
+		int withoutScore = bot.evaluateForTesting(withoutRights.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(withScore > withoutScore, "Having castling rights should improve evaluation");
+	}
+
+	@Test
+	void evaluationRewardsRookOnOpenFile() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// Rook at a1 behind own a-pawn vs rook at b1 on open b-file; same material
+		Game rookBlocked = TestSupport.gameFromFen("4k3/8/8/8/8/8/P7/RK6 w - - 0 1");
+		Game rookOpen = TestSupport.gameFromFen("4k3/8/8/8/8/8/P7/1RK5 w - - 0 1");
+
+		int blockedScore = bot.evaluateForTesting(rookBlocked.getCopyOfCurrBoard(), Color.WHITE);
+		int openScore = bot.evaluateForTesting(rookOpen.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(openScore > blockedScore, "Rook on open file should score higher than rook behind own pawn");
+	}
+
+	@Test
+	void evaluationRewardsFlankPawnAdvancement() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// a-pawn advanced vs a-pawn at home — same material
+		Game advancedFlank = TestSupport.gameFromFen("4k3/8/8/8/8/P7/8/4K3 w - - 0 1");
+		Game homeFlank = TestSupport.gameFromFen("4k3/8/8/8/8/8/P7/4K3 w - - 0 1");
+
+		int advancedScore = bot.evaluateForTesting(advancedFlank.getCopyOfCurrBoard(), Color.WHITE);
+		int homeScore = bot.evaluateForTesting(homeFlank.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(advancedScore > homeScore, "Flank pawn advanced off home rank should score higher");
 	}
 
 	@Test

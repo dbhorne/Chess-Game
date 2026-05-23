@@ -17,13 +17,16 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
+import javafx.geometry.Bounds;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -108,6 +111,11 @@ public class ChessGUI extends Application implements GameViewListener {
 			new PromoteButton("Bishop", PieceType.BISHOP) };
 	private final EnumMap<PieceType, Image> whiteImages = new EnumMap<>(PieceType.class);
 	private final EnumMap<PieceType, Image> blackImages = new EnumMap<>(PieceType.class);
+	private boolean isDragging = false;
+	private int dragStartRank = -1;
+	private int dragStartFile = -1;
+	private final Pane dragLayer = new Pane();
+	private final ImageView dragImage = new ImageView();
 
 	private enum GameMode {
 		PLAYER_VS_PLAYER,
@@ -166,7 +174,17 @@ public class ChessGUI extends Application implements GameViewListener {
 		bottom.getChildren().add(fenBar);
 		root.setBottom(bottom);
 		root.setLeft(left);
-		Scene sceneGame = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+		dragImage.setFitWidth(PIECE_SIZE);
+		dragImage.setFitHeight(PIECE_SIZE);
+		dragImage.setPreserveRatio(true);
+		dragImage.setMouseTransparent(true);
+		dragImage.setVisible(false);
+		dragLayer.setMouseTransparent(true);
+		dragLayer.getChildren().add(dragImage);
+		StackPane gameRoot = new StackPane(root, dragLayer);
+		Scene sceneGame = new Scene(gameRoot, SCENE_WIDTH, SCENE_HEIGHT);
+		sceneGame.addEventFilter(MouseEvent.MOUSE_DRAGGED, e -> handleDragMove(e));
+		sceneGame.addEventFilter(MouseEvent.MOUSE_RELEASED, e -> handleDragEnd(e));
 		Scene sceneMain = new Scene(menu, SCENE_WIDTH, SCENE_HEIGHT);
 
 		EventHandler<ActionEvent> mainMenuEvent = new EventHandler<ActionEvent>() {
@@ -544,7 +562,9 @@ public class ChessGUI extends Application implements GameViewListener {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
-				click(tb.rank, tb.file);
+				if (!isDragging) {
+					click(tb.rank, tb.file);
+				}
 			}
 		};
 		for (int i = 0; i < BOARD_SIZE; i++) {
@@ -585,6 +605,9 @@ public class ChessGUI extends Application implements GameViewListener {
 				buttons[i][j] = new ChessButton(BOARD_SIZE - 1 - i, j);
 				buttons[i][j].setOnAction(event);
 				buttons[i][j].getStyleClass().add("chess-button-transparent");
+				final int rank = BOARD_SIZE - 1 - i;
+				final int file = j;
+				buttons[i][j].setOnMousePressed(e -> handleDragStart(rank, file, e));
 
 				spaces[i][j].getChildren().add(spacesBackground[i][j]);
 				spaces[i][j].getChildren().add(lastMoveHighlights[i][j]);
@@ -787,9 +810,19 @@ public class ChessGUI extends Application implements GameViewListener {
 	 * Loop through the buttons and disable their event handler
 	 */
 	private void disableButtons() {
+		if (isDragging) {
+			isDragging = false;
+			dragImage.setVisible(false);
+			if (dragStartRank >= 0) {
+				pieceViews[BOARD_SIZE - 1 - dragStartRank][dragStartFile].setVisible(true);
+			}
+			dragStartRank = -1;
+			dragStartFile = -1;
+		}
 		for (ChessButton[] bArray : buttons) {
 			for (ChessButton b : bArray) {
 				b.setOnAction(null);
+				b.setOnMousePressed(null);
 			}
 		}
 	}
@@ -804,12 +837,15 @@ public class ChessGUI extends Application implements GameViewListener {
 		EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent e) {
 				ChessButton tb = (ChessButton) e.getSource();
-				click(tb.rank, tb.file);
+				if (!isDragging) {
+					click(tb.rank, tb.file);
+				}
 			}
 		};
 		for (ChessButton[] bArray : buttons) {
 			for (ChessButton b : bArray) {
 				b.setOnAction(event);
+				b.setOnMousePressed(e -> handleDragStart(b.rank, b.file, e));
 			}
 		}
 	}
@@ -1011,7 +1047,67 @@ public class ChessGUI extends Application implements GameViewListener {
 		player.play();
 	}
 
-	
+	private void handleDragStart(int rank, int file, MouseEvent e) {
+		if (isBotTurn() || promotionPending) {
+			return;
+		}
+		Board board = game.getCopyOfCurrBoard();
+		Piece piece = board.getPiece(rank, file);
+		if (piece == null) {
+			return;
+		}
+		selectSquare(rank, file);
+		if (moveList.isEmpty()) {
+			return;
+		}
+		isDragging = true;
+		dragStartRank = rank;
+		dragStartFile = file;
+		pieceViews[BOARD_SIZE - 1 - rank][file].setVisible(false);
+		dragImage.setImage(getImage(piece));
+		dragImage.setVisible(true);
+		dragImage.setLayoutX(e.getSceneX() - PIECE_SIZE / 2.0);
+		dragImage.setLayoutY(e.getSceneY() - PIECE_SIZE / 2.0);
+	}
+
+	private void handleDragMove(MouseEvent e) {
+		if (!isDragging) {
+			return;
+		}
+		dragImage.setLayoutX(e.getSceneX() - PIECE_SIZE / 2.0);
+		dragImage.setLayoutY(e.getSceneY() - PIECE_SIZE / 2.0);
+		e.consume();
+	}
+
+	private void handleDragEnd(MouseEvent e) {
+		if (!isDragging) {
+			return;
+		}
+		isDragging = false;
+		dragImage.setVisible(false);
+		pieceViews[BOARD_SIZE - 1 - dragStartRank][dragStartFile].setVisible(true);
+		int[] target = sceneToSquare(e.getSceneX(), e.getSceneY());
+		if (target != null && moveList.contains(new SimpleEntry<>(target[0], target[1]))) {
+			moveSelectedPiece(target[0], target[1]);
+		} else {
+			clearSelection();
+		}
+		dragStartRank = -1;
+		dragStartFile = -1;
+	}
+
+	private int[] sceneToSquare(double sceneX, double sceneY) {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				Bounds b = spaces[i][j].localToScene(spaces[i][j].getBoundsInLocal());
+				if (b.contains(sceneX, sceneY)) {
+					return new int[]{ spaces[i][j].rank, spaces[i][j].file };
+				}
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * Launch the GUI game
 	 * @param args default java argument

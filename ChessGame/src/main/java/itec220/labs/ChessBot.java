@@ -430,6 +430,9 @@ public class ChessBot {
 				score += side * centerControlValue(piece, rank, file);
 				score += side * developmentValue(piece);
 				score += side * promotionProgressValue(piece);
+				if (piece.getType() == PieceType.ROOK) {
+					score += side * rookFileBonus(pieces, file, piece.getColor());
+				}
 				if (piece.getType() == PieceType.BISHOP) {
 					if (piece.getColor() == Color.WHITE) {
 						whiteBishops++;
@@ -462,10 +465,6 @@ public class ChessBot {
 		}
 		if (board.isKingInCheck(color)) {
 			score -= CHECK_BONUS;
-		}
-		ArrayList<Move> moves = generateLegalMoves(board, sideToMove);
-		if (moves.isEmpty()) {
-			score += terminalScore(board, sideToMove, 0);
 		}
 		return score;
 	}
@@ -516,17 +515,14 @@ public class ChessBot {
 			int homeRank = piece.getColor() == Color.WHITE ? 0 : 7;
 			return piece.getRank() == homeRank ? -8 : 8;
 		}
-		if (piece.getType() == PieceType.QUEEN) {
-			int homeRank = piece.getColor() == Color.WHITE ? 0 : 7;
-			if (piece.getRank() != homeRank || piece.getFile() != 3) {
-				return -16;
-			}
-		}
 		if (piece.getType() == PieceType.PAWN) {
 			int homeRank = piece.getColor() == Color.WHITE ? 1 : 6;
 			int file = piece.getFile();
 			if ((file == 3 || file == 4) && piece.getRank() != homeRank) {
 				return 45;
+			}
+			if (piece.getRank() != homeRank) {
+				return 12;
 			}
 		}
 		return 0;
@@ -541,7 +537,7 @@ public class ChessBot {
 	}
 
 	private int pawnStructureScore(int[] whitePawnsByFile, int[] blackPawnsByFile) {
-		return pawnStructureFor(Color.WHITE, whitePawnsByFile) - pawnStructureFor(Color.BLACK, blackPawnsByFile);
+		return pawnStructureFor(Color.WHITE, whitePawnsByFile) + pawnStructureFor(Color.BLACK, blackPawnsByFile);
 	}
 
 	private int pawnStructureFor(Color side, int[] pawnsByFile) {
@@ -619,8 +615,18 @@ public class ChessBot {
 		int homeRank = side == Color.WHITE ? 0 : 7;
 		if (king.getRank() == homeRank && (king.getFile() == 6 || king.getFile() == 2)) {
 			score += 45;
-		} else if (king.getRank() != homeRank || king.getFile() != 4) {
-			score -= 10;
+		} else if (!king.getHasMoved()) {
+			if (canCastle(pieces, homeRank, 4, homeRank, 7)) {
+				score += 12;
+			}
+			if (canCastle(pieces, homeRank, 4, homeRank, 0)) {
+				score += 8;
+			}
+		} else {
+			score -= 45;
+			if (king.getRank() != homeRank || king.getFile() != 4) {
+				score -= 10;
+			}
 		}
 		int shieldRank = side == Color.WHITE ? king.getRank() + 1 : king.getRank() - 1;
 		if (shieldRank >= 0 && shieldRank < 8) {
@@ -642,12 +648,33 @@ public class ChessBot {
 		return (ownMoves - enemyMoves) * 3;
 	}
 
+	private int rookFileBonus(Piece[][] pieces, int file, Color rookColor) {
+		boolean ownPawn = false;
+		boolean enemyPawn = false;
+		for (int r = 0; r < 8; r++) {
+			if (pieces[r][file] instanceof Pawn) {
+				if (pieces[r][file].getColor() == rookColor) {
+					ownPawn = true;
+				} else {
+					enemyPawn = true;
+				}
+			}
+		}
+		if (!ownPawn && !enemyPawn) {
+			return 20;
+		}
+		if (!ownPawn) {
+			return 10;
+		}
+		return 0;
+	}
+
 	private int endgameMatingScore(Board board, Piece[][] pieces) {
 		int ownMaterial = nonKingMaterial(pieces, color);
 		int enemyMaterial = nonKingMaterial(pieces, opponent(color));
 		int balance = ownMaterial - enemyMaterial;
 		if (Math.abs(balance) <= WINNING_MATERIAL_MARGIN || Math.max(ownMaterial, enemyMaterial) < 500
-				|| Math.min(ownMaterial, enemyMaterial) > 100) {
+				|| Math.min(ownMaterial, enemyMaterial) > 300) {
 			return 0;
 		}
 
@@ -671,8 +698,8 @@ public class ChessBot {
 		int score = (3 - edgeDistance) * 45 + (6 - nearestCornerDistance) * 10 + (14 - kingDistance) * 12;
 
 		ArrayList<Move> losingMoves = generateLegalMoves(board, losingSide);
-		if (winningSide == color && losingMoves.size() <= 2 && !board.isKingInCheck(losingSide)) {
-			score -= (3 - losingMoves.size()) * 70;
+		if (winningSide == color && losingMoves.size() <= 1 && !board.isKingInCheck(losingSide)) {
+			score -= (2 - losingMoves.size()) * 80;
 		}
 		return winningSide == color ? score : -score;
 	}
@@ -847,10 +874,12 @@ public class ChessBot {
 			return 0;
 		}
 		PieceType movedType = move.promotionType == null ? movedPiece.getType() : move.promotionType;
+		int capturedValue = move.capturedType != null ? pieceValue(move.capturedType) : 0;
 		for (Move opponentMove : generateLegalMoves(afterMove, opponent(color))) {
 			if (opponentMove.endRank == move.endRank && opponentMove.endFile == move.endFile
 					&& opponentMove.capturedType == movedType) {
-				return pieceValue(movedType);
+				int netLoss = pieceValue(movedType) - capturedValue;
+				return Math.max(0, netLoss);
 			}
 		}
 		return 0;
