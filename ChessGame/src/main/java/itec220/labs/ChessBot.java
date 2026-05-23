@@ -837,10 +837,12 @@ public class ChessBot {
 			return 0;
 		}
 		PieceType movedType = move.promotionType == null ? movedPiece.getType() : move.promotionType;
+		int capturedValue = move.capturedType != null ? pieceValue(move.capturedType) : 0;
 		for (Move opponentMove : generateLegalMoves(afterMove, opponent(color))) {
 			if (opponentMove.endRank == move.endRank && opponentMove.endFile == move.endFile
 					&& opponentMove.capturedType == movedType) {
-				return pieceValue(movedType);
+				int netLoss = pieceValue(movedType) - capturedValue;
+				return Math.max(0, netLoss);
 			}
 		}
 		return 0;
