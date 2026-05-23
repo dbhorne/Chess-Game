@@ -487,6 +487,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		scrollHistoryToBottom();
 	}
 
+
 	private HBox buildMoveRow(int num, Move whiteMove, Move blackMove) {
 		Label numLabel = new Label(num + ".");
 		numLabel.getStyleClass().addAll("move-entry", "move-entry-num");

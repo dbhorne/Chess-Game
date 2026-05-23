@@ -199,6 +199,7 @@ public class ChessBot {
 		}
 	}
 
+
 	private ScoredMove scoreRootMove(Move move, Board boardSnapshot, int effectiveDepth,
 			List<String> priorPositions) {
 		Board afterMove = applyMove(boardSnapshot, move);
