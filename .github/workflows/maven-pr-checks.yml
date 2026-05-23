@@ -1,9 +1,12 @@
 name: Maven PR Checks
 
 on:
-  pull_request_review:
+  pull_request:
     types:
-      - submitted
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
 
 permissions:
   contents: read
@@ -19,13 +22,11 @@ jobs:
     timeout-minutes: 10
 
     if: >
-      github.event.review.state == 'approved' &&
-      github.event.review.author_association == 'OWNER' &&
-      github.event.review.commit_id == github.event.pull_request.head.sha &&
+      github.event.pull_request.author_association == 'OWNER' &&
       github.event.pull_request.draft == false
 
     steps:
-      - name: Check out approved PR head
+      - name: Check out PR head
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -34,7 +35,6 @@ jobs:
       - name: Verify checked out SHA
         run: |
           test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
-          test "$(git rev-parse HEAD)" = "${{ github.event.review.commit_id }}"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -54,13 +54,11 @@ jobs:
     timeout-minutes: 15
 
     if: >
-      github.event.review.state == 'approved' &&
-      github.event.review.author_association == 'OWNER' &&
-      github.event.review.commit_id == github.event.pull_request.head.sha &&
+      github.event.pull_request.author_association == 'OWNER' &&
       github.event.pull_request.draft == false
 
     steps:
-      - name: Check out approved PR head
+      - name: Check out PR head
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -69,7 +67,6 @@ jobs:
       - name: Verify checked out SHA
         run: |
           test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
-          test "$(git rev-parse HEAD)" = "${{ github.event.review.commit_id }}"
 
       - name: Set up Java
         uses: actions/setup-java@v4
