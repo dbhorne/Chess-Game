@@ -59,6 +59,21 @@ class ChessBotTest {
 	}
 
 	@Test
+	void evaluationDoesNotPenalizeActiveQueen() {
+		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
+		// Equal-material (Q+K vs Q+K) so endgame-mating heuristic is inactive;
+		// only the white queen's position differs between the two FENs.
+		Game queenCentral = TestSupport.gameFromFen("4k3/8/8/3Q4/3q4/8/8/4K3 w - - 0 1");
+		Game queenHome = TestSupport.gameFromFen("4k3/8/8/8/3q4/8/8/3QK3 w - - 0 1");
+
+		int centralScore = bot.evaluateForTesting(queenCentral.getCopyOfCurrBoard(), Color.WHITE);
+		int homeScore = bot.evaluateForTesting(queenHome.getCopyOfCurrBoard(), Color.WHITE);
+
+		assertTrue(centralScore >= homeScore,
+				"Active queen should not be penalized vs queen at home; got central=" + centralScore + " home=" + homeScore);
+	}
+
+	@Test
 	void evaluationPrefersMinorPieceDevelopmentOverEarlyQueenMove() {
 		ChessBot bot = new ChessBot(Color.WHITE, 1, new Random(1), 1);
 		Game developed = TestSupport.gameFromFen("rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 0 1");

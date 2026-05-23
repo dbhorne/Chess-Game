@@ -516,12 +516,6 @@ public class ChessBot {
 			int homeRank = piece.getColor() == Color.WHITE ? 0 : 7;
 			return piece.getRank() == homeRank ? -8 : 8;
 		}
-		if (piece.getType() == PieceType.QUEEN) {
-			int homeRank = piece.getColor() == Color.WHITE ? 0 : 7;
-			if (piece.getRank() != homeRank || piece.getFile() != 3) {
-				return -16;
-			}
-		}
 		if (piece.getType() == PieceType.PAWN) {
 			int homeRank = piece.getColor() == Color.WHITE ? 1 : 6;
 			int file = piece.getFile();
