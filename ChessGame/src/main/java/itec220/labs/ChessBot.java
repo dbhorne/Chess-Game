@@ -430,6 +430,9 @@ public class ChessBot {
 				score += side * centerControlValue(piece, rank, file);
 				score += side * developmentValue(piece);
 				score += side * promotionProgressValue(piece);
+				if (piece.getType() == PieceType.ROOK) {
+					score += side * rookFileBonus(pieces, file, piece.getColor());
+				}
 				if (piece.getType() == PieceType.BISHOP) {
 					if (piece.getColor() == Color.WHITE) {
 						whiteBishops++;
@@ -609,8 +612,18 @@ public class ChessBot {
 		int homeRank = side == Color.WHITE ? 0 : 7;
 		if (king.getRank() == homeRank && (king.getFile() == 6 || king.getFile() == 2)) {
 			score += 45;
-		} else if (king.getRank() != homeRank || king.getFile() != 4) {
-			score -= 10;
+		} else if (!king.getHasMoved()) {
+			if (canCastle(pieces, homeRank, 4, homeRank, 7)) {
+				score += 12;
+			}
+			if (canCastle(pieces, homeRank, 4, homeRank, 0)) {
+				score += 8;
+			}
+		} else {
+			score -= 45;
+			if (king.getRank() != homeRank || king.getFile() != 4) {
+				score -= 10;
+			}
 		}
 		int shieldRank = side == Color.WHITE ? king.getRank() + 1 : king.getRank() - 1;
 		if (shieldRank >= 0 && shieldRank < 8) {
@@ -630,6 +643,27 @@ public class ChessBot {
 		int ownMoves = generateLegalMoves(board, color).size();
 		int enemyMoves = generateLegalMoves(board, opponent(color)).size();
 		return (ownMoves - enemyMoves) * 3;
+	}
+
+	private int rookFileBonus(Piece[][] pieces, int file, Color rookColor) {
+		boolean ownPawn = false;
+		boolean enemyPawn = false;
+		for (int r = 0; r < 8; r++) {
+			if (pieces[r][file] instanceof Pawn) {
+				if (pieces[r][file].getColor() == rookColor) {
+					ownPawn = true;
+				} else {
+					enemyPawn = true;
+				}
+			}
+		}
+		if (!ownPawn && !enemyPawn) {
+			return 20;
+		}
+		if (!ownPawn) {
+			return 10;
+		}
+		return 0;
 	}
 
 	private int endgameMatingScore(Board board, Piece[][] pieces) {
