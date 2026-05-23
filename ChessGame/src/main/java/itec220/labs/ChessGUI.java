@@ -11,6 +11,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -45,7 +46,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	private static final int MOVE_INDICATOR_RADIUS = 10;
 	private static final int CAPTURE_INDICATOR_RADIUS = 28;
 	private static final int SCENE_WIDTH = 1120;
-	private static final int SCENE_HEIGHT = 780;
+	private static final int SCENE_HEIGHT = 820;
 	private static final String MOVE_SOUND = "/itec220/labs/ChessMove.mp3";
 	private static final String CAPTURE_SOUND = "/itec220/labs/ChessCapture.mp3";
 	private static final String CHECK_SOUND = "/itec220/labs/move-check.mp3";
@@ -61,12 +62,18 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final Button restart = new Button("Restart");
 	private final Button exitNoSave = new Button("Exit without Saving");
 	private final Button saveAndExit = new Button("Save and Exit");
+	private final Button muteButton = new Button("Mute");
+	private boolean soundMuted = false;
 	private final Button playerVsPlayerButton = new Button("Player vs. Player");
 	private final Button playerVsBotButton = new Button("Player vs. Bot");
 	private final Button botVsBotButton = new Button("Bot vs. Bot");
 	private final Button playWhiteButton = new Button("Play White");
 	private final Button playBlackButton = new Button("Play Black");
 	private final Button startGameButton = new Button("Start Game");
+	private final Button easyButton = new Button("Easy");
+	private final Button mediumButton = new Button("Medium");
+	private final Button hardButton = new Button("Hard");
+	private int botDepth = 2;
 	private final TextField fenField = new TextField();
 	private final Button loadFenButton = new Button("Load FEN");
 	private final Label fenError = new Label();
@@ -85,6 +92,8 @@ public class ChessGUI extends Application implements GameViewListener {
 	private final ChessButton[][] buttons = new ChessButton[BOARD_SIZE][BOARD_SIZE];
 	private final ChessStackPane[][] spaces = new ChessStackPane[BOARD_SIZE][BOARD_SIZE];
 	private final Region[][] spacesBackground = new Region[BOARD_SIZE][BOARD_SIZE];
+	private final Region[][] lastMoveHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
+	private final Region[][] checkHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
 	private final Region[][] selectedHighlights = new Region[BOARD_SIZE][BOARD_SIZE];
 	private final Circle[][] moveIndicators = new Circle[BOARD_SIZE][BOARD_SIZE];
 	private final ImageView[][] pieceViews = new ImageView[BOARD_SIZE][BOARD_SIZE];
@@ -125,14 +134,32 @@ public class ChessGUI extends Application implements GameViewListener {
 		fenError.getStyleClass().add("error-label");
 		VBox menuCenter = new VBox(12, playerVsPlayerButton, playerVsBotButton, botVsBotButton,
 				new HBox(10, playWhiteButton, playBlackButton), startGameButton, new Separator(),
-				new Label("Start from FEN position"), fenField, loadFenButton, fenError);
+				new Label("Bot difficulty"), new HBox(8, easyButton, mediumButton, hardButton),
+				new Separator(), new Label("Start from FEN position"), fenField, loadFenButton, fenError);
 		menuCenter.getStyleClass().add("menu-panel");
 		menuCenter.setAlignment(Pos.CENTER);
 		menuCenter.setPadding(new Insets(20));
 		menu.setCenter(menuCenter);
 
+		VBox rankLabels = new VBox(0);
+		rankLabels.setPadding(new Insets(18, 6, 18, 0));
+		for (int i = BOARD_SIZE - 1; i >= 0; i--) {
+			Label lbl = new Label(String.valueOf(i + 1));
+			lbl.getStyleClass().add("coord-label-rank");
+			rankLabels.getChildren().add(lbl);
+		}
+		HBox fileLabels = new HBox(0);
+		fileLabels.setPadding(new Insets(4, 0, 0, 40));
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			Label lbl = new Label(String.valueOf((char) ('A' + j)));
+			lbl.getStyleClass().add("coord-label-file");
+			fileLabels.getChildren().add(lbl);
+		}
+		HBox boardRow = new HBox(0, rankLabels, grid);
+		VBox boardWithCoords = new VBox(0, boardRow, fileLabels);
+
 		root.setTop(currentColor);
-		root.setCenter(grid);
+		root.setCenter(boardWithCoords);
 		root.setRight(moveHistoryPanel);
 		moveBar.getChildren().add(lastMove);
 		bottom.getChildren().add(moveBar);
@@ -229,6 +256,15 @@ public class ChessGUI extends Application implements GameViewListener {
 		playBlackButton.setOnAction(playBlackEvent);
 		startGameButton.setOnAction(startGameEvent);
 		loadFenButton.setOnAction(loadFenEvent);
+		easyButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) { botDepth = 1; updateMenuModeButtons(); }
+		});
+		mediumButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) { botDepth = 2; updateMenuModeButtons(); }
+		});
+		hardButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) { botDepth = 3; updateMenuModeButtons(); }
+		});
 		updateMenuModeButtons();
 
 		sceneGame.getStylesheets().add(ChessGUI.class.getResource("styles.css").toExternalForm());
@@ -249,10 +285,10 @@ public class ChessGUI extends Application implements GameViewListener {
 		switch (gameMode) {
 		case PLAYER_VS_BOT:
 			return humanColor == Color.WHITE
-					? new GameController(game, new HumanPlayer(Color.WHITE), new BotPlayer(Color.BLACK), this)
-					: new GameController(game, new BotPlayer(Color.WHITE), new HumanPlayer(Color.BLACK), this);
+					? new GameController(game, new HumanPlayer(Color.WHITE), new BotPlayer(Color.BLACK, botDepth), this)
+					: new GameController(game, new BotPlayer(Color.WHITE, botDepth), new HumanPlayer(Color.BLACK), this);
 		case BOT_VS_BOT:
-			return new GameController(game, new BotPlayer(Color.WHITE), new BotPlayer(Color.BLACK), this);
+			return new GameController(game, new BotPlayer(Color.WHITE, botDepth), new BotPlayer(Color.BLACK, botDepth), this);
 		case PLAYER_VS_PLAYER:
 		default:
 			return new GameController(game, new HumanPlayer(Color.WHITE), new HumanPlayer(Color.BLACK), this);
@@ -262,6 +298,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	private void resetGameView() {
 		lastMove.setText("");
 		clearSelection();
+		clearLastMoveHighlights();
 		clearPromotionButtons();
 		numTakenPieces = game.getNumTakenPieces();
 		updateStatusLabel();
@@ -281,6 +318,9 @@ public class ChessGUI extends Application implements GameViewListener {
 		playBlackButton.setDisable(gameMode != GameMode.PLAYER_VS_BOT);
 		playWhiteButton.setText(humanColor == Color.WHITE ? "Play White *" : "Play White");
 		playBlackButton.setText(humanColor == Color.BLACK ? "Play Black *" : "Play Black");
+		easyButton.setText(botDepth == 1 ? "Easy *" : "Easy");
+		mediumButton.setText(botDepth == 2 ? "Medium *" : "Medium");
+		hardButton.setText(botDepth == 3 ? "Hard *" : "Hard");
 	}
 
 	private boolean isBotTurn() {
@@ -313,9 +353,17 @@ public class ChessGUI extends Application implements GameViewListener {
 		restart.getStyleClass().add("restart");
 		exitNoSave.getStyleClass().add("restart");
 		saveAndExit.getStyleClass().add("restart");
+		muteButton.getStyleClass().add("restart");
+		muteButton.setOnAction(new EventHandler<ActionEvent>() {
+			public void handle(ActionEvent e) {
+				soundMuted = !soundMuted;
+				muteButton.setText(soundMuted ? "Unmute" : "Mute");
+			}
+		});
 		leftButtons.getChildren().add(restart);
 		leftButtons.getChildren().add(exitNoSave);
 		leftButtons.getChildren().add(saveAndExit);
+		leftButtons.getChildren().add(muteButton);
 		left.getChildren().add(leftButtons);
 		bottom.setAlignment(Pos.CENTER_LEFT);
 		bottom.setMinHeight(96);
@@ -408,12 +456,37 @@ public class ChessGUI extends Application implements GameViewListener {
 			moveRows.getChildren().add(buildMoveRow(moveNum, whiteMove, blackMove));
 			moveNum++;
 		}
+		scrollHistoryToBottom();
+	}
+
+	private void scrollHistoryToBottom() {
 		javafx.application.Platform.runLater(new Runnable() {
 			public void run() {
 				moveScroll.setVvalue(1.0);
 			}
 		});
 	}
+
+	private void appendLatestMoveToHistory() {
+		ArrayList<Move> history = game.getMoveHistory();
+		if (history.isEmpty()) return;
+		Move latest = history.get(history.size() - 1);
+		if (latest.moverColor == Color.BLACK && !moveRows.getChildren().isEmpty()) {
+			HBox lastRow = (HBox) moveRows.getChildren().get(moveRows.getChildren().size() - 1);
+			Label blackLabel = (Label) lastRow.getChildren().get(2);
+			if (blackLabel.getText().isEmpty()) {
+				blackLabel.setText(formatMoveForPanel(latest));
+				scrollHistoryToBottom();
+				return;
+			}
+		}
+		int moveNum = moveRows.getChildren().size() + 1;
+		Move whiteMove = latest.moverColor != Color.BLACK ? latest : null;
+		Move blackMove = latest.moverColor == Color.BLACK ? latest : null;
+		moveRows.getChildren().add(buildMoveRow(moveNum, whiteMove, blackMove));
+		scrollHistoryToBottom();
+	}
+
 
 	private HBox buildMoveRow(int num, Move whiteMove, Move blackMove) {
 		Label numLabel = new Label(num + ".");
@@ -482,6 +555,16 @@ public class ChessGUI extends Application implements GameViewListener {
 				spacesBackground[i][j].getStyleClass().add((i + j) % 2 == 0
 						? "chess-background-white" : "chess-background-black");
 
+				lastMoveHighlights[i][j] = new Region();
+				lastMoveHighlights[i][j].getStyleClass().add("last-move-square");
+				lastMoveHighlights[i][j].setVisible(false);
+				lastMoveHighlights[i][j].setMouseTransparent(true);
+
+				checkHighlights[i][j] = new Region();
+				checkHighlights[i][j].getStyleClass().add("check-square");
+				checkHighlights[i][j].setVisible(false);
+				checkHighlights[i][j].setMouseTransparent(true);
+
 				selectedHighlights[i][j] = new Region();
 				selectedHighlights[i][j].getStyleClass().add("selected-square");
 				selectedHighlights[i][j].setVisible(false);
@@ -504,6 +587,8 @@ public class ChessGUI extends Application implements GameViewListener {
 				buttons[i][j].getStyleClass().add("chess-button-transparent");
 
 				spaces[i][j].getChildren().add(spacesBackground[i][j]);
+				spaces[i][j].getChildren().add(lastMoveHighlights[i][j]);
+				spaces[i][j].getChildren().add(checkHighlights[i][j]);
 				spaces[i][j].getChildren().add(selectedHighlights[i][j]);
 				spaces[i][j].getChildren().add(moveIndicators[i][j]);
 				spaces[i][j].getChildren().add(pieceViews[i][j]);
@@ -596,7 +681,7 @@ public class ChessGUI extends Application implements GameViewListener {
 				clearPromotionButtons();
 				enableButtons();
 				updateStatusLabel();
-				refreshMoveHistory();
+				appendLatestMoveToHistory();
 				updateFenDisplay();
 				ArrayList<Move> history = game.getMoveHistory();
 				if (!history.isEmpty()) {
@@ -604,6 +689,7 @@ public class ChessGUI extends Application implements GameViewListener {
 				}
 			}
 		};
+		setPromoteButtonImages(pawn.getColor());
 		for (Button b : promoteButtons) {
 			b.setOnAction(event);
 			if (!moveBar.getChildren().contains(b)) {
@@ -645,6 +731,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		boolean inCheck = state == GameState.WHITEINCHECK || state == GameState.BLACKINCHECK;
 		playSound(inCheck ? chessCheck : isCapture ? chessTake : chessMove);
 		clearSelection();
+		setLastMoveHighlights(move.startRank, move.startFile, move.endRank, move.endFile);
 		updateMoveSquares(move.startRank, move.startFile, move.endRank, move.endFile, movingPiece, enPassantCapture);
 		handlePromotionIfNeeded(move.endRank, move.endFile);
 		if (promotionPending) {
@@ -653,7 +740,7 @@ public class ChessGUI extends Application implements GameViewListener {
 		}
 		updateStatusLabel();
 		updateLastMove(move.endRank, move.endFile);
-		refreshMoveHistory();
+		appendLatestMoveToHistory();
 		updateFenDisplay();
 		if (!gameIsOver()) {
 			enableButtons();
@@ -829,6 +916,52 @@ public class ChessGUI extends Application implements GameViewListener {
 		}
 	}
 
+	private void clearLastMoveHighlights() {
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				lastMoveHighlights[i][j].setVisible(false);
+			}
+		}
+	}
+
+	private void setLastMoveHighlights(int startRank, int startFile, int endRank, int endFile) {
+		clearLastMoveHighlights();
+		lastMoveHighlights[BOARD_SIZE - 1 - startRank][startFile].setVisible(true);
+		lastMoveHighlights[BOARD_SIZE - 1 - endRank][endFile].setVisible(true);
+	}
+
+	private void updateCheckHighlight() {
+		if (checkHighlights[0][0] == null) return;
+		for (int i = 0; i < BOARD_SIZE; i++) {
+			for (int j = 0; j < BOARD_SIZE; j++) {
+				checkHighlights[i][j].setVisible(false);
+			}
+		}
+		GameState state = game.getCurrState();
+		Color colorInCheck = null;
+		if (state == GameState.WHITEINCHECK) {
+			colorInCheck = Color.WHITE;
+		} else if (state == GameState.BLACKINCHECK) {
+			colorInCheck = Color.BLACK;
+		}
+		if (colorInCheck == null) return;
+		King king = game.getCopyOfCurrBoard().getKing(colorInCheck);
+		if (king == null) return;
+		checkHighlights[BOARD_SIZE - 1 - king.getRank()][king.getFile()].setVisible(true);
+	}
+
+	private void setPromoteButtonImages(Color color) {
+		EnumMap<PieceType, Image> images = color == itec220.labs.Color.WHITE ? whiteImages : blackImages;
+		for (PromoteButton b : promoteButtons) {
+			ImageView iv = new ImageView(images.get(b.type));
+			iv.setFitWidth(44);
+			iv.setFitHeight(44);
+			iv.setPreserveRatio(true);
+			b.setGraphic(iv);
+			b.setContentDisplay(ContentDisplay.TOP);
+		}
+	}
+
 	private void clearPromotionButtons() {
 		for (Button b : promoteButtons) {
 			b.setOnAction(null);
@@ -857,6 +990,7 @@ public class ChessGUI extends Application implements GameViewListener {
 			currentColor.setText(String.format("%s's move", game.getCurrMove().name));
 			break;
 		}
+		updateCheckHighlight();
 	}
 
 	private Media loadMedia(String resourcePath) {
@@ -865,7 +999,7 @@ public class ChessGUI extends Application implements GameViewListener {
 	}
 
 	private void playSound(Media media) {
-		if (media == null) {
+		if (media == null || soundMuted) {
 			return;
 		}
 		MediaPlayer player = new MediaPlayer(media);

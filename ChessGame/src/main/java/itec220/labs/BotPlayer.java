@@ -13,6 +13,10 @@ final class BotPlayer implements ChessPlayer {
 		this.bot = new ChessBot(color);
 	}
 
+	BotPlayer(Color color, int depth) {
+		this.bot = new ChessBot(color, depth);
+	}
+
 	public Color getColor() {
 		return bot.getColor();
 	}

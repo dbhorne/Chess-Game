@@ -4,10 +4,12 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 
 /**
  * Depth-limited alpha-beta chess bot with tactical leaf search and static heuristics.
@@ -101,7 +103,8 @@ public class ChessBot {
 	private final int depth;
 	private final Random random;
 	private final int threadCount;
-	private final Map<String, TranspositionEntry> transpositionTable = new HashMap<>();
+	private final ForkJoinPool searchPool;
+	private final Map<String, TranspositionEntry> transpositionTable = new ConcurrentHashMap<>();
 
 	public ChessBot(Color color) {
 		this(color, DEFAULT_DEPTH);
@@ -125,6 +128,7 @@ public class ChessBot {
 		this.depth = depth;
 		this.random = random;
 		this.threadCount = Math.max(1, threadCount);
+		this.searchPool = new ForkJoinPool(Math.max(1, this.threadCount / 2));
 	}
 
 	public Color getColor() {
@@ -143,7 +147,7 @@ public class ChessBot {
 			return immediateMates.get(random.nextInt(immediateMates.size()));
 		}
 		int effectiveDepth = effectiveDepth(boardSnapshot, legalMoves.size());
-		ArrayList<ScoredMove> scoredMoves = scoreSequentially(orderedMoves, boardSnapshot, effectiveDepth, priorPositions);
+		ArrayList<ScoredMove> scoredMoves = scoreParallel(orderedMoves, boardSnapshot, effectiveDepth, priorPositions);
 		int bestScore = Integer.MIN_VALUE;
 		for (ScoredMove scoredMove : scoredMoves) {
 			if (scoredMove.score > bestScore) {
@@ -181,6 +185,20 @@ public class ChessBot {
 		}
 		return scoredMoves;
 	}
+
+	private ArrayList<ScoredMove> scoreParallel(ArrayList<Move> legalMoves, Board boardSnapshot,
+			int effectiveDepth, List<String> priorPositions) {
+		try {
+			return new ArrayList<>(searchPool.submit(() ->
+				legalMoves.parallelStream()
+					.map(move -> scoreRootMove(move, boardSnapshot, effectiveDepth, priorPositions))
+					.collect(Collectors.toList())
+			).get());
+		} catch (Exception e) {
+			return scoreSequentially(legalMoves, boardSnapshot, effectiveDepth, priorPositions);
+		}
+	}
+
 
 	private ScoredMove scoreRootMove(Move move, Board boardSnapshot, int effectiveDepth,
 			List<String> priorPositions) {
